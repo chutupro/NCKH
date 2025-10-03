@@ -1,0 +1,132 @@
+.top-section {
+    margin: 24px 80px;
+    color: #222;
+}
+
+.top-header h2 {
+    font-size: 40px;
+    font-weight: 800;
+    margin: 8px 0 20px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .5s ease, transform .5s ease;
+    will-change: opacity, transform;
+    color: #FFFF00
+}
+
+.top-header.show h2, .top-header h2.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.top-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.top-card {
+    display: block;
+    background: #0f0f0f;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(12px);
+    opacity: 0;
+    transition: transform .5s ease, opacity .5s ease, box-shadow .3s ease;
+    will-change: transform, opacity;
+}
+
+.top-card.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.top-card:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px) scale(1.02);
+}
+
+.top-media {
+    height: 220px;
+    background: #f3f3f3;
+}
+
+.top-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .5s ease;
+}
+
+.top-content {
+    padding: 14px 16px 18px;
+}
+
+.top-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #FFFF00;
+    line-height: 1.35;
+}
+
+.top-actions {
+    margin-top: 18px;
+}
+
+.top-button {
+    display: inline-block;
+    padding: 10px 14px;
+    border: 1px solid #222;
+    border-radius: 8px;
+    color: #222;
+    text-decoration: none;
+    background: #fff;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .5s ease, transform .5s ease, background .2s ease;
+    will-change: opacity, transform;
+}
+
+.top-actions.show .top-button, .top-actions .top-button.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.top-button:hover {
+    background: #10b981;
+}
+
+/* Hover image zoom within the card */
+.top-card:hover .top-media img{
+    transform: scale(1.05);
+}
+
+@media (max-width: 1200px) {
+    .top-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .top-media {
+        height: 200px;
+    }
+}
+
+@media (max-width: 640px) {
+    .top-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .top-media {
+        height: 180px;
+    }
+
+    .top-section {
+        margin: 16px;
+    }
+}
