@@ -9,15 +9,15 @@
 
 .app-container {
   width: 100%;
-  min-height: 100vh; 
+  min-height: 100vh;
 }
 
 .header {
-  background-color: rgb(201, 207, 40);
+  background-color: rgb(127, 129, 101);
   padding: 15px 20px;
   position: fixed;
   width: 100%;
-  z-index: 20; 
+  z-index: 20;
 }
 
 .navbar {
@@ -25,7 +25,7 @@
   justify-content: space-between;
   align-items: center;
   margin: 0 auto;
-  width: 100%; 
+  width: 100%;
 }
 
 .nav-links {
@@ -35,7 +35,7 @@
 }
 
 .font-handwriting {
-  font-family: "Pacifico", cursive; 
+  font-family: "Pacifico", cursive;
   color: #fff;
   font-size: 28px;
   font-weight: 400;
@@ -68,7 +68,7 @@
 }
 
 .nav-item .nav-link svg {
-  transition: transform 0.3s ease; 
+  transition: transform 0.3s ease;
 }
 
 .nav-item.open .nav-link svg {
@@ -93,14 +93,14 @@
 .nav-buttonDongGop {
   background-color: transparent;
   color: #fff;
-  border-radius: 9999px; 
+  border-radius: 9999px;
 }
 
 .nav-buttonThamGia {
   background-color: #fff;
   color: #000;
-  border-color: #10b981; 
-  border-radius: 25px; 
+  border-color: #10b981;
+  border-radius: 25px;
 }
 
 .nav-buttonDongGop:hover {
@@ -114,7 +114,6 @@
   border-color: #10b981;
 }
 
-
 .nav-item {
   position: relative;
 }
@@ -123,7 +122,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgb(201, 207, 40); 
+  background-color: rgb(201, 207, 40);
   border: 1px solid #333;
   border-top: none;
   border-radius: 0 0 12px 12px;
@@ -223,7 +222,7 @@
   .nav-links {
     width: 100%;
     display: flex;
-    flex-direction: row; 
+    flex-direction: row;
     justify-content: space-between;
     padding-bottom: 10px;
   }
