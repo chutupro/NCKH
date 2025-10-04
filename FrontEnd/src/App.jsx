@@ -6,6 +6,9 @@ import Exploration from "./Component/Exploration";
 import Headers from "./Component/Headers";
 import Timeline from "./Component/Timeline";
 import Top from "./Component/Top";
+import Study from "./Component/Study";
+import Footer from "./Component/Footer";
+import Connect from "./Component/Connect";
 
 function App() {
 
@@ -15,8 +18,11 @@ function App() {
       <Headers />
       <Banner />
       <Exploration />
-      <Timeline />  
+      <Connect />
       <Top />
+      <Study />
+      <Timeline />  
+      <Footer />
     </div>
   );
 }

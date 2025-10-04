@@ -52,7 +52,7 @@
   border: 1px solid white;
 }
 
-/* Blur effect on background */
+/* Overlay effect on background */
 .landing-container::before {
   content: "";
   position: absolute;
@@ -60,9 +60,18 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: inherit;
-  filter: blur(5px);
-  z-index: -1;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  z-index: 1;
+}
+
+.landing-container > * {
+  position: relative;
+  z-index: 2;
 }
 
 .nav-buttons {
@@ -102,4 +111,55 @@
   background-color: #10b981;
   color: #fff;
   border-color: #10b981;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .landing-container {
+    padding: 20px;
+    height: 80vh;
+    min-height: 600px;
+  }
+  
+  .landing-container h1 {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+  }
+  
+  .landing-container p {
+    font-size: 1rem;
+    margin-bottom: 25px;
+    max-width: 90%;
+  }
+  
+  .nav-buttons {
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .nav-buttonDongGop,
+  .nav-buttonThamGia {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-container h1 {
+    font-size: 1.8rem;
+    line-height: 1.3;
+  }
+  
+  .landing-container p {
+    font-size: 0.9rem;
+  }
+  
+  .nav-buttonDongGop,
+  .nav-buttonThamGia {
+    padding: 10px 15px;
+    font-size: 13px;
+  }
 }

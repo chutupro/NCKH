@@ -1,26 +1,30 @@
-import React, { useEffect } from 'react'
+import React, { useEffect } from 'react';
 import "../Styles/Top.css";
 
 const items = [
   {
-    title: "Lịch sử Đà Nẵng",
-    image: "https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg",
-    href: "#"
+    title: "Tòa thị chính Đà Nẵng (nay là UBND Đà Nẵng)",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-14.jpg",
+    href: "#",
+    author: "Nguyễn Văn A"
   },
   {
-    title: "Lịch sử Đà Nẵng",
-    image: "https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg",
-    href: "#"
+    title: "Cầu chữ T sông Hàn trước tòa thị chính Đà Nẵng",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-64.jpg",
+    href: "#",
+    author: "Trần Thị B"
   },
   {
-    title: "Lịch sử Đà Nẵng",
-    image: "https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg",
-    href: "#"
+    title: "Tòa nhà tại góc ngã ba Bạch Đằng-Phan Đình Phùng",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-22.jpg",
+    href: "#",
+    author: "Lê Văn C"
   },
   {
-    title: "Lịch sử Đà Nẵng",
-    image: "https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg",
-    href: "#"
+    title: "Đường Trần Hưng Đạo, nay là đường Nguyễn Thái Học",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-57.jpg",
+    href: "#",
+    author: "Phạm Thị D"
   }
 ];
 
@@ -46,7 +50,6 @@ const Top = () => {
     singles.forEach((el) => io.observe(el));
     containers.forEach((el) => io.observe(el));
 
-    // If elements are already in viewport on first paint, mark them as shown
     const maybeReveal = (el) => {
       const rect = el.getBoundingClientRect();
       if (rect.top < window.innerHeight * 0.9) {
@@ -74,15 +77,16 @@ const Top = () => {
             </div>
             <div className="top-content">
               <div className="top-title">{it.title}</div>
+              <div className="top-author">Người đăng: {it.author}</div>
             </div>
           </a>
         ))}
       </div>
       <div className="top-actions">
-        <a className="top-button" href="#">Xem tất cả câu truyệns</a>
+        <a className="top-button" href="#">Xem nhiều câu truyện</a>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default Top
+export default Top;

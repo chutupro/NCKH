@@ -1,5 +1,5 @@
 .top-section {
-    margin: 24px 80px;
+    margin: 90px 80px;
     color: #222;
 }
 
@@ -8,14 +8,15 @@
     font-weight: 800;
     margin: 8px 0 20px;
     text-align: center;
-    opacity: 0;
+    opacity: 0;/* Tiêu đề không hiển thị */
     transform: translateY(12px);
     transition: opacity .5s ease, transform .5s ease;
-    will-change: opacity, transform;
-    color: #FFFF00
+    will-change: opacity, transform; /* Gợi ý trình duyệt tối ưu hóa các thuộc tính này cho hoạt hình. */
+    color: rgb(129, 131, 97);
 }
 
-.top-header.show h2, .top-header h2.show {
+.top-header.show h2,
+.top-header h2.show {
     opacity: 1;
     transform: translateY(0);
 }
@@ -48,7 +49,7 @@
 
 .top-card:hover {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
-    transform: translateY(-4px) scale(1.02);
+    transform: translateY(-4px) scale(1.09);
 }
 
 .top-media {
@@ -71,8 +72,16 @@
 .top-title {
     font-size: 18px;
     font-weight: 700;
-    color: #FFFF00;
+    color: rgb(129, 131, 97);
     line-height: 1.35;
+    margin-bottom: 2px; /* Giảm khoảng cách để người đăng sát bên dưới */
+}
+
+.top-author {
+    font-size: 14px;
+    font-weight: 400;
+    color: #666;
+    line-height: 1.4;
 }
 
 .top-actions {
@@ -83,7 +92,7 @@
     display: inline-block;
     padding: 10px 14px;
     border: 1px solid #222;
-    border-radius: 8px;
+    border-radius: 9999px;
     color: #222;
     text-decoration: none;
     background: #fff;
@@ -93,7 +102,8 @@
     will-change: opacity, transform;
 }
 
-.top-actions.show .top-button, .top-actions .top-button.show {
+.top-actions.show .top-button,
+.top-actions .top-button.show {
     opacity: 1;
     transform: translateY(0);
 }
@@ -103,7 +113,7 @@
 }
 
 /* Hover image zoom within the card */
-.top-card:hover .top-media img{
+.top-card:hover .top-media img {
     transform: scale(1.05);
 }
 

@@ -1,6 +1,6 @@
 .timeline {
   margin: 48px 80px;
-  color: #FFFF00;
+  color: rgb(129, 131, 97);
 }
 
 .tl-heading {
@@ -131,7 +131,7 @@
 }
 
 .tl-item.animate:hover .tl-card {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1.03);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45);
 }
 
