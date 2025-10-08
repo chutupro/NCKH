@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import "../Styles/Banner.css";
+import "../../Styles/Home/Banner.css";
 
 const Banner = () => {
   const [currentImage, setCurrentImage] = useState(0);

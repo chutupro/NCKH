@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleDoubleDown, faFolder, faGift, faGraduationCap, faHome, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
-import "../Styles/Header.css";
+import "../../Styles/Home/Header.css";
 import { faDiscourse } from '@fortawesome/free-brands-svg-icons';
 
 const Headers = () => {

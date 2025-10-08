@@ -1,4 +1,4 @@
-import "../Styles/Timeline.css";
+import "../../Styles/Home/Timeline.css";
 import { useEffect } from "react";
 
 const TIMELINE_ITEMS = [

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import "../Styles/Top.css";
+import "../../Styles/Home/Top.css";
 
 const items = [
   {
