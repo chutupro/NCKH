@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ModerationLogsModule } from './modules/moderation_logs/moderation_logs.module';
+import { contributionsModule } from './modules/contributions/contributions.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ModerationLogsModule } from './modules/moderation_logs/moderation_logs.
     UsersModule,
     RolesModule,
     ModerationLogsModule,
+    contributionsModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,13 +1,7 @@
-import "../../Styles/Home/Timeline.css";
+import "../Styles/Timeline/Timeline.css";
 import { useEffect } from "react";
-
-const TIMELINE_ITEMS = [
-  { date: "1890", title: "Hình thành khu dân cư", desc: "Những cộng đồng đầu tiên sinh sống và phát triển." },
-  { date: "1930", title: "Công trình lịch sử", desc: "Nhiều công trình kiến trúc được xây dựng, lưu dấu thời gian." },
-  { date: "1975", title: "Bước ngoặt lịch sử", desc: "Giai đoạn chuyển mình mạnh mẽ về văn hoá và xã hội." },
-  { date: "2000", title: "Hiện đại hoá", desc: "Hạ tầng và đời sống đô thị phát triển nhanh chóng." },
-  { date: "2025", title: "Bảo tồn & Phát huy", desc: "Gìn giữ di sản, lan toả giá trị đến cộng đồng." }
-];
+import { TIMELINE_ITEMS } from "../util/constant";
+import Headers from "../Component/home/Headers";
 
 const Timeline = () => {
   useEffect(() => {
@@ -29,6 +23,8 @@ const Timeline = () => {
   }, []);
 
   return (
+    <div>
+      <Headers />
     <section className="timeline">
       <h2 className="tl-heading">Dòng thời gian</h2>
       <div className="tl-container">
@@ -36,7 +32,13 @@ const Timeline = () => {
         {TIMELINE_ITEMS.map((item, idx) => (
           <div key={item.date} className={`tl-item ${idx % 2 === 0 ? "left" : "right"}`}>
             <div className="tl-dot" />
-            <a className="tl-card" href="#">
+            <a
+              className="tl-card"
+              href="#"
+              // set a CSS custom property for the ::before blurred layer and keep backgroundImage as fallback
+              style={{ ['--tl-bg']: `url(${item.image})`, backgroundImage: `url(${item.image})` }}
+            >
+              <div className="tl-card-overlay" />
               <div className="tl-date">{item.date}</div>
               <div className="tl-title">{item.title}</div>
               <div className="tl-desc">{item.desc}</div>
@@ -45,6 +47,7 @@ const Timeline = () => {
         ))}
       </div>
     </section>
+    </div>
   );
 }
 
