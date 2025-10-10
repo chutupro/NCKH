@@ -41,8 +41,8 @@ import {
           Timeline,
           VersionHistory
         ],
-        synchronize: configService.get('NODE_ENV') === 'development',
-        logging: configService.get('NODE_ENV') === 'development',
+        // synchronize: configService.get('NODE_ENV') === 'development',
+        // logging: configService.get('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
     }),
