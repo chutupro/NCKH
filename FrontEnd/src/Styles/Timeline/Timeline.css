@@ -1,7 +1,7 @@
 
 
 .timeline {
-  margin: 48px 80px;
+  margin: auto 80px;
   color: rgb(129, 131, 97);
 }
 
@@ -21,14 +21,47 @@
   align-items: start; 
   padding-top: 20px; /* give the line room above the first item */
   padding-bottom: 24px; /* give the line room below the last item */
+  min-height: var(--tl-height, auto);
+}
+
+/* scroll behavior when many years/items are present */
+.tl-scroll {
+  max-height: 640px; /* visible area before scrolling */
+  overflow-y: auto;
+  padding-right: 12px; /* room for scrollbar */
+}
+
+/* alternative: use class directly on container to enable scroll with blurred track */
+.tl-container.tl-scroll-wrap {
+  max-height: 640px;
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
+/* Webkit scrollbar style: translucent track with blur effect */
+.tl-container.tl-scroll-wrap::-webkit-scrollbar {
+  width: 12px;
+}
+.tl-container.tl-scroll-wrap::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.04);
+  backdrop-filter: blur(6px);
+}
+.tl-container.tl-scroll-wrap::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.35));
+  border-radius: 8px;
+}
+
+/* Firefox scrollbar colors */
+@supports (scrollbar-color: auto) {
+  .tl-container.tl-scroll-wrap { scrollbar-color: rgba(0,0,0,0.35) rgba(0,0,0,0.05); }
 }
 
 .tl-line {
   position: absolute;
   left: 50%;
-  top: 20px; /* match container padding-top */
-  bottom: 24px; /* match container padding-bottom */
-  width: 2px;
+  top: 0; 
+  bottom: 0; 
+  width: 4px;
   background: rgba(255, 255, 255, 0.2);
   transform: translateX(-50%);
   z-index: 0;
@@ -127,9 +160,8 @@
 
 .tl-date {
   color: white;
-  font-weight: 700;
-  margin-bottom: 6px;
   font-weight: bold;
+  margin-bottom: 6px;
 }
 
 .tl-title {

@@ -2,6 +2,7 @@ import "../Styles/Timeline/Timeline.css";
 import { useEffect } from "react";
 import { TIMELINE_ITEMS } from "../util/constant";
 import Headers from "../Component/home/Headers";
+import Footer from "../Component/home/Footer";
 
 const Timeline = () => {
   useEffect(() => {
@@ -25,28 +26,29 @@ const Timeline = () => {
   return (
     <div>
       <Headers />
-    <section className="timeline">
-      <h2 className="tl-heading">Dòng thời gian</h2>
-      <div className="tl-container">
-        <div className="tl-line" />
-        {TIMELINE_ITEMS.map((item, idx) => (
-          <div key={item.date} className={`tl-item ${idx % 2 === 0 ? "left" : "right"}`}>
-            <div className="tl-dot" />
-            <a
-              className="tl-card"
-              href="#"
-              // set a CSS custom property for the ::before blurred layer and keep backgroundImage as fallback
-              style={{ ['--tl-bg']: `url(${item.image})`, backgroundImage: `url(${item.image})` }}
-            >
-              <div className="tl-card-overlay" />
-              <div className="tl-date">{item.date}</div>
-              <div className="tl-title">{item.title}</div>
-              <div className="tl-desc">{item.desc}</div>
-            </a>
-          </div>
-        ))}
-      </div>
-    </section>
+      <section className="timeline">
+        <h2 className="tl-heading">Dòng thời gian</h2>
+  <div className="tl-container">
+          <div className="tl-line" />
+          {TIMELINE_ITEMS.map((item, idx) => (
+            <div key={item.date} className={`tl-item ${idx % 2 === 0 ? "left" : "right"}`}>
+              <div className="tl-dot" />
+              <a
+                className="tl-card"
+                href="#"
+                // set a CSS custom property for the ::before blurred layer and keep backgroundImage as fallback
+                style={{ ['--tl-bg']: `url(${item.image})`, backgroundImage: `url(${item.image})` }}
+              >
+                <div className="tl-card-overlay" />
+                <div className="tl-date">{item.date}</div>
+                <div className="tl-title">{item.title}</div>
+                <div className="tl-desc">{item.desc}</div>
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+      <Footer />
     </div>
   );
 }

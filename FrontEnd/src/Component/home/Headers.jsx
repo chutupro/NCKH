@@ -97,9 +97,9 @@ const Headers = () => {
                       </a>
                     </div>
                     <div className="menu-item">
-                      <a href="#" className="menu-link">
+                      <Link to="/contribute" className="menu-link">
                         <FontAwesomeIcon icon={faGift} /> Góp ảnh
-                      </a>
+                      </Link>
                       <a href="#" className="menu-link">
                         Gốp phần phát triễn web
                       </a>
