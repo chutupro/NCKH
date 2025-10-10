@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post, ValidationPipe } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 import { ApiResponse } from '@nestjs/swagger';
 import { CreateAnalyticsDto } from './dto/create-analytics.dto';

@@ -1,7 +1,10 @@
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Analytics } from '../entities/analytics.entity';
+import { CreateAnalyticsDto } from './dto/create-analytics.dto';
+import { UpdateAnalyticsDto } from './dto/update-analytics.dto';
 
 @Injectable()
 export class AnalyticsService {
@@ -21,14 +24,14 @@ export class AnalyticsService {
     });
   }
 
-  create(analyticsData: Partial<Analytics>) {
+  create(analyticsData: CreateAnalyticsDto) {
     const analytics = this.analyticsRepository.create(analyticsData);
     analytics.CreatedAt = new Date();
     analytics.UpdatedAt = new Date();
     return this.analyticsRepository.save(analytics);
   }
 
-  async update(id: number, analyticsData: Partial<Analytics>) {
+  async update(id: number, analyticsData: UpdateAnalyticsDto) {
     analyticsData.UpdatedAt = new Date();
     await this.analyticsRepository.update(id, analyticsData);
     return this.analyticsRepository.findOneBy({ AnalyticsID: id });
@@ -50,3 +53,4 @@ export class AnalyticsService {
     return this.analyticsRepository.save(analytics);
   }
 }
+

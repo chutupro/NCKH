@@ -1,8 +1,4 @@
-export class ImageUpdateDto {
-  Url?: string;
-  Caption?: string;
-  ArticleID?: number;
-  UserID?: number;
-  Width?: number;
-  Height?: number;
-}
+import { PartialType } from "@nestjs/swagger";
+import { ImageCreateDto } from "./Image.create.dto";
+
+export class ImageUpdateDto extends PartialType(ImageCreateDto) {}
