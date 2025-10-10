@@ -24,7 +24,7 @@ export class AuthService {
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
-      where: { email },
+      where: { Email: email },
     });
 
     if (existingUser) {
@@ -79,7 +79,7 @@ export class AuthService {
     const { email, password } = loginDto;
 
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { Email: email },
       relations: ['role'],
     });
 
@@ -150,7 +150,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { Email: email },
     });
 
     if (user && await bcrypt.compare(password, user.PasswordHash)) {
