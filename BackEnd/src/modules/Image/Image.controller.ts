@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, ParseIntPipe } from '@nestjs/common';
+import {Body,Controller,Delete,Get,Param,Patch,Post,ParseIntPipe,} from '@nestjs/common';
 import { ImageService } from './Image.service';
 import { ImageCreateDto } from './dto/Image.create.dto';
 import { ImageUpdateDto } from './dto/Image.update';
@@ -23,7 +23,10 @@ export class ImageController {
   }
 
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: ImageUpdateDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ImageUpdateDto,
+  ) {
     return this.service.update(id, dto);
   }
 

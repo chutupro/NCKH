@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { IMAGES, TIMELINE } from '../util/constant';
+import React, { createContext, useEffect, useState, useMemo } from 'react';
+import constants from '../util/constant';
 
 const AppContext = createContext(null);
 
@@ -9,16 +9,28 @@ export const AppProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [locIndex, setLocIndex] = useState(0);
+  const [showMap, setShowMap] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const locations = useMemo(() => constants.locations || [], []);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % IMAGES.length);
-    }, 3000);
+      setCurrentImage((prev) => (prev + 1) % (constants.IMAGES?.length || 1));
+    }, 2000);
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (!locations || locations.length <= 1 || showMap) return undefined;
+    const id = setInterval(() => {
+      setLocIndex((i) => (i + 1) % locations.length);
+    }, 2000);
+    return () => clearInterval(id);
+  }, [locations, showMap]);
+
   const value = {
-    images: IMAGES,
+    images: constants.IMAGES,
     currentImage,
     setCurrentImage,
     searchQuery,
@@ -27,16 +39,19 @@ export const AppProvider = ({ children }) => {
     setUser,
     isAuthenticated,
     setIsAuthenticated,
-    timeline: TIMELINE,
+    locations,
+    locIndex,
+    setLocIndex,
+    showMap,
+    isSidebarOpen,
+    setIsSidebarOpen,
+    setShowMap,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export const useAppContext = () => {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useAppContext must be used inside AppProvider');
-  return ctx;
-};
-
 export default AppContext;
+
+// Re-export the hook for backwards compatibility (some files import it from context.jsx)
+export { useAppContext } from './useAppContext';

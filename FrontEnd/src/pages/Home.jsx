@@ -7,6 +7,7 @@ import Study from "../Component/home/Study";
 import Footer from "../Component/home/Footer";
 import Connect from "../Component/home/Connect";
 
+
 const Home = () => {
   return (
     <div>
