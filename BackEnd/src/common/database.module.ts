@@ -1,18 +1,18 @@
-import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-imports: [
+  imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: 'localhost',
-      port: 3310,
+      port: 3306,
       username: 'root',
-      password: '123456',
-      database: 'QLNV',
+      password: '',
+      database: 'KETNOI',
       autoLoadEntities: true,
-      synchronize: true, 
-    })]
+      synchronize: true,
+    }),
+  ],
 })
-
-export class databaseModule{};
+export class databaseModule {}
