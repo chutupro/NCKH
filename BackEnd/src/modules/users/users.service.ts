@@ -57,7 +57,7 @@ export class UsersService {
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
-      where: { email },
+      where: { Email: email },
     });
 
     if (existingUser) {
@@ -111,7 +111,7 @@ export class UsersService {
     // Check if email is being changed and if it already exists
     if (updateUserDto.email && updateUserDto.email !== user.Email) {
       const existingUser = await this.userRepository.findOne({
-        where: { email: updateUserDto.email },
+        where: { Email: updateUserDto.email },
       });
 
       if (existingUser) {
