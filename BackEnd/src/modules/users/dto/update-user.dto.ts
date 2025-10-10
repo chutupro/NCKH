@@ -2,12 +2,12 @@ import { IsEmail, IsString, MinLength, MaxLength, IsOptional } from 'class-valid
 
 export class UpdateUserDto {
   @IsEmail()
-  @IsOptional()
+  @IsOptional() // Make email optional for updates
   email?: string;
 
   @IsString()
   @MinLength(6)
-  @IsOptional()
+  @IsOptional() // Make password optional for updates
   password?: string;
 
   @IsString()
