@@ -1,13 +1,24 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post, ValidationPipe } from "@nestjs/common";
-import { contributionsService } from "./contributions.service";
-import { CreateContributionDto } from "./dto/create-contribution.dto";
-import { UpdateContributionDto } from "./dto/update-contribution.dto";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  ValidationPipe,
+} from '@nestjs/common';
+import { ContributionsService } from './contributions.service';
+import { CreateContributionDto } from './dto/create-contribution.dto';
+import { UpdateContributionDto } from './dto/update-contribution.dto';
 
-@Controller("contributions")
-export class contributionsController{
-    constructor(private readonly contributionsService:contributionsService){}
+@Controller('contributions')
+export class contributionsController {
+  constructor(private readonly contributionsService: ContributionsService) {}
 
-    @Get()
+  @Get()
   findAll() {
     return this.contributionsService.findAll();
   }
@@ -22,13 +33,15 @@ export class contributionsController{
   }
 
   @Post()
- 
   create(@Body(new ValidationPipe()) contributionData: CreateContributionDto) {
     return this.contributionsService.create(contributionData);
   }
 
   @Patch(':id')
-  update(@Body() contributionData: UpdateContributionDto, @Param('id') id: number) {
+  update(
+    @Body() contributionData: UpdateContributionDto,
+    @Param('id') id: number,
+  ) {
     return this.contributionsService.update(id, contributionData);
   }
 
@@ -41,3 +54,4 @@ export class contributionsController{
     return contribution;
   }
 }
+

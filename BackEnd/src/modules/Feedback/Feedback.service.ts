@@ -1,10 +1,13 @@
+
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Feedback } from '../entities/feedback.entity';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { UpdateFeedbackDto } from './dto/update-feedback.dto';
 
 @Injectable()
-export class FeedbackService {
+export class feedbackService {
   constructor(
     @InjectRepository(Feedback)
     private readonly feedbackRepository: Repository<Feedback>,
@@ -21,35 +24,21 @@ export class FeedbackService {
     });
   }
 
-  create(feedbackData: Partial<Feedback>) {
-    if (
-      feedbackData.Rating &&
-      (feedbackData.Rating < 0 || feedbackData.Rating > 5)
-    ) {
-      throw new BadRequestException('Rating phải từ 0 đến 5');
-    }
+  create(feedbackData: CreateFeedbackDto) {
     const feedback = this.feedbackRepository.create(feedbackData);
     feedback.CreatedAt = new Date();
     return this.feedbackRepository.save(feedback);
   }
 
-  async update(id: number, feedbackData: Partial<Feedback>) {
-    if (
-      feedbackData.Rating &&
-      (feedbackData.Rating < 0 || feedbackData.Rating > 5)
-    ) {
-      throw new BadRequestException('Rating phải từ 0 đến 5');
-    }
-    feedbackData.CreatedAt = new Date();
+  async update(id: number, feedbackData: UpdateFeedbackDto) {
     await this.feedbackRepository.update(id, feedbackData);
     return this.feedbackRepository.findOneBy({ FeedbackID: id });
   }
 
   async delete(id: number) {
-    const feedback = await this.feedbackRepository.findOneBy({
-      FeedbackID: id,
-    });
+    const feedback = await this.feedbackRepository.findOneBy({ FeedbackID: id });
     await this.feedbackRepository.delete(id);
     return feedback;
   }
 }
+
