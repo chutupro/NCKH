@@ -6,19 +6,17 @@ import { faDiscourse } from '@fortawesome/free-brands-svg-icons';
 
 const Headers = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const timeoutRef = useRef(null); // Ref để lưu timeout
+  const timeoutRef = useRef(null); 
 
-  // Mở sidebar
   const handleMouseEnter = () => {
-    clearTimeout(timeoutRef.current); // Xóa timeout cũ nếu có
+    clearTimeout(timeoutRef.current); 
     setIsOpen(true);
   };
 
-  // Đóng sidebar sau delay
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsOpen(false);
-    }, 200); // Delay 200ms để người dùng di chuột xuống sidebar
+    }, 200); 
   };
 
   return (
@@ -38,8 +36,8 @@ const Headers = () => {
           </a>
           <div 
             className={`nav-item ${isOpen ? 'open' : ''}`}
-            onMouseEnter={handleMouseEnter} // Mở khi hover vào nav-item
-            onMouseLeave={handleMouseLeave} // Đóng khi rời khỏi nav-item
+            onMouseEnter={handleMouseEnter} 
+            onMouseLeave={handleMouseLeave} 
           >
             <a className="nav-link">
               Tư liệu <FontAwesomeIcon icon={faAngleDoubleDown} />
@@ -47,8 +45,8 @@ const Headers = () => {
             {isOpen && (
               <div 
                 className="sidebar"
-                onMouseEnter={handleMouseEnter} // Giữ mở khi hover vào sidebar
-                onMouseLeave={handleMouseLeave} // Đóng khi rời sidebar
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
               >
                 <div className="container">
                   <div className="menu-column">
