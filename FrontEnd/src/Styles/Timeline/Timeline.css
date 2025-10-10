@@ -1,3 +1,5 @@
+
+
 .timeline {
   margin: 48px 80px;
   color: rgb(129, 131, 97);
@@ -15,17 +17,21 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px 24px;
+  gap: 5% 40px; 
+  align-items: start; 
+  padding-top: 20px; /* give the line room above the first item */
+  padding-bottom: 24px; /* give the line room below the last item */
 }
 
 .tl-line {
   position: absolute;
   left: 50%;
-  top: 0;
-  bottom: 0;
+  top: 20px; /* match container padding-top */
+  bottom: 24px; /* match container padding-bottom */
   width: 2px;
   background: rgba(255, 255, 255, 0.2);
   transform: translateX(-50%);
+  z-index: 0;
 }
 
 .tl-item {
@@ -46,39 +52,11 @@
 
 .tl-item.right {
   grid-column: 2 / 3;
+  margin-top: 40px; /* offset right column items from top */
 }
 
-.tl-item:nth-child(1) {
-  margin-top: 0;
-}
-
-.tl-item:nth-child(2) {
-  margin-top: 10px;
-}
-
-.tl-item:nth-child(3) {
-  margin-top: 20px;
-}
-
-.tl-item:nth-child(4) {
-  margin-top: 30px;
-}
-
-.tl-item:nth-child(5) {
-  margin-top: 40px;
-}
-
-.tl-item:nth-child(6) {
-  margin-top: 50px;
-}
-
-.tl-item:nth-child(7) {
-  margin-top: 60px;
-}
-
-.tl-item:nth-child(8) {
-  margin-top: 70px;
-}
+/* Remove per-item manual offsets so spacing stays even when many items are present */
+.tl-item { margin-top: 0; }
 
 .tl-dot {
   position: absolute;
@@ -101,6 +79,9 @@
 
 .tl-card {
   background: #0f0f0f;
+  background-size: cover;
+  background-position: center center;
+  position: relative;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 16px 20px;
@@ -108,22 +89,61 @@
   text-decoration: none;
   color: inherit;
   display: block;
+  position: relative;
+  z-index: 2; /* keep cards above the central line */
+}
+
+.tl-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background:
+    linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), /* lớp phủ tối */
+    var(--tl-bg, none);
+  background-size: cover;
+  background-position: center;
+  filter: blur(1.5px) saturate(0.2);
+  transform: scale(1.03);
+  z-index: 0;
+  pointer-events: none;
+}
+
+
+.tl-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 100%);
+  border-radius: 12px;
+  z-index: 1;
+  backdrop-filter: blur(2px) brightness(0.9);
+  -webkit-backdrop-filter: blur(2px) brightness(0.9);
+}
+
+.tl-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .tl-date {
-  color: #c7c7c7;
+  color: white;
   font-weight: 700;
   margin-bottom: 6px;
+  font-weight: bold;
 }
 
 .tl-title {
-  font-size: 22px;
+  font-size: 30px;
   font-weight: 800;
   margin-bottom: 6px;
+  font-weight: bold;
+  color: #4ecdc4;
 }
 
 .tl-desc {
-  color: #cfcfcf;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
 }
 
 .tl-item.animate .tl-card {
@@ -153,6 +173,9 @@
   .tl-item.right {
     grid-column: 1 / -1;
   }
+
+  /* reset right-column offset on mobile */
+  .tl-item.right { margin-top: 0; }
 
   .tl-item .tl-dot {
     left: 0;

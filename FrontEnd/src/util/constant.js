@@ -1,4 +1,4 @@
-// Shared constants for the app
+
 
 export const IMAGES = [
 	'https://www.agoda.com/wp-content/uploads/2024/08/son-tra-da-nang-vietnam-featured.jpg',
@@ -11,7 +11,84 @@ export const TIMELINE = [
 	{ label: 'Modern Era', color: 'orange' }
 ];
 
+
+const locations = [
+  {
+    name: "Cầu Vàng",
+    image: "https://www.kkday.com/vi/blog/wp-content/uploads/B%C3%A0-N%C3%A0-2.jpg",
+    mapEmbed: "https://www.google.com/maps?q=Golden+Bridge+Ba+Na+Hills+Da+Nang&output=embed"
+  },
+  {
+    name: "Cầu Rồng",
+    image: "https://danangfantasticity.com/wp-content/uploads/2018/10/cau-rong-top-20-cay-cau-ky-quai-nhat-the-gioi-theo-boredom-therapy.jpg",
+    mapEmbed: "https://www.google.com/maps?q=Cau+Rong+Da+Nang&output=embed"
+  }
+];
 export default {
 	IMAGES,
 	TIMELINE,
+	locations,
 };
+
+export const TIMELINE_ITEMS = [
+  {
+    date: "1890",
+    title: "Hình thành khu dân cư",
+    desc: "Những cộng đồng đầu tiên sinh sống và phát triển.",
+    image: "https://png.pngtree.com/background/20250104/original/pngtree-free-hd-wallpaper-4k-new-background-picture-image_15546678.jpg"
+  },
+  {
+    date: "1930",
+    title: "Công trình lịch sử",
+    desc: "Nhiều công trình kiến trúc được xây dựng, lưu dấu thời gian.",
+    image: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a"
+  },
+  {
+    date: "1975",
+    title: "Bước ngoặt lịch sử",
+    desc: "Giai đoạn chuyển mình mạnh mẽ về văn hoá và xã hội.",
+    image: "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1a2b3c4d5e6f7a8b9c0d"
+  },
+  {
+    date: "2000",
+    title: "Hiện đại hoá",
+    desc: "Hạ tầng và đời sống đô thị phát triển nhanh chóng.",
+    image: "https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=abcdef1234567890abcd"
+  },
+  {
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Gìn giữ di sản, lan toả giá trị đến cộng đồng.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  },
+  {
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Gìn giữ di sản, lan toả giá trị đến cộng đồng.",
+    image: "https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1a2b3c4d5e6f7a8b9c0d"
+  },
+  {
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Gìn giữ di sản, lan toả giá trị đến cộng đồng.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  },
+  {
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Gìn giữ di sản, lan toả giá trị đến cộng đồng.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  },
+  {
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Gìn giữ di sản, lan toả giá trị đến cộng đồng.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  },
+  {
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Gìn giữ di sản, lan toả giá trị đến cộng đồng.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  }
+];
