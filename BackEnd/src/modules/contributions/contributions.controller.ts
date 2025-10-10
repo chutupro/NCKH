@@ -8,7 +8,8 @@ export class contributionsController{
     @Get()
     findAll(){
         return this.contributionsService.findAll();
-    }
-    @Get(":id")
-    findOne
+    // @Get(":id")
+    // findOne 
+}
+    
 }

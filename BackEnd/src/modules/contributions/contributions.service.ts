@@ -8,9 +8,9 @@ export class contributionsService{
     constructor(@InjectRepository(Contribution)private readonly contributionsRepository:Repository<Contribution> ){}
 
     findAll(){
-        return this.contributionsRepository.find();
+        return this.contributionsRepository.find({ relations: ['article', 'user', 'moderationLogs'] });
     }
     findOne(id:number){
-        return this.contributionsRepository.findOne({where:{}}) 
+        return this.contributionsRepository.findOne 
     }
 }
