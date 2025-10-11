@@ -61,9 +61,9 @@ const Headers = () => {
                       </a>
                     </div>
                     <div className="menu-item">
-                      <a href="#" className="menu-link">
+                      <Link to="/gallery" className="menu-link"> 
                         <FontAwesomeIcon icon={faFolder} /> Bộ sưu tập
-                      </a>
+                      </Link>
                       <a href="#" className="menu-link">
                         Tài nguyên
                       </a>

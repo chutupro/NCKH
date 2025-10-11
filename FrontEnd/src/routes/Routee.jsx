@@ -1,12 +1,12 @@
 import React from 'react'
-import {Routes, Route} from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import Lauput from '../layout/Lauput'
 import Personal from '../pages/Personal'
 import Timeline from '../pages/Timeline'
 import Contribute from '../pages/Contribute'
 import ContributeInformation from '../pages/ContributeInformation'
-
-
+import ImageGallery from '../pages/ImageGallery'
+import ImageDetail from '../pages/ImageDetail'
 
 const Routee = () => {
   return (
@@ -17,6 +17,8 @@ const Routee = () => {
         <Route path='/timeline' element={<Timeline />}></Route>
         <Route path='/contribute' element={<Contribute />}></Route>
         <Route path='/contributeinformation' element={<ContributeInformation />}></Route>
+        <Route path='/gallery' element={<ImageGallery />}></Route>
+        <Route path='/image-detail/:id' element={<ImageDetail />}></Route>
       </Routes>
     </div>
   )
