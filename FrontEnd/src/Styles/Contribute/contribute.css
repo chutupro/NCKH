@@ -1,0 +1,26 @@
+/* src/Styles/Contribute/contribute.css */
+.contribute-page-root {
+  background: linear-gradient(135deg, #1a1612 0%, #2a2520 50%, #1a1612 100%);
+  color: #D4C5A9;
+  min-height: 100vh;
+}
+
+.contribute-main {
+  padding: 64px 0;
+}
+
+.upload-card {
+  background-color: rgba(26, 22, 18, 0.8);
+  border: 1px solid rgba(212, 197, 169, 0.3);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.info-box {
+  background-color: rgba(212, 197, 169, 0.1);
+  border: 1px solid rgba(212, 197, 169, 0.2);
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 24px;
+}
