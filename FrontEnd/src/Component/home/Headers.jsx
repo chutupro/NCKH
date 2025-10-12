@@ -61,9 +61,9 @@ const Headers = () => {
                       </a>
                     </div>
                     <div className="menu-item">
-                      <Link to="/gallery" className="menu-link"> 
+                      <a href="#" className="menu-link">
                         <FontAwesomeIcon icon={faFolder} /> Bộ sưu tập
-                      </Link>
+                      </a>
                       <a href="#" className="menu-link">
                         Tài nguyên
                       </a>
@@ -111,8 +111,8 @@ const Headers = () => {
           </div>
         </div>
         <div className="nav-buttons">
-          <button className="nav-buttonDongGop">Đóng góp</button>
-          <button className="nav-buttonThamGia">Tham gia</button>
+          <button className="nav-buttonDongGop">Tham gia</button>
+          <button className="nav-buttonThamGia">Đăng Nhập</button>
         </div>
       </nav>
     </header>
