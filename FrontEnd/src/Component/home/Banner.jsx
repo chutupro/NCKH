@@ -11,7 +11,7 @@ const Banner = () => {
   const mapEmbedUrl = currentLocation ? currentLocation.mapEmbed : '';
 
   return (
-    <section className="banner-hero" style={{ ['--bg-image']: `url(${bg})` }}>
+    <section className="banner-hero" style={{ ['--bg-image']: `url(${bg})`, padding: '40px' }}>
       <div className="banner-inner">
         <div className="banner-left">
           <div className="kicker">Da Nang</div>

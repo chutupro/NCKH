@@ -41,7 +41,6 @@ const Timeline = () => {
 
   return (
     <div>
-      <Headers />
 
       <main className="timeline-wrapper">
         <header className="timeline-header">
@@ -91,8 +90,6 @@ const Timeline = () => {
           </ul>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }
