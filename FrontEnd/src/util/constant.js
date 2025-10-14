@@ -1,3 +1,30 @@
+export const items = [
+  {
+    title: "Tòa thị chính Đà Nẵng (nay là UBND Đà Nẵng)",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-14.jpg",
+    href: "#",
+    author: "Nguyễn Văn A"
+  },
+  {
+    title: "Cầu chữ T sông Hàn trước tòa thị chính Đà Nẵng",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-64.jpg",
+    href: "#",
+    author: "Trần Thị B"
+  },
+  {
+    title: "Tòa nhà tại góc ngã ba Bạch Đằng-Phan Đình Phùng",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-22.jpg",
+    href: "#",
+    author: "Lê Văn C"
+  },
+  {
+    title: "Đường Trần Hưng Đạo, nay là đường Nguyễn Thái Học",
+    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-57.jpg",
+    href: "#",
+    author: "Phạm Thị D"
+  }
+];
+
 
 
 export const IMAGES = [

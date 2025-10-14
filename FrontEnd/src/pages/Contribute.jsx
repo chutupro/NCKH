@@ -22,7 +22,6 @@ const Contribute = () => {
 
   return (
     <div>
-      <Headers />
       <div className="contribute-page">
         <div className="contribute-card">
           <div className="contribute-top">
@@ -71,7 +70,6 @@ const Contribute = () => {
           </div>
         </div>
       </div>
-            <Footer />
     </div>
   )
 }

@@ -36,16 +36,16 @@ const Headers = () => {
           <Link to="/timeline" className="nav-link">
             Timeline
           </Link>
-          <div 
+          <div
             className={`nav-item ${isOpen ? 'open' : ''}`}
-            onMouseEnter={handleMouseEnter} 
-            onMouseLeave={handleMouseLeave} 
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             <a className="nav-link">
               Tư liệu <FontAwesomeIcon icon={faAngleDoubleDown} />
             </a>
             {isOpen && (
-              <div 
+              <div
                 className="sidebar"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
@@ -54,36 +54,24 @@ const Headers = () => {
                   <div className="menu-column">
                     <div className="menu-item">
                       <a href="#" className="menu-link">
-                        <FontAwesomeIcon icon={faHome} /> Trang chủ
-                      </a>
-                      <a href="#" className="menu-link">
-                        Kho lưu trữ di sản văn hóa
+                        <FontAwesomeIcon icon={faHome} /> Cộng đồng
                       </a>
                     </div>
                     <div className="menu-item">
-                      <a href="#" className="menu-link">
+                      <Link to="/ImageLibrary" className="menu-link">
                         <FontAwesomeIcon icon={faFolder} /> Bộ sưu tập
-                      </a>
-                      <a href="#" className="menu-link">
-                        Tài nguyên
-                      </a>
+                      </Link>
                     </div>
                   </div>
                   <div className="menu-column">
                     <div className="menu-item">
                       <a href="#" className="menu-link">
-                        <FontAwesomeIcon icon={faRightFromBracket} /> Đăng Nhập
-                      </a>
-                      <a href="#" className="menu-link">
-                        Đăng nhập để xem nhiêu hơn
+                        <FontAwesomeIcon icon={faRightFromBracket} /> Xưa và nay
                       </a>
                     </div>
                     <div className="menu-item">
                       <a href="#" className="menu-link">
                         <FontAwesomeIcon icon={faGraduationCap} /> Học Tập
-                      </a>
-                      <a href="#" className="menu-link">
-                        Tài nguyên học tập
                       </a>
                     </div>
                   </div>
@@ -92,17 +80,11 @@ const Headers = () => {
                       <a href="#" className="menu-link">
                         <FontAwesomeIcon icon={faDiscourse} /> Khám Phá
                       </a>
-                      <a href="#" className="menu-link">
-                        Bộ ảnh
-                      </a>
                     </div>
                     <div className="menu-item">
                       <Link to="/contribute" className="menu-link">
                         <FontAwesomeIcon icon={faGift} /> Góp ảnh
                       </Link>
-                      <a href="#" className="menu-link">
-                        Gốp phần phát triễn web
-                      </a>
                     </div>
                   </div>
                 </div>

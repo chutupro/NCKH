@@ -11,13 +11,11 @@ import Connect from "../Component/home/Connect";
 const Home = () => {
   return (
     <div>
-      <Headers />
       <Banner />
       <Exploration />
       <Connect />
       <Top />
       <Study />
-      <Footer />
     </div>
   )
 }
