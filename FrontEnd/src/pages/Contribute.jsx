@@ -1,6 +1,4 @@
 import React, { useCallback, useState } from 'react'
-import Headers from "../Component/home/Headers";
-import Footer from "../Component/home/Footer";
 import { Link } from 'react-router-dom';
 import '../Styles/Contribute/contribute.css'
 

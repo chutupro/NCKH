@@ -94,7 +94,7 @@ const Headers = () => {
         </div>
         <div className="nav-buttons">
           <button className="nav-buttonDongGop">Tham gia</button>
-          <button className="nav-buttonThamGia">Đăng Nhập</button>
+          <Link to="/login" className="nav-buttonThamGia">Đăng Nhập</Link>
         </div>
       </nav>
     </header>

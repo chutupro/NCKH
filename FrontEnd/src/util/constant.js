@@ -63,7 +63,7 @@ export const TIMELINE_ITEMS = [
     date: "1890",
     title: "Hình thành khu dân cư",
     desc: "Những cộng đồng đầu tiên sinh sống và phát triển, đặt nền tảng cho địa phương.",
-    image: "https://png.pngtree.com/background/20250104/original/pngtree-free-hd-wallpaper-4k-new-background-picture-image_15546678.jpg"
+    image: "https://tse2.mm.bing.net/th/id/OIP.HWTZraGLciX9ENut9wXjWwHaE7?pid=Api&P=0&h=220"
   },
   {
     id: 2,

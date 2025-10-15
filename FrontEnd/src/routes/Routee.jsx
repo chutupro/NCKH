@@ -7,6 +7,8 @@ import Home from '../pages/Home'
 import Contribute from '../pages/Contribute'
 import ContributeInformation from '../pages/ContributeInformation'
 import ImageLibrary from '../pages/ImageLibrary'
+import Login from '../pages/Login'
+import Register from '../pages/Register'
 
 
 
@@ -22,6 +24,8 @@ const Routee = () => {
           <Route path='/contributeinformation' element={<ContributeInformation />}></Route>
           <Route path='/ImageLibrary' element={<ImageLibrary />}></Route>
         </Route>
+          <Route path='/login' element={<Login />}></Route>
+          <Route path='/register' element={<Register />}></Route>
       </Routes>
     </div>
   )
