@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom';
-import '../Styles/Contribute/contribute.css'
+import '../../Styles/Contribute/contribute.css'
 
 const Contribute = () => {
   const [dragOver, setDragOver] = useState(false)

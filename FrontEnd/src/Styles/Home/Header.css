@@ -6,16 +6,9 @@
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
 }
-
-.app-container {
-  width: 100%;
-  min-height: 100vh;
-  padding-top: 64px;
-}
-
 .header {
   background-color: rgb(127, 129, 101);
-  padding: 15px 20px;
+  padding: 5px 20px;
   position: fixed;
   top: 0;
   left: 0;
@@ -35,6 +28,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  cursor: pointer;
 }
 
 .font-handwriting {
@@ -91,6 +85,7 @@
   font-weight: 600;
   font-size: 16px;
   transition: all 0.3s ease;
+  text-decoration: none;
 }
 
 .nav-buttonDongGop {
@@ -125,41 +120,43 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgb(129, 131, 97) ;
-  border: 1px solid #333;
+  background-color: rgb(129, 131, 97);
+  border: 1px solid rgba(0,0,0,0.45);
   border-top: none;
   border-radius: 0 0 12px 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
   z-index: 10;
-  width: 300px;
-  min-width: max-content;
+  width: auto;
+  min-width: 320px;
+  max-width: 920px;
   animation: fadeIn 0.3s ease-out;
-  margin-top: 20px;
-  padding: 30px;
+  margin-top: 8px;
+  padding: 18px 20px;
 }
 
-.container {
-  background-color: transparent;
+/* scoped inner container to avoid colliding with global .container */
+.sidebar-inner {
   display: flex;
-  gap: 20px; 
-  flex-wrap: wrap;
+  gap: 28px;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
 }
-
 
 .menu-column {
   display: flex;
   flex-direction: column;
-  min-width: 140px; 
-  flex: 1;
+  min-width: 160px;
+  flex: 1 1 0;
 }
 
 .menu-item {
   display: flex;
   flex-direction: column;
   text-align: left;
-  padding-bottom: 4px; /* slightly reduced */
-  border-bottom: 1px solid #333;
-  padding: 10px;
+  padding: 10px 6px;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+  border-radius: 6px;
 }
 
 .menu-item:last-child {
@@ -167,25 +164,25 @@
 }
 
 .menu-link {
-  color: white;
+  color: #fff;
   text-decoration: none;
   font-size: 15px;
-  padding: 2px 0; /* reduced padding so links are closer */
+  padding: 8px 6px;
   display: flex;
   align-items: center;
-  gap: 6px; /* slightly larger icon gap for readability */
-  transition: color 0.2s ease, padding-left 0.2s ease;
+  gap: 8px;
+  transition: color 0.18s ease, transform 0.12s ease;
 }
 
 .menu-link:nth-child(2) {
   font-size: 13px;
   padding-left: 20px;
-  color: white;
+  color: #fff;
 }
 
 .menu-link:hover {
-  color: #fff;
-  padding-left: 5px;
+  color: #ffdca6;
+  transform: translateX(4px);
 }
 @media (max-width: 1024px) {
   .navbar {
@@ -196,13 +193,11 @@
   }
   .sidebar {
     width: 95vw;
-    padding: 15px;
+    padding: 12px;
     left: 50%;
     transform: translateX(-50%);
   }
-  .container {
-    gap: 10px;
-  }
+  .sidebar-inner { gap: 12px }
 }
 
 @media (max-width: 768px) {

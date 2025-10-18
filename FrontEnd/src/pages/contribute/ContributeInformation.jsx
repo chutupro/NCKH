@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import '../Styles/Contribute/contributeInformation.css'
+import '../../Styles/Contribute/contributeInformation.css'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 const ContributeInformation = () => {

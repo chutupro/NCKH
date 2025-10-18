@@ -1,14 +1,16 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Lauput from '../layout/Lauput'
-import Personal from '../pages/Personal'
-import Timeline from '../pages/Timeline'
-import Home from '../pages/Home'
-import Contribute from '../pages/Contribute'
-import ContributeInformation from '../pages/ContributeInformation'
-import ImageLibrary from '../pages/ImageLibrary'
-import Login from '../pages/Login'
-import Register from '../pages/Register'
+import Personal from '../pages/common/Personal'
+import Timeline from '../pages/Timeline/Timeline'
+import Home from '../pages/common/Home'
+import Contribute from '../pages/contribute/Contribute'
+import ContributeInformation from '../pages/contribute/ContributeInformation'
+import ImageLibrary from '../pages/gallery/ImageLibrary'
+import Login from '../pages/common/Login'
+import Register from '../pages/common/Register'
+import Community from '../pages/community/Community'
+import CompareGallery from '../pages/Compare/CompareGallery'
 
 
 
@@ -23,9 +25,11 @@ const Routee = () => {
           <Route path='/contribute' element={<Contribute />}></Route>
           <Route path='/contributeinformation' element={<ContributeInformation />}></Route>
           <Route path='/ImageLibrary' element={<ImageLibrary />}></Route>
+          <Route path='/compare' element={<CompareGallery />}></Route>
         </Route>
           <Route path='/login' element={<Login />}></Route>
           <Route path='/register' element={<Register />}></Route>
+          <Route path='/community' element={<Community />}></Route>
       </Routes>
     </div>
   )

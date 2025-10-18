@@ -92,6 +92,27 @@ export const TIMELINE_ITEMS = [
     title: "Bảo tồn & Phát huy",
     desc: "Chuyển sang giai đoạn số hoá, bảo tồn di sản và lan toả giá trị đến cộng đồng thông qua nền tảng kỹ thuật số.",
     image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
-  }
+  },
+  {
+    id: 5,
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Chuyển sang giai đoạn số hoá, bảo tồn di sản và lan toả giá trị đến cộng đồng thông qua nền tảng kỹ thuật số.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  },
+  {
+    id: 5,
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Chuyển sang giai đoạn số hoá, bảo tồn di sản và lan toả giá trị đến cộng đồng thông qua nền tảng kỹ thuật số.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  },
+  {
+    id: 5,
+    date: "2025",
+    title: "Bảo tồn & Phát huy",
+    desc: "Chuyển sang giai đoạn số hoá, bảo tồn di sản và lan toả giá trị đến cộng đồng thông qua nền tảng kỹ thuật số.",
+    image: "https://images.unsplash.com/photo-1470770903676-69b98201ea1c?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=1234567890abcdef1234"
+  },
 ];
 

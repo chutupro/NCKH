@@ -1,7 +1,5 @@
-import "../Styles/Timeline/Timeline.css";
-import { TIMELINE_ITEMS } from "../util/constant";
-import Headers from "../Component/home/Headers";
-import Footer from "../Component/home/Footer";
+import "../../Styles/Timeline/Timeline.css";
+import { TIMELINE_ITEMS } from "../../util/constant";
 import React, { useMemo, useState } from "react";
 
 const Timeline = () => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import articles from '../util/mockArticles';
-import '../Styles/ImageLibrary/ImageLibrary.css';
+import articles from '../../util/mockArticles';
+import '../../Styles/ImageLibrary/ImageLibrary.css';
 
 const ImageLibraryInformation = () => {
   const { id } = useParams();
