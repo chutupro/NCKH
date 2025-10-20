@@ -1,10 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { Article } from './article.entity';
-import { User } from './user.entity';
-import { ModerationLog } from './moderation-log.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
+import { Articles } from './article.entity'; 
+import { Users } from './user.entity'; 
+import { ModerationLogs } from './moderation-log.entity'; 
 
 @Entity('Contributions')
-export class Contribution {
+export class Contributions {
   @PrimaryGeneratedColumn()
   ContributionID: number;
 
@@ -14,23 +22,24 @@ export class Contribution {
   @Column({ type: 'int', nullable: true })
   UserID: number;
 
-  @Column({ type: 'longtext', nullable: true })
+  @Column({ type: 'nvarchar', length: 'max', nullable: true })
   Content: string;
 
-  @Column({ type: 'varchar', length: 20, default: 'Pending' })
+  @Column({ type: 'varchar', length: 20, nullable: false, default: 'Pending' })
   Status: string;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'datetime' })
   SubmittedAt: Date;
 
-  @ManyToOne(() => Article, article => article.contributions)
+  // --- RELATIONS ---
+  @ManyToOne(() => Articles, (article) => article.contributions)
   @JoinColumn({ name: 'ArticleID' })
-  article: Article;
+  article: Articles;
 
-  @ManyToOne(() => User, user => user.contributions)
+  @ManyToOne(() => Users, (user) => user.contributions)
   @JoinColumn({ name: 'UserID' })
-  user: User;
+  user: Users;
 
-  @OneToMany(() => ModerationLog, moderationLog => moderationLog.contribution)
-  moderationLogs: ModerationLog[];
+  @OneToMany(() => ModerationLogs, (moderationLog) => moderationLog.contribution)
+  moderationLogs: ModerationLogs[];
 }

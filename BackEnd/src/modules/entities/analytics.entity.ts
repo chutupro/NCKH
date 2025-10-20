@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Article } from './article.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Articles } from './article.entity'; 
 
 @Entity('Analytics')
 export class Analytics {
@@ -9,16 +9,17 @@ export class Analytics {
   @Column({ type: 'int', nullable: true })
   ArticleID: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'int', nullable: true, default: 0 })
   ViewCount: number;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  @UpdateDateColumn({ type: 'datetime', nullable: true })
   UpdatedAt: Date;
 
-  @ManyToOne(() => Article, article => article.analytics)
+  // --- RELATIONS ---
+  @ManyToOne(() => Articles, (article) => article.analytics)
   @JoinColumn({ name: 'ArticleID' })
-  article: Article;
+  article: Articles;
 }

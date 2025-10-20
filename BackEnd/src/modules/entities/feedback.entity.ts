@@ -1,9 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Check } from 'typeorm';
-import { Article } from './article.entity';
-import { User } from './user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Articles } from './article.entity';
+import { Users } from './user.entity'; 
 
 @Entity('Feedback')
-@Check(`"Rating" >= 0 AND "Rating" <= 5`)
 export class Feedback {
   @PrimaryGeneratedColumn()
   FeedbackID: number;
@@ -14,20 +13,21 @@ export class Feedback {
   @Column({ type: 'int', nullable: true })
   UserID: number;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'nvarchar', length: 500, nullable: true })
   Comment: string;
 
   @Column({ type: 'int', nullable: true })
   Rating: number;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
-  @ManyToOne(() => Article, article => article.feedbacks)
+  // --- RELATIONS ---
+  @ManyToOne(() => Articles, (article) => article.feedbacks)
   @JoinColumn({ name: 'ArticleID' })
-  article: Article;
+  article: Articles;
 
-  @ManyToOne(() => User, user => user.feedbacks)
+  @ManyToOne(() => Users, (user) => user.feedbacks)
   @JoinColumn({ name: 'UserID' })
-  user: User;
+  user: Users;
 }
