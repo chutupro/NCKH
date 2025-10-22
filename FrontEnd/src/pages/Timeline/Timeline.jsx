@@ -1,0 +1,168 @@
+import "../../Styles/Timeline/Timeline.css";
+import { TIMELINE_ITEMS } from "../../util/constant";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+
+const Timeline = () => {
+  const [fromYear, setFromYear] = useState("");
+  const [toYear, setToYear] = useState("");
+  const containerRef = useRef(null);
+  const listRef = useRef(null);
+  const dragRef = useRef({
+    isDown: false,
+    startX: 0,
+    scrollLeft: 0,
+    pointerId: null,
+  });
+  const [lineWidth, setLineWidth] = useState(0);
+
+  const parsed = (v) => {
+    const n = parseInt(String(v), 10);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const filtered = useMemo(() => {
+    const f = parsed(fromYear);
+    const t = parsed(toYear);
+    return TIMELINE_ITEMS.filter((it) => {
+      const y = parsed(it.date);
+      if (y === null) return true;
+      if (f !== null && y < f) return false;
+      if (t !== null && y > t) return false;
+      return true;
+    }).sort((a, b) => parseInt(a.date, 10) - parseInt(b.date, 10));
+  }, [fromYear, toYear]);
+
+  const clearFilters = () => {
+    setFromYear("");
+    setToYear("");
+  };
+
+  const fromVal = fromYear;
+  const toVal = toYear;
+
+  const isInvalidRange = () => {
+    const f = parsed(fromYear);
+    const t = parsed(toYear);
+    return f !== null && t !== null && f > t;
+  };
+
+  // Measure timeline content width so the center line matches the content
+  useLayoutEffect(() => {
+    const measure = () => {
+      const listEl = listRef.current;
+      const containerEl = containerRef.current;
+      if (!listEl || !containerEl) return;
+      const w = Math.max(listEl.scrollWidth || 0, containerEl.clientWidth || 0);
+      setLineWidth(w);
+    };
+    // Use rAF to ensure layout has settled
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
+    // re-measure when the filtered items count changes
+  }, [filtered.length]);
+
+  // Pointer-based drag-to-scroll handlers
+  const onPointerDown = (e) => {
+    const el = containerRef.current;
+    if (!el) return;
+    dragRef.current.isDown = true;
+    dragRef.current.startX = e.clientX;
+    dragRef.current.scrollLeft = el.scrollLeft;
+    dragRef.current.pointerId = e.pointerId;
+    try {
+      el.setPointerCapture && el.setPointerCapture(e.pointerId);
+    } catch {
+      /* noop: pointer capture may not be supported */
+    }
+    el.classList.add("is-dragging");
+  };
+
+  const onPointerMove = (e) => {
+    const el = containerRef.current;
+    if (!el || !dragRef.current.isDown) return;
+    const dx = e.clientX - dragRef.current.startX;
+    el.scrollLeft = dragRef.current.scrollLeft - dx;
+    // Prevent text/image drag while panning
+    if (typeof e.preventDefault === "function") e.preventDefault();
+  };
+
+  const endDrag = () => {
+    const el = containerRef.current;
+    dragRef.current.isDown = false;
+    if (el && dragRef.current.pointerId != null) {
+      try {
+        el.releasePointerCapture && el.releasePointerCapture(dragRef.current.pointerId);
+      } catch {
+        /* noop: safe to ignore */
+      }
+      el.classList.remove("is-dragging");
+    }
+    dragRef.current.pointerId = null;
+  };
+
+  return (
+    <div>
+
+      <main className="timeline-wrapper">
+        <header className="timeline-header">
+          <h1 className="timeline-main-title">Dòng thời gian</h1>
+          <div className="timeline-search">
+            <div className="search-field">
+              <label> Từ năm </label>
+              <input
+                type="number"
+                placeholder="1890"
+                value={fromVal}
+                onChange={(e) => setFromYear(e.target.value)}
+              />
+            </div>
+            <div className="search-field">
+              <label> Đến năm </label>
+              <input
+                type="number"
+                placeholder="2025"
+                value={toVal}
+                onChange={(e) => setToYear(e.target.value)}
+              />
+            </div>
+            <div className="search-actions">
+              <button className="btn" onClick={clearFilters} type="button">Reset</button>
+            </div>
+          </div>
+          {isInvalidRange() && <div className="timeline-error">Khoảng năm không hợp lệ (từ {'>'} đến)</div>}
+        </header>
+
+        <section
+          className="timeline-container"
+          ref={containerRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerLeave={endDrag}
+        >
+          <div className="timeline-line" style={lineWidth ? { width: `${lineWidth}px` } : undefined} />
+          <ul className="timeline-list" ref={listRef}>
+            {filtered.map((item, idx) => (
+              <li className="timeline-item" key={item.id || idx}>
+                <div className="timeline-card">
+                  <div className="timeline-card-image" style={{backgroundImage: `url(${item.image})`}} />
+                  <div className="timeline-card-body">
+                    <time className="timeline-date">{item.date}</time>
+                    <h3 className="timeline-title">{item.title}</h3>
+                    <p className="timeline-desc">{item.desc}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+export default Timeline;
