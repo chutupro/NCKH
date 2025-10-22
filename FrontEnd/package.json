@@ -29,5 +29,10 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
     "vite": "^7.1.9"
-  }
+  },
+  "description": "-Node.js (v16 trở lên)\r -npm",
+  "main": "eslint.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
