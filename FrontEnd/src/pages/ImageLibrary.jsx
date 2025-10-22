@@ -1,6 +1,6 @@
-import "../../Styles/ImageLibrary/ImageLibrary.css";
+import "../Styles/ImageLibrary/ImageLibrary.css";
 import { useState, useEffect } from "react";
-import articlesData from "../../util/mockArticles";
+import articlesData from "../util/mockArticles";
 
 const PAGE_SIZE = 9;
 

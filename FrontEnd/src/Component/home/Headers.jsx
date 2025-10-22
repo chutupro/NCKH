@@ -1,29 +1,24 @@
 import React, { useRef } from 'react';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleDoubleDown, faFolder, faGift, faHome, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faAngleDoubleDown, faFolder, faGift, faGraduationCap, faHome, faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import "../../Styles/Home/Header.css";
 import useAppContext from '../../context/useAppContext';
-
+import { faDiscourse } from '@fortawesome/free-brands-svg-icons';
 import { Link } from 'react-router-dom';
 
 const Headers = () => {
   const { isSidebarOpen: isOpen, setIsSidebarOpen: setIsOpen } = useAppContext();
   const timeoutRef = useRef(null);
 
-  const handleClick = () => {
-    setIsOpen(!isOpen); // Toggle sidebar on click
+  const handleMouseEnter = () => {
+    clearTimeout(timeoutRef.current);
+    setIsOpen(true);
   };
 
   const handleMouseLeave = () => {
-    // Close sidebar when mouse leaves
     timeoutRef.current = setTimeout(() => {
       setIsOpen(false);
     }, 200);
-  };
-
-  const handleMouseEnterSidebar = () => {
-    // Prevent sidebar from closing while mouse is over it
-    clearTimeout(timeoutRef.current);
   };
 
   return (
@@ -43,7 +38,8 @@ const Headers = () => {
           </Link>
           <div
             className={`nav-item ${isOpen ? 'open' : ''}`}
-            onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
             <a className="nav-link">
               Tư liệu <FontAwesomeIcon icon={faAngleDoubleDown} />
@@ -51,15 +47,15 @@ const Headers = () => {
             {isOpen && (
               <div
                 className="sidebar"
-                onMouseEnter={handleMouseEnterSidebar}
+                onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <div className="sidebar-inner">
+                <div className="container">
                   <div className="menu-column">
                     <div className="menu-item">
-                      <Link to="/community" className="menu-link">
+                      <a href="#" className="menu-link">
                         <FontAwesomeIcon icon={faHome} /> Cộng đồng
-                      </Link>
+                      </a>
                     </div>
                     <div className="menu-item">
                       <Link to="/ImageLibrary" className="menu-link">
@@ -69,9 +65,21 @@ const Headers = () => {
                   </div>
                   <div className="menu-column">
                     <div className="menu-item">
-                      <Link to="/compare" className="menu-link">
+                      <a href="#" className="menu-link">
                         <FontAwesomeIcon icon={faRightFromBracket} /> Xưa và nay
-                      </Link>
+                      </a>
+                    </div>
+                    <div className="menu-item">
+                      <a href="#" className="menu-link">
+                        <FontAwesomeIcon icon={faGraduationCap} /> Học Tập
+                      </a>
+                    </div>
+                  </div>
+                  <div className="menu-column">
+                    <div className="menu-item">
+                      <a href="#" className="menu-link">
+                        <FontAwesomeIcon icon={faDiscourse} /> Khám Phá
+                      </a>
                     </div>
                     <div className="menu-item">
                       <Link to="/contribute" className="menu-link">
@@ -85,7 +93,7 @@ const Headers = () => {
           </div>
         </div>
         <div className="nav-buttons">
-          <Link to="/community" className="nav-buttonDongGop">Tham gia</Link>
+          <button className="nav-buttonDongGop">Tham gia</button>
           <Link to="/login" className="nav-buttonThamGia">Đăng Nhập</Link>
         </div>
       </nav>
