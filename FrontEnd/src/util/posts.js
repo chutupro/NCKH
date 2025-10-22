@@ -1,3 +1,23 @@
+/**
+ * =============================================================================
+ * POSTS - Dữ liệu cho CỘNG ĐỒNG (Community)
+ * =============================================================================
+ * Sử dụng trong:
+ * - FrontEnd/src/pages/community/Community.jsx (Hiển thị các bài đăng của cộng đồng)
+ * - FrontEnd/src/Component/Community/PostCard.jsx (Card component cho mỗi post)
+ * 
+ * Cấu trúc:
+ * - id: ID duy nhất
+ * - author: Tên người đăng
+ * - when: Thời gian đăng (string format tương đối)
+ * - category: Thể loại bài viết
+ * - text: Nội dung bài đăng
+ * - likes: Số lượt thích
+ * - image: URL hình ảnh đính kèm
+ * 
+ * Note: Đây là dữ liệu mẫu cho phần Community/Social feed
+ * =============================================================================
+ */
 const posts = [
   {
     id: 1,

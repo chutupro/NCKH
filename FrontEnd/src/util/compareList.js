@@ -1,3 +1,25 @@
+/**
+ * =============================================================================
+ * COMPARE LIST - Dữ liệu cho trang SO SÁNH XƯA - NAY
+ * =============================================================================
+ * Sử dụng trong:
+ * - FrontEnd/src/Component/Compare/CompareGallery.jsx (Gallery hiển thị tất cả ảnh so sánh)
+ * - FrontEnd/src/pages/Compare/CompareDetail.jsx (Chi tiết từng ảnh so sánh)
+ * - FrontEnd/src/pages/gallery/ImageLibraryInformation.jsx (Phần "Related Compare")
+ * 
+ * Mỗi item bao gồm:
+ * - id: ID duy nhất
+ * - title: Tên địa điểm/công trình
+ * - oldSrc: URL ảnh XƯA
+ * - newSrc: URL ảnh NAY
+ * - yearOld: Năm chụp ảnh cũ
+ * - yearNew: Năm chụp ảnh mới
+ * - category: Thể loại (Văn hóa, Kiến trúc, Du lịch, Thiên nhiên)
+ * - description: Mô tả chi tiết
+ * - historicalNote: Ghi chú lịch sử
+ * - culturalValue: Giá trị văn hóa
+ * =============================================================================
+ */
 const compareList = [
   {
     id: 1,
@@ -101,60 +123,7 @@ const compareList = [
     historicalNote: "Từ những năm 1960, khu vực này vẫn giữ được nét hoang sơ ban đầu. Với việc phát triển du lịch sinh thái, đỉnh núi đã được bảo vệ và trở thành điểm đến hấp dẫn.",
     culturalValue: "Là tài sản thiên nhiên quý giá, cần được bảo tồn và phát triển bền vững cho các thế hệ tương lai."
   },
-  {
-    id: 7,
-    title: "Khu chợ truyền thống",
-    post: "Chợ",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 58,
-    category: "Văn hóa",
-  },
-  {
-    id: 8,
-    title: "Cầu gỗ lịch sử",
-    post: "Cầu gỗ",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 92,
-    category: "Kiến trúc",
-  },
-  {
-    id: 9,
-    title: "Vịnh biển đẹp",
-    post: "Vịnh biển",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 210,
-    category: "Du lịch",
-  },
-  {
-    id: 10,
-    title: "Rừng nguyên sinh",
-    post: "Rừng",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 76,
-    category: "Thiên nhiên",
-  },
-  {
-    id: 11,
-    title: "Những mái nhà cổ",
-    post: "Mái nhà cổ",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 143,
-    category: "Kiến trúc",
-  },
-  {
-    id: 12,
-    title: "Con đường ven biển",
-    post: "Con đường ven biển",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 65,
-    category: "Du lịch",
-  },
+  
 ];
 
 export default compareList;

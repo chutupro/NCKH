@@ -1,3 +1,13 @@
+/**
+ * =============================================================================
+ * CONSTANT.JS - Các dữ liệu cố định cho ứng dụng
+ * =============================================================================
+ */
+
+// =============================================================================
+// ITEMS - Dữ liệu cũ (hiện không còn sử dụng trong UI chính)
+// =============================================================================
+// Legacy data - có thể xóa hoặc giữ lại để tham khảo
 export const items = [
   {
     title: "Tòa thị chính Đà Nẵng (nay là UBND Đà Nẵng)",
@@ -25,20 +35,28 @@ export const items = [
   }
 ];
 
-
-
+// =============================================================================
+// IMAGES - Ảnh mẫu cho banner hoặc slideshow
+// =============================================================================
+// Sử dụng trong: Banner, Hero sections, hoặc slideshow
 export const IMAGES = [
 	'https://www.agoda.com/wp-content/uploads/2024/08/son-tra-da-nang-vietnam-featured.jpg',
 	'https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg'
 ];
 
+// =============================================================================
+// TIMELINE - Metadata cho timeline (legacy - không còn sử dụng)
+// =============================================================================
 export const TIMELINE = [
 	{ label: 'Ancient Era', color: 'green' },
 	{ label: 'Colonial Period', color: 'blue' },
 	{ label: 'Modern Era', color: 'orange' }
 ];
 
-
+// =============================================================================
+// LOCATIONS - Dữ liệu địa điểm với Google Maps embed
+// =============================================================================
+// Sử dụng trong: Trang Map/Location hoặc trang detail hiển thị bản đồ
 const locations = [
   {
     name: "Cầu Vàng",
@@ -51,14 +69,35 @@ const locations = [
     mapEmbed: "https://www.google.com/maps?q=Cau+Rong+Da+Nang&output=embed"
   }
 ];
+
+// Export default cho các module cần import nhiều constant
 export default {
 	IMAGES,
 	TIMELINE,
 	locations,
 };
 
+// =============================================================================
+// TIMELINE_ITEMS - Dữ liệu cho trang DÒNG THỜI GIAN
+// =============================================================================
+// Sử dụng trong: FrontEnd/src/pages/Timeline/Timeline.jsx
+// 
+// Cấu trúc:
+// - id: ID duy nhất
+// - date: Năm (string) - dùng để sắp xếp theo thời gian
+// - title: Tiêu đề sự kiện
+// - desc: Mô tả ngắn gọn
+// - image: URL hình ảnh
+// - category: Thể loại (Kiến trúc | Văn hóa | Du lịch | Thiên nhiên)
+//
+// Có 4 categories chính, mỗi category có 6 items = tổng 24 items
+// =============================================================================
+//dữ liệu trang timeline
 export const TIMELINE_ITEMS = [
-  // Kiến trúc (6 items)
+  // =============================================================================
+  // CATEGORY: KIẾN TRÚC - 6 items
+  // =============================================================================
+  // Các công trình kiến trúc nổi bật của Đà Nẵng qua các thời kỳ
   {
     id: 1,
     date: "1930",
@@ -108,7 +147,10 @@ export const TIMELINE_ITEMS = [
     category: "Kiến trúc"
   },
 
-  // Văn hóa (6 items)
+  // =============================================================================
+  // CATEGORY: VĂN HÓA - 6 items
+  // =============================================================================
+  // Di sản văn hóa, lễ hội, bảo tàng và các sự kiện văn hóa quan trọng
   {
     id: 7,
     date: "1915",
@@ -158,7 +200,10 @@ export const TIMELINE_ITEMS = [
     category: "Văn hóa"
   },
 
-  // Du lịch (6 items)
+  // =============================================================================
+  // CATEGORY: DU LỊCH - 6 items
+  // =============================================================================
+  // Các điểm đến, khu du lịch và cơ sở hạ tầng du lịch
   {
     id: 13,
     date: "1995",
@@ -208,7 +253,10 @@ export const TIMELINE_ITEMS = [
     category: "Du lịch"
   },
 
-  // Thiên nhiên (6 items)
+  // =============================================================================
+  // CATEGORY: THIÊN NHIÊN - 6 items
+  // =============================================================================
+  // Danh lam thắng cảnh, khu bảo tồn thiên nhiên và di sản thiên nhiên
   {
     id: 19,
     date: "1825",

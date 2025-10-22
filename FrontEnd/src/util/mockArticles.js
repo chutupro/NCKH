@@ -1,3 +1,24 @@
+/**
+ * =============================================================================
+ * MOCK ARTICLES - Dữ liệu cho THƯ VIỆN ẢNH (Image Library)
+ * =============================================================================
+ * Sử dụng trong:
+ * - FrontEnd/src/pages/gallery/ImageLibrary.jsx (Gallery view)
+ * - FrontEnd/src/pages/gallery/ImageLibraryInformation.jsx (Detail view)
+ * 
+ * Cấu trúc:
+ * - id: ID duy nhất
+ * - title: Tiêu đề bài viết
+ * - date: Năm (string, trước năm 2000)
+ * - likes: Số lượt thích
+ * - category: Thể loại (Văn hóa, Kiến trúc, Du lịch, Thiên nhiên)
+ * - image: URL hình ảnh chính
+ * - description: Mô tả chi tiết
+ * - relatedCompares: Mảng ID liên kết đến compareList (hiển thị ảnh xưa-nay liên quan)
+ * 
+ * Tổng: 10 articles
+ * =============================================================================
+ */
 const articles = [
   {
     id: 1,
