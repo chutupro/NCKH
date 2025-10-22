@@ -5,6 +5,7 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 const Timeline = () => {
   const [fromYear, setFromYear] = useState("");
   const [toYear, setToYear] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Thể loại");
   const containerRef = useRef(null);
   const listRef = useRef(null);
   const dragRef = useRef({
@@ -15,6 +16,8 @@ const Timeline = () => {
   });
   const [lineWidth, setLineWidth] = useState(0);
 
+  const categories = ["Thể loại", "Tất cả", "Kiến trúc", "Văn hóa", "Du lịch", "Thiên nhiên"];
+
   const parsed = (v) => {
     const n = parseInt(String(v), 10);
     return Number.isFinite(n) ? n : null;
@@ -24,17 +27,26 @@ const Timeline = () => {
     const f = parsed(fromYear);
     const t = parsed(toYear);
     return TIMELINE_ITEMS.filter((it) => {
+      // Filter by year
       const y = parsed(it.date);
-      if (y === null) return true;
-      if (f !== null && y < f) return false;
-      if (t !== null && y > t) return false;
+      if (y !== null) {
+        if (f !== null && y < f) return false;
+        if (t !== null && y > t) return false;
+      }
+      
+      // Filter by category
+      if (selectedCategory !== "Thể loại" && selectedCategory !== "Tất cả") {
+        if (it.category !== selectedCategory) return false;
+      }
+      
       return true;
     }).sort((a, b) => parseInt(a.date, 10) - parseInt(b.date, 10));
-  }, [fromYear, toYear]);
+  }, [fromYear, toYear, selectedCategory]);
 
   const clearFilters = () => {
     setFromYear("");
     setToYear("");
+    setSelectedCategory("Thể loại");
   };
 
   const fromVal = fromYear;
@@ -136,15 +148,30 @@ const Timeline = () => {
           {isInvalidRange() && <div className="timeline-error">Khoảng năm không hợp lệ (từ {'>'} đến)</div>}
         </header>
 
-        <section
-          className="timeline-container"
-          ref={containerRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerLeave={endDrag}
-        >
-          <div className="timeline-line" style={lineWidth ? { width: `${lineWidth}px` } : undefined} />
+        <div className="timeline-content-wrapper">
+          <aside className="timeline-sidebar">
+            <h3 className="sidebar-title">{selectedCategory}</h3>
+            <ul className="category-list">
+              {categories.slice(1).map((category) => (
+                <li 
+                  key={category}
+                  className={`category-item ${selectedCategory === category ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </li>
+              ))}
+            </ul>
+          </aside>
+
+          <section
+            className="timeline-container"
+            ref={containerRef}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={endDrag}
+            onPointerLeave={endDrag}
+          >
           <ul className="timeline-list" ref={listRef}>
             {filtered.map((item, idx) => (
               <li className="timeline-item" key={item.id || idx}>
@@ -159,7 +186,9 @@ const Timeline = () => {
               </li>
             ))}
           </ul>
+          <div className="timeline-line" style={lineWidth ? { width: `${lineWidth}px` } : undefined} />
         </section>
+        </div>
       </main>
     </div>
   );

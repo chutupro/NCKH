@@ -1,5 +1,6 @@
 import "../../Styles/ImageLibrary/ImageLibrary.css";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import articlesData from "../../util/mockArticles";
 
 const PAGE_SIZE = 9;
@@ -7,28 +8,29 @@ const PAGE_SIZE = 9;
 const categories = ["Tất cả", ...Array.from(new Set(articlesData.map(a => a.category)))];
 
 const ImageLibrary = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Tất cả");
   const [sort, setSort] = useState("moi_nhat");
   const [page, setPage] = useState(1);
-  const [selectedArticle, setSelectedArticle] = useState(null);
 
   // Filter articles
   let filtered = articlesData.filter(a => {
     const matchTitle = a.title.toLowerCase().includes(search.toLowerCase());
-    const matchAuthor = a.author.toLowerCase().includes(search.toLowerCase());
+    const matchYear = a.date.includes(search);
     const matchCategory = category === "Tất cả" || a.category === category;
-    return (matchTitle || matchAuthor) && matchCategory;
+    return (matchTitle || matchYear) && matchCategory;
   });
 
   // Sort
   const handleSortChange = e => { setSort(e.target.value); setPage(1); };
-  if(sort === "luot_xem_cao_nhat"){
-    filtered = filtered.slice().sort((a,b) => b.views - a.views);
-  } else if(sort === "yeu_thich_nhat"){
+  if(sort === "yeu_thich_nhat"){
     filtered = filtered.slice().sort((a,b) => b.likes - a.likes);
+  } else if(sort === "cu_nhat"){
+    filtered = filtered.slice().sort((a,b) => parseInt(a.date) - parseInt(b.date));
   } else {
-    // newest (fallback) - assume data order is newest first
+    // newest (fallback) - sort by year descending
+    filtered = filtered.slice().sort((a,b) => parseInt(b.date) - parseInt(a.date));
   }
 
   // Pagination
@@ -44,23 +46,6 @@ const ImageLibrary = () => {
     if (page !== clampedPage) setPage(clampedPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clampedPage]);
-
-  // Close modal on Escape
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') setSelectedArticle(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  // Prevent background scroll when modal open
-  useEffect(() => {
-    if (selectedArticle) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [selectedArticle]);
 
   // Handlers
   const handleSearch = e => {
@@ -78,7 +63,7 @@ const ImageLibrary = () => {
       <div className="filters-bar">
         <input
           type="text"
-          placeholder="Tìm kiếm theo tiêu đề hoặc tác giả..."
+          placeholder="Tìm kiếm theo tiêu đề hoặc năm (VD: Chùa, 1995)..."
           value={search}
           onChange={handleSearch}
           className="search-input"
@@ -90,7 +75,7 @@ const ImageLibrary = () => {
         </select>
         <select value={sort} onChange={handleSortChange} className="category-select">
           <option value="moi_nhat">Mới nhất</option>
-          <option value="luot_xem_cao_nhat">Lượt xem cao nhất</option>
+          <option value="cu_nhat">Cũ nhất</option>
           <option value="yeu_thich_nhat">Yêu thích nhất</option>
         </select>
         <span className="result-count">Tìm thấy {filtered.length} bài viết</span>
@@ -102,8 +87,8 @@ const ImageLibrary = () => {
             className="article-card-link"
             role="button"
             tabIndex={0}
-            onClick={() => setSelectedArticle(article)}
-            onKeyDown={(e) => { if (e.key === 'Enter') setSelectedArticle(article); }}
+            onClick={() => navigate(`/ImageLibrary/${article.id}`)}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/ImageLibrary/${article.id}`); }}
           >
             <div className="article-card">
               <div className="card-image" style={{backgroundImage: `url(${article.image})`}}>
@@ -113,9 +98,7 @@ const ImageLibrary = () => {
               <div className="card-content">
                 <h3 className="card-title">{article.title}</h3>
                 <div className="card-meta">
-                  <span className="card-author">{article.author}</span>
-                  <span className="card-date">{article.date}</span>
-                  <span className="card-views">👁️ {article.views}</span>
+                  <span className="card-date">📅 Năm {article.date}</span>
                 </div>
               </div>
             </div>
@@ -123,23 +106,6 @@ const ImageLibrary = () => {
         ))}
       </div>
 
-      {/* Modal overlay for article detail */}
-      {selectedArticle && (
-        <div className="modal-overlay" onClick={() => setSelectedArticle(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelectedArticle(null)}>✕</button>
-            <div className="detail-card">
-              <div className="detail-image" style={{ backgroundImage: `url(${selectedArticle.image})` }} />
-              <div className="detail-content">
-                <h1 className="detail-title">{selectedArticle.title}</h1>
-                <div className="detail-meta">{selectedArticle.author} • {selectedArticle.date} • {selectedArticle.category}</div>
-                <div className="detail-stats">👁️ {selectedArticle.views} &nbsp; ❤️ {selectedArticle.likes}</div>
-                <p className="detail-description">{selectedArticle.description}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="pagination-bar">
         {Array.from({length: totalPages}, (_, i) => (
           <button
