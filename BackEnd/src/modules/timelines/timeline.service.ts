@@ -13,21 +13,36 @@ export class TimelineService {
     private readonly imageRepo: Repository<Images>,
   ) {}
 
-  // Lấy timeline + ảnh, trả về đúng cấu trúc frontend cần
-  async getTimelineItems() {
-    const timelines = await this.timelineRepo.find({
-      order: { EventDate: 'ASC' },
-    });
+  async getTimelineItems(categories?: string[]) {
+    const validCategories = ['Kiến trúc', 'Văn hóa', 'Du lịch', 'Thiên nhiên'];
+
+    // Lọc category hợp lệ
+    if (categories) {
+      categories = categories.filter(cat => validCategories.includes(cat));
+      if (categories.length === 0) return [];
+    }
+
+    const query = this.timelineRepo.createQueryBuilder('timeline');
+
+    if (categories) {
+      query.where('timeline.Category IN (:...categories)', { categories });
+    }
+
+    const timelines = await query.orderBy('timeline.EventDate', 'ASC').getMany();
 
     const items = await Promise.all(
       timelines.map(async (tl) => {
-        const image = await this.imageRepo.findOne({
-          where: { ArticleID: tl.ArticleID },
-        });
+        const image = await this.imageRepo.findOne({ where: { ArticleID: tl.ArticleID } });
+
+        let dateStr = '';
+        if (tl.EventDate) {
+          const eventDate = tl.EventDate instanceof Date ? tl.EventDate : new Date(tl.EventDate);
+          dateStr = eventDate.toISOString().slice(0, 10);
+        }
 
         return {
           id: tl.TimelineID,
-          date: tl.EventDate ? tl.EventDate.toString().slice(0, 4) : '',
+          date: dateStr,
           title: tl.Title,
           desc: tl.Description,
           image: image ? image.FilePath : null,
