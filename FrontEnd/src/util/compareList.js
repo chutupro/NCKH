@@ -20,110 +20,75 @@
  * - culturalValue: Giá trị văn hóa
  * =============================================================================
  */
+/**
+ * Compare list aligned with DB (ImageComparisons + Images + Articles)
+ * Fields kept for frontend convenience:
+ * - id: local id (kept for existing components)
+ * - ComparisonID: PK from ImageComparisons
+ * - HistoricalImageID, ModernImageID: FK to images table
+ * - ArticleID: related article
+ * - oldSrc/newSrc: image URLs (from Images.FilePath)
+ * - yearOld/yearNew, location, likes, category, description...
+ */
 const compareList = [
   {
     id: 1,
+    ComparisonID: 1,
+    HistoricalImageID: 201,
+    ModernImageID: 301,
+    ArticleID: 1,
     title: "Chùa Linh Ứng",
-    post: "Chùa Linh Ứng",
     oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 245,
-    category: "Văn hóa",
-    date: "15/10/2024",
-    views: 1234,
-    location: "Bán đảo Sơn Trà, Đà Nẵng",
+    newSrc: "https://statics.vinpearl.com/chua-linh-ung-da-nang-3.jpg",
     yearOld: "1950",
     yearNew: "2024",
-    description: "Chùa Linh Ứng là một trong những ngôi chùa nổi tiếng nhất tại Đà Nẵng, nằm trên bán đảo Sơn Trà. Với tượng Phật Bà Quan Âm cao 67m, chùa là điểm đến tâm linh quan trọng. Qua thời gian, chùa đã được tu bổ và mở rộng, trở thành một quần thể kiến trúc Phật giáo hiện đại nhưng vẫn giữ được nét truyền thống.",
-    historicalNote: "Chùa được xây dựng từ những năm 1950, ban đầu là một ngôi chùa nhỏ. Qua nhiều lần trùng tu, đặc biệt là giai đoạn 2004-2010, chùa đã có quy mô như ngày nay.",
-    culturalValue: "Là biểu tượng văn hóa tâm linh của Đà Nẵng, thu hút hàng triệu lượt khách hành hương và du lịch mỗi năm."
+    likes: 245,
+    category: "Văn hóa",
+    location: "Bán đảo Sơn Trà, Đà Nẵng",
+    description:
+      "So sánh hình ảnh cho thấy sự mở rộng và tu bổ của chùa qua nhiều thập kỷ.",
+    historicalNote:
+      "Ban đầu là ngôi chùa nhỏ, nhiều lần trùng tu đặc biệt sau 2004.",
+    culturalValue:
+      "Biểu tượng văn hóa - tâm linh của Đà Nẵng."
   },
   {
     id: 2,
+    ComparisonID: 2,
+    HistoricalImageID: 202,
+    ModernImageID: 302,
+    ArticleID: 2,
     title: "Cầu Rồng",
-    post: "Cầu Rồng",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 189,
-    category: "Kiến trúc",
-    date: "20/09/2024",
-    views: 2150,
-    location: "Sông Hàn, Đà Nẵng",
+    oldSrc: "https://example.com/dragon_old.jpg",
+    newSrc: "https://haycafe.vn/wp-content/uploads/2022/01/Hinh-anh-cau-Rong.jpg",
     yearOld: "2009",
     yearNew: "2024",
-    description: "Cầu Rồng là biểu tượng của Đà Nẵng hiện đại, được thiết kế theo hình rồng - linh vật của người Việt. Cầu dài 666m, rộng 37.5m, nối liền hai bờ sông Hàn. Mỗi tối cuối tuần, cầu có màn biểu diễn phun lửa và nước thu hút hàng ngàn người dân và du khách.",
-    historicalNote: "Cầu được khởi công năm 2009 và khánh thành vào ngày 29/3/2013, đúng dịp kỷ niệm 38 năm Giải phóng Đà Nẵng.",
-    culturalValue: "Là công trình kiến trúc hiện đại mang đậm bản sắc văn hóa Việt Nam, trở thành biểu tượng mới của thành phố năng động."
+    likes: 189,
+    category: "Kiến trúc",
+    location: "Sông Hàn, Đà Nẵng",
+    description: "Cầu Rồng - biểu tượng kiến trúc hiện đại của thành phố.",
+    historicalNote: "Khởi công 2009, khánh thành 2013.",
+    culturalValue: "Biểu tượng thành phố, thu hút du lịch."
   },
   {
     id: 3,
+    ComparisonID: 3,
+    HistoricalImageID: 203,
+    ModernImageID: 303,
+    ArticleID: 3,
     title: "Bãi biển Mỹ Khê",
-    post: "Bãi biển Mỹ Khê",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 156,
-    category: "Du lịch",
-    date: "05/10/2024",
-    views: 987,
-    location: "Phường Phước Mỹ, Đà Nẵng",
+    oldSrc: "https://example.com/mykhe_old.jpg",
+    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b",
     yearOld: "1970",
     yearNew: "2024",
-    description: "Bãi biển Mỹ Khê được tạp chí Forbes bình chọn là một trong những bãi biển quyến rũ nhất hành tinh. Với bờ cát trắng mịn dài 900m và làn nước trong xanh, đây là điểm đến lý tưởng cho du khách trong và ngoài nước.",
-    historicalNote: "Từng là bãi biển hoang sơ vào những năm 1970, qua nhiều giai đoạn phát triển du lịch, Mỹ Khê đã trở thành bãi biển hiện đại với đầy đủ tiện nghi.",
-    culturalValue: "Là niềm tự hào của người dân Đà Nẵng, biểu tượng cho sự phát triển du lịch bền vững của thành phố."
+    likes: 156,
+    category: "Du lịch",
+    location: "Phường Phước Mỹ, Đà Nẵng",
+    description: "Bãi biển thay đổi theo thời kỳ phát triển du lịch.",
+    historicalNote: "Từ hoang sơ tới điểm nóng du lịch.",
+    culturalValue: "Thể hiện phát triển du lịch bền vững."
   },
-  {
-    id: 4,
-    title: "Làng cổ ven sông",
-    post: "Làng cổ",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 101,
-    category: "Văn hóa",
-    date: "12/09/2024",
-    views: 876,
-    location: "Làng Cẩm Kim, Đà Nẵng",
-    yearOld: "1920",
-    yearNew: "2024",
-    description: "Làng cổ ven sông là nơi lưu giữ nhiều nét văn hóa truyền thống của người dân miền Trung. Với những ngôi nhà cổ kính, đường làng nhỏ hẹp và dòng sông thơ mộng, làng cổ mang đến cảm giác yên bình, gần gũi với thiên nhiên.",
-    historicalNote: "Làng được hình thành từ đầu thế kỷ 20, là nơi cư trú của nhiều thế hệ ngư dân và thợ thủ công. Qua thời gian, làng vẫn giữ được nét đẹp truyền thống đặc trưng.",
-    culturalValue: "Là di sản văn hóa phi vật thể quý giá, thể hiện lối sống hòa mình với thiên nhiên của người dân miền sông nước."
-  },
-  {
-    id: 5,
-    title: "Cổng thành cổ",
-    post: "Cổng thành",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 87,
-    category: "Kiến trúc",
-    date: "28/08/2024",
-    views: 654,
-    location: "Trung tâm thành phố, Đà Nẵng",
-    yearOld: "1890",
-    yearNew: "2024",
-    description: "Cổng thành cổ là một trong những di tích kiến trúc quân sự còn sót lại từ thời Pháp thuộc. Với kiến trúc đặc trưng của phong cách châu Âu kết hợp yếu tố Đông Nam Á, cổng thành là minh chứng lịch sử quan trọng của thành phố.",
-    historicalNote: "Được xây dựng vào cuối thế kỷ 19 với mục đích phòng thủ, cổng thành đã trải qua nhiều lần trùng tu và bảo tồn. Hiện nay, đây là điểm tham quan lịch sử hấp dẫn.",
-    culturalValue: "Biểu tượng của thời kỳ lịch sử đặc biệt, là bài học về bảo tồn di sản kiến trúc cho thế hệ sau."
-  },
-  {
-    id: 6,
-    title: "Đỉnh núi mùa",
-    post: "Đỉnh núi",
-    oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?q=80&w=1600&auto=format&fit=crop&ixlib=rb-4.0.3&s=6b4b9d5d5c3d3a2d1f0a",
-    likes: 134,
-    category: "Thiên nhiên",
-    date: "18/08/2024",
-    views: 1098,
-    location: "Ngũ Hành Sơn, Đà Nẵng",
-    yearOld: "1960",
-    yearNew: "2024",
-    description: "Đỉnh núi mùa mang vẻ đẹp hoang sơ, hùng vĩ với những vách đá dựng đứng và rừng xanh bao phủ. Đây là điểm đến lý tưởng cho những ai yêu thích leo núi và khám phá thiên nhiên hoang dã.",
-    historicalNote: "Từ những năm 1960, khu vực này vẫn giữ được nét hoang sơ ban đầu. Với việc phát triển du lịch sinh thái, đỉnh núi đã được bảo vệ và trở thành điểm đến hấp dẫn.",
-    culturalValue: "Là tài sản thiên nhiên quý giá, cần được bảo tồn và phát triển bền vững cho các thế hệ tương lai."
-  },
-  
+  // thêm item khác nếu cần...
 ];
 
 export default compareList;

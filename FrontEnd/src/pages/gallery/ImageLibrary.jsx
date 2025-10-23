@@ -5,8 +5,6 @@ import articlesData from "../../util/mockArticles";
 
 const PAGE_SIZE = 9;
 
-const categories = ["Tất cả", ...Array.from(new Set(articlesData.map(a => a.category)))];
-
 const ImageLibrary = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -14,48 +12,40 @@ const ImageLibrary = () => {
   const [sort, setSort] = useState("moi_nhat");
   const [page, setPage] = useState(1);
 
-  // Filter articles
+  const categories = ["Tất cả", ...Array.from(new Set(articlesData.map(a => a.categoryName)))];
+
+  // Filter articles (search against Title and year in CreatedAt)
   let filtered = articlesData.filter(a => {
-    const matchTitle = a.title.toLowerCase().includes(search.toLowerCase());
-    const matchYear = a.date.includes(search);
-    const matchCategory = category === "Tất cả" || a.category === category;
+    const matchTitle = a.Title.toLowerCase().includes(search.toLowerCase());
+    const year = a.CreatedAt ? new Date(a.CreatedAt).getFullYear().toString() : "";
+    const matchYear = year.includes(search);
+    const matchCategory = category === "Tất cả" || a.categoryName === category;
     return (matchTitle || matchYear) && matchCategory;
   });
 
   // Sort
   const handleSortChange = e => { setSort(e.target.value); setPage(1); };
-  if(sort === "yeu_thich_nhat"){
-    filtered = filtered.slice().sort((a,b) => b.likes - a.likes);
-  } else if(sort === "cu_nhat"){
-    filtered = filtered.slice().sort((a,b) => parseInt(a.date) - parseInt(b.date));
+  if (sort === "yeu_thich_nhat") {
+    filtered = filtered.slice().sort((a, b) => (b.likes || 0) - (a.likes || 0));
+  } else if (sort === "cu_nhat") {
+    filtered = filtered.slice().sort((a, b) => new Date(a.CreatedAt) - new Date(b.CreatedAt));
   } else {
-    // newest (fallback) - sort by year descending
-    filtered = filtered.slice().sort((a,b) => parseInt(b.date) - parseInt(a.date));
+    filtered = filtered.slice().sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
   }
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-
-  // Ensure current page is within bounds. Use a clamped page for slicing so
-  // we never render more than PAGE_SIZE items even if `page` was stale.
   const clampedPage = Math.min(Math.max(1, page), totalPages);
   const paginated = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
-  // Keep UI state in sync: if `page` is out of range (e.g. after filtering), update it.
   useEffect(() => {
     if (page !== clampedPage) setPage(clampedPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clampedPage]);
 
   // Handlers
-  const handleSearch = e => {
-    setSearch(e.target.value);
-    setPage(1);
-  };
-  const handleCategory = e => {
-    setCategory(e.target.value);
-    setPage(1);
-  };
+  const handleSearch = e => { setSearch(e.target.value); setPage(1); };
+  const handleCategory = e => { setCategory(e.target.value); setPage(1); };
   const handlePage = p => setPage(p);
 
   return (
@@ -80,40 +70,44 @@ const ImageLibrary = () => {
         </select>
         <span className="result-count">Tìm thấy {filtered.length} bài viết</span>
       </div>
+
       <div className="articles-grid">
-        {paginated.map(article => (
-          <div
-            key={article.id}
-            className="article-card-link"
-            role="button"
-            tabIndex={0}
-            onClick={() => navigate(`/ImageLibrary/${article.id}`)}
-            onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/ImageLibrary/${article.id}`); }}
-          >
-            <div className="article-card">
-              <div className="card-image" style={{backgroundImage: `url(${article.image})`}}>
-                <span className="card-category">{article.category}</span>
-                <span className="card-likes">❤️ {article.likes}</span>
-              </div>
-              <div className="card-content">
-                <h3 className="card-title">{article.title}</h3>
-                <div className="card-meta">
-                  <span className="card-date">📅 Năm {article.date}</span>
+        {paginated.map(article => {
+          const mainImage = article.images && article.images.length ? article.images[0].FilePath : '';
+          return (
+            <div
+              key={article.ArticleID}
+              className="article-card-link"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/ImageLibrary/${article.ArticleID}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/ImageLibrary/${article.ArticleID}`); }}
+            >
+              <div className="article-card">
+                <div className="card-image" style={{ backgroundImage: `url(${mainImage})` }}>
+                  <span className="card-category">{article.categoryName}</span>
+                  <span className="card-likes">❤️ {article.likes || 0}</span>
+                </div>
+                <div className="card-content">
+                  <h3 className="card-title">{article.Title}</h3>
+                  <div className="card-meta">
+                    <span className="card-date">📅 Năm {new Date(article.CreatedAt).getFullYear()}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="pagination-bar">
-        {Array.from({length: totalPages}, (_, i) => (
+        {Array.from({ length: totalPages }, (_, i) => (
           <button
-            key={i+1}
-            className={page === i+1 ? "active" : ""}
-            onClick={() => handlePage(i+1)}
+            key={i + 1}
+            className={page === i + 1 ? "active" : ""}
+            onClick={() => handlePage(i + 1)}
           >
-            {i+1}
+            {i + 1}
           </button>
         ))}
       </div>

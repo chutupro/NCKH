@@ -19,107 +19,100 @@
  * Tổng: 10 articles
  * =============================================================================
  */
+ /**
+ * Mock data aligned with your database schema (ArticleID, Images, MapLocations, Timelines...)
+ * Fields:
+ * - ArticleID, Title, Content, Language, CreatedAt, UpdatedAt, UserID, CategoryID
+ * - images: array of objects matching Images table (ImageID, FilePath, AltText, Type)
+ * - likes, categoryName, description, relatedCompareIds (reference to compareList ids)
+ */
 const articles = [
   {
-    id: 1,
-    title: "Chùa Linh Ứng - Bán đảo Sơn Trà",
-    date: "1995",
+    ArticleID: 1,
+    Title: "Chùa Linh Ứng - Bán đảo Sơn Trà",
+    Content: "Chùa Linh Ứng trên bán đảo Sơn Trà là một trong những ngôi chùa nổi tiếng nhất ở Đà Nẵng...",
+    Language: "vi",
+    CreatedAt: "1995-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 1,
+    CategoryID: 1,
+    categoryName: "Văn hóa",
     likes: 1234,
-    category: "Văn hóa",
-    image: "https://statics.vinpearl.com/chua-linh-ung-da-nang-3.jpg",
-    description: "Chùa Linh Ứng trên bán đảo Sơn Trà là một trong những ngôi chùa nổi tiếng nhất ở Đà Nẵng, nổi bật với tượng Bồ Tát cao và tầm nhìn ra biển.",
-    relatedCompares: [1] // ID từ compareList
+    description: "Nổi bật với tượng Bồ Tát cao và tầm nhìn ra biển.",
+    images: [
+      { ImageID: 101, FilePath: "https://statics.vinpearl.com/chua-linh-ung-da-nang-3.jpg", AltText: "Chùa Linh Ứng", Type: "main" }
+    ],
+    relatedCompareIds: [1]
   },
   {
-    id: 2,
-    title: "Cầu Rồng - Biểu tượng của Đà Nẵng",
-    date: "1998",
+    ArticleID: 2,
+    Title: "Cầu Rồng - Biểu tượng của Đà Nẵng",
+    Content: "Cầu Rồng được thiết kế như một con rồng phun lửa và phun nước...",
+    Language: "vi",
+    CreatedAt: "1998-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 2,
+    CategoryID: 2,
+    categoryName: "Kiến trúc",
     likes: 987,
-    category: "Kiến trúc",
-    image: "https://haycafe.vn/wp-content/uploads/2022/01/Hinh-anh-cau-Rong.jpg",
-    description: "Cầu Rồng được thiết kế như một con rồng phun lửa và phun nước vào cuối tuần, là điểm đến hấp dẫn cho cả du khách và người dân địa phương.",
-    relatedCompares: [2]
+    description: "Điểm đến hấp dẫn cho cả du khách và người dân địa phương.",
+    images: [
+      { ImageID: 102, FilePath: "https://haycafe.vn/wp-content/uploads/2022/01/Hinh-anh-cau-Rong.jpg", AltText: "Cầu Rồng", Type: "main" }
+    ],
+    relatedCompareIds: [2]
   },
   {
-    id: 3,
-    title: "Bà Nà Hills - Thiên đường nghỉ dưỡng",
-    date: "1992",
+    ArticleID: 3,
+    Title: "Bà Nà Hills - Thiên đường nghỉ dưỡng",
+    Content: "Bà Nà Hills nổi tiếng với khí hậu mát mẻ và kiến trúc châu Âu giả tưởng...",
+    Language: "vi",
+    CreatedAt: "1992-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 3,
+    CategoryID: 3,
+    categoryName: "Du lịch",
     likes: 1456,
-    category: "Du lịch",
-    image: "https://cdn3.ivivu.com/2024/04/sun-world-ba-na-hills-ivivu45.jpg",
-    description: "Bà Nà Hills nổi tiếng với khí hậu mát mẻ, khu vui chơi và kiến trúc châu Âu giả tưởng, phù hợp cho các chuyến dã ngoại gia đình.",
-    relatedCompares: [3]
+    description: "Phù hợp cho các chuyến dã ngoại gia đình.",
+    images: [
+      { ImageID: 103, FilePath: "https://cdn3.ivivu.com/2024/04/sun-world-ba-na-hills-ivivu45.jpg", AltText: "Bà Nà Hills", Type: "main" }
+    ],
+    relatedCompareIds: [3]
   },
   {
-    id: 4,
-    title: "Phố cổ Hội An - Di sản văn hóa",
-    date: "1987",
+    ArticleID: 4,
+    Title: "Phố cổ Hội An - Di sản văn hóa",
+    Content: "Phố cổ Hội An giữ được nhiều nét kiến trúc truyền thống...",
+    Language: "vi",
+    CreatedAt: "1987-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 4,
+    CategoryID: 1,
+    categoryName: "Văn hóa",
     likes: 652,
-    category: "Văn hóa",
-    image: "https://focusasiatravel.vn/wp-content/uploads/2018/09/Ph%E1%BB%91-C%E1%BB%95-H%E1%BB%99i-An1.jpg",
-    description: "Phố cổ Hội An giữ được nhiều nét kiến trúc truyền thống, đèn lồng rực rỡ và ẩm thực đặc sắc, là nơi dừng chân không thể bỏ qua ở miền Trung.",
-    relatedCompares: [4, 11]
+    description: "Đèn lồng rực rỡ và ẩm thực đặc sắc.",
+    images: [
+      { ImageID: 104, FilePath: "https://focusasiatravel.vn/wp-content/uploads/2018/09/Ph%E1%BB%91-C%E1%BB%95-H%E1%BB%99i-An1.jpg", AltText: "Phố cổ Hội An", Type: "main" }
+    ],
+    relatedCompareIds: [4, 11]
   },
   {
-    id: 5,
-    title: "Đồi chè Cầu Đất - Lâm Đồng",
-    date: "1990",
+    ArticleID: 5,
+    Title: "Đồi chè Cầu Đất - Lâm Đồng",
+    Content: "Đồi chè Cầu Đất trải dài bát ngát...",
+    Language: "vi",
+    CreatedAt: "1990-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 5,
+    CategoryID: 4,
+    categoryName: "Thiên nhiên",
     likes: 321,
-    category: "Thiên nhiên",
-    image: "https://dalattrongtim.com/wp-content/uploads/2022/07/doi-che-cau-dat-2.jpg",
-    description: "Đồi chè Cầu Đất trải dài bát ngát, thời tiết mát mẻ, phù hợp để chụp ảnh và trải nghiệm không gian đồng quê yên bình.",
-    relatedCompares: [6, 10]
+    description: "Thời tiết mát mẻ, phù hợp để chụp ảnh.",
+    images: [
+      { ImageID: 105, FilePath: "https://dalattrongtim.com/wp-content/uploads/2022/07/doi-che-cau-dat-2.jpg", AltText: "Đồi chè Cầu Đất", Type: "main" }
+    ],
+    relatedCompareIds: [6, 10]
   },
-  {
-    id: 6,
-    title: "Thác Bản Giốc - Kỳ quan miền Bắc",
-    date: "1985",
-    likes: 890,
-    category: "Thiên nhiên",
-    image: "https://photo-cms-plo.epicdn.me/Uploaded/2023/lcemdurlq/2022_10_16/thac-ba-gioc3-3757.jpg",
-    description: "Thác Bản Giốc nằm trên biên giới Việt-Trung, mang vẻ hùng vĩ và nước chảy trắng xóa, là một trong những thắng cảnh đáng xem.",
-    relatedCompares: [6]
-  },
-  {
-    id: 7,
-    title: "Nhà thờ Đức Bà - Sài Gòn",
-    date: "1993",
-    likes: 1102,
-    category: "Kiến trúc",
-    image: "https://tse2.mm.bing.net/th/id/OIP.iVCPDGJoDJDAO--wsKfvtAHaEo?pid=Api&P=0&h=220",
-    description: "Nhà thờ Đức Bà là một công trình kiến trúc Pháp tiêu biểu giữa lòng TP.HCM, thu hút nhiều khách tham quan và nhiếp ảnh gia.",
-    relatedCompares: [5, 8]
-  },
-  {
-    id: 8,
-    title: "Đà Lạt - Thành phố ngàn hoa",
-    date: "1988",
-    likes: 980,
-    category: "Du lịch",
-    image: "https://tse1.mm.bing.net/th/id/OIP.5zDQ4NXe8MNybDiPy7i0tgHaEF?pid=Api&P=0&h=220",
-    description: "Đà Lạt nổi tiếng với khí hậu ôn hòa, hoa và rừng thông, là điểm nghỉ dưỡng lãng mạn của nhiều cặp đôi.",
-    relatedCompares: [9, 12]
-  },
-  {
-    id: 9,
-    title: "Hồ Hoàn Kiếm - Trái tim Hà Nội",
-    date: "1991",
-    likes: 2100,
-    category: "Văn hóa",
-    image: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
-    description: "Hồ Hoàn Kiếm là biểu tượng của Hà Nội, thích hợp cho các buổi dạo bộ, chụp ảnh và tìm hiểu lịch sử Tháp Rùa.",
-    relatedCompares: [7]
-  },
-  {
-    id: 10,
-    title: "Cồn Cát Mũi Né - Trải nghiệm sa mạc",
-    date: "1996",
-    likes: 410,
-    category: "Du lịch",
-    image: "https://tse2.mm.bing.net/th/id/OIP.HWTZraGLciX9ENut9wXjWwHaE7?pid=Api&P=0&h=220",
-    description: "Cồn cát Mũi Né cung cấp trải nghiệm trượt cát và ngắm bình minh, rất thú vị cho du khách ưa mạo hiểm.",
-    relatedCompares: [3, 9]
-  }
+  // ... thêm bài khác nếu cần (giữ cấu trúc tương tự)
 ];
 
 export default articles;
