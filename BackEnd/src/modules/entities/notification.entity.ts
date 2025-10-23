@@ -12,8 +12,9 @@ export class Notifications {
   @Column({ type: 'nvarchar', length: 255, nullable: true })
   Message: string;
 
-  @Column({ type: 'bit', nullable: true, default: 0 })
+ @Column({ type: 'tinyint', width: 1, default: 0 })
   IsRead: boolean;
+
 
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;

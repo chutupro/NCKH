@@ -28,7 +28,7 @@ export class Articles {
   @Column({ type: 'nvarchar', length: 200, nullable: false })
   Title: string;
 
-  @Column({ type: 'nvarchar', length: 'max', nullable: true })
+  @Column({ type: 'nvarchar', length: '255', nullable: true })
   Content: string;
 
   @Column({ type: 'varchar', length: 10, nullable: false, default: 'vi' })

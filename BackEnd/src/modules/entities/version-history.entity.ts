@@ -13,7 +13,7 @@ export class VersionHistory {
   @Column({ type: 'int', nullable: true })
   UserID: number;
 
-  @Column({ type: 'nvarchar', length: 'max', nullable: true })
+  @Column({ type: 'nvarchar', length: 100, nullable: true })
   Changes: string;
 
   @CreateDateColumn({ type: 'datetime' })

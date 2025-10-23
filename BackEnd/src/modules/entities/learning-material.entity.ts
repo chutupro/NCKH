@@ -1,15 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { Categories } from './category.entity'; 
+  import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+  import { Categories } from './category.entity'; 
 
-@Entity('LearningMaterials')
-export class LearningMaterials {
+ @Entity('learning_materials')
+  export class LearningMaterials {
   @PrimaryGeneratedColumn()
   MaterialID: number;
 
-  @Column({ type: 'nvarchar', length: 200, nullable: false })
+  @Column({ type: 'nvarchar', length: 200 })
   Title: string;
 
-  @Column({ type: 'nvarchar', length: 'max', nullable: true })
+  @Column({ type: 'nvarchar', length: 50, nullable: true })
   Content: string;
 
   @Column({ type: 'nvarchar', length: 50, nullable: true })
@@ -21,7 +21,6 @@ export class LearningMaterials {
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Categories, (category) => category.learningMaterials)
   @JoinColumn({ name: 'CategoryID' })
   category: Categories;

@@ -22,7 +22,7 @@ export class Contributions {
   @Column({ type: 'int', nullable: true })
   UserID: number;
 
-  @Column({ type: 'nvarchar', length: 'max', nullable: true })
+  @Column({ type: 'nvarchar', length: 20, nullable: true })
   Content: string;
 
   @Column({ type: 'varchar', length: 20, nullable: false, default: 'Pending' })
