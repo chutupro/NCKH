@@ -1,28 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Articles } from '../entities/article.entity';
-import { Users } from '../entities/user.entity';
-import { UserProfiles } from '../entities/user-profile.entity';
-import { Categories } from '../entities/category.entity';
-import { Images } from '../entities/image.entity';
-import { Analytics } from '../entities/analytics.entity';
-import { Likes } from '../entities/like.entity';
-import { ArticleService } from './article.service';
 import { ArticleController } from './article.controller';
+import { ArticleService } from './article.service';
+import { Articles } from '../entities/article.entity';
+import { Images } from '../entities/image.entity';
+import { Categories } from '../entities/category.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Articles,
-      Users,
-      UserProfiles,
-      Categories,
-      Images,
-      Analytics,
-      Likes,
-    ]),
-  ],
-  providers: [ArticleService],
+  imports: [TypeOrmModule.forFeature([Articles, Images, Categories])],
   controllers: [ArticleController],
+  providers: [ArticleService],
+  exports: [ArticleService],
 })
 export class ArticleModule {}

@@ -18,6 +18,7 @@ import { VersionHistory } from 'src/modules/entities/version-history.entity';
 import { Notifications } from 'src/modules/entities/notification.entity';
 import { MapLocations } from 'src/modules/entities/map-location.entity';
 import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
+import { ImageComparison } from '../modules/entities/image-comparison.entity'; // <-- thêm nếu cần
 
 @Module({
   imports: [
@@ -52,8 +53,9 @@ import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
           MapLocations,
           Notifications,
           ModerationLogs,
+          ImageComparison, 
         ],
-        synchronize: false,
+        synchronize: false, // <-- turn off automatic schema sync in dev when tables conflict
         logging: false,
       }),
       inject: [ConfigService],
