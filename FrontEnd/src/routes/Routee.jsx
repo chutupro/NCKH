@@ -1,3 +1,4 @@
+// src/routes/Routee.jsx
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Lauput from '../layout/Lauput'
@@ -12,30 +13,35 @@ import Login from '../pages/common/Login'
 import Register from '../pages/common/Register'
 import Community from '../pages/community/Community'
 import CompareGallery from '../pages/Compare/CompareGallery'
-import CompareDetail from '../pages/Compare/CompareDetail'
+import CompareDetail from '../pages/Compare/CompareDetail' // ĐÃ SỬA
 
-
+// Bản đồ
+import MapPage from '../pages/map/MapPage'
 
 const Routee = () => {
   return (
-    <div>
-      <Routes>
-        <Route path='/' element={<Lauput />}>
-          <Route index element={<Home />} />
-          <Route path='/Personal' element={<Personal />}></Route>
-          <Route path='/timeline' element={<Timeline />}></Route>
-          <Route path='/contribute' element={<Contribute />}></Route>
-          <Route path='/contributeinformation' element={<ContributeInformation />}></Route>
-          <Route path='/ImageLibrary' element={<ImageLibrary />}></Route>
-          <Route path='/ImageLibrary/:id' element={<ImageLibraryInformation />}></Route>
-          <Route path='/compare' element={<CompareGallery />}></Route>
-          <Route path='/compare/:id' element={<CompareDetail />}></Route>
-          <Route path='/community' element={<Community />}></Route>
-        </Route>
-          <Route path='/login' element={<Login />}></Route>
-          <Route path='/register' element={<Register />}></Route>
-      </Routes>
-    </div>
+    <Routes>
+      {/* TRANG CÓ LAYOUT */}
+      <Route element={<Lauput />}>
+        <Route index element={<Home />} />
+        <Route path='/Personal' element={<Personal />} />
+        <Route path='/timeline' element={<Timeline />} />
+        <Route path='/contribute' element={<Contribute />} />
+        <Route path='/contributeinformation' element={<ContributeInformation />} />
+        <Route path='/ImageLibrary' element={<ImageLibrary />} />
+        <Route path='/ImageLibrary/:id' element={<ImageLibraryInformation />} />
+        <Route path='/compare' element={<CompareGallery />} />
+        <Route path='/compare/:id' element={<CompareDetail />} />
+        <Route path='/community' element={<Community />} />
+      </Route>
+
+      {/* TRANG KHÔNG LAYOUT */}
+      <Route path='/login' element={<Login />} />
+      <Route path='/register' element={<Register />} />
+
+      {/* BẢN ĐỒ: FULL MÀN HÌNH */}
+      <Route path='/map' element={<MapPage />} />
+    </Routes>
   )
 }
 
