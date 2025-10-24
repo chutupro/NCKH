@@ -13,9 +13,7 @@ const Headers = () => {
           <Link to="/" className="nav-link">
             Trang chủ
           </Link>
-          <a href="#" className="nav-link">
-            Bản đồ
-          </a>
+          <Link to="/map" className="nav-link">Bản đồ</Link>
           <Link to="/timeline" className="nav-link">
             Timeline
           </Link>
