@@ -1,9 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Contribution } from './contribution.entity';
-import { User } from './user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Contributions } from './contribution.entity'; 
+import { Users } from './user.entity'; 
 
 @Entity('ModerationLogs')
-export class ModerationLog {
+export class ModerationLogs {
   @PrimaryGeneratedColumn()
   LogID: number;
 
@@ -16,17 +16,18 @@ export class ModerationLog {
   @Column({ type: 'varchar', length: 50, nullable: true })
   Action: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'nvarchar', length: 255, nullable: true })
   Reason: string;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'datetime' })
   Timestamp: Date;
 
-  @ManyToOne(() => Contribution, contribution => contribution.moderationLogs)
+  // --- RELATIONS ---
+  @ManyToOne(() => Contributions, (contribution) => contribution.moderationLogs)
   @JoinColumn({ name: 'ContributionID' })
-  contribution: Contribution;
+  contribution: Contributions;
 
-  @ManyToOne(() => User, user => user.moderationLogs)
+  @ManyToOne(() => Users, (user) => user.moderationLogs)
   @JoinColumn({ name: 'ModeratorID' })
-  moderator: User;
+  moderator: Users;
 }

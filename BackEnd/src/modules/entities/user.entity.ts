@@ -1,47 +1,73 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
-import { Role } from './role.entity';
-import { Article } from './article.entity';
-import { Contribution } from './contribution.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToOne,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
+import { Articles } from './article.entity';
+import { Comments } from './comment.entity'; 
+import { Contributions } from './contribution.entity'; 
 import { Feedback } from './feedback.entity';
-import { ModerationLog } from './moderation-log.entity';
-import { VersionHistory } from './version-history.entity';
+import { Likes } from './like.entity';
+import { ModerationLogs } from './moderation-log.entity'; 
+import { Notifications } from './notification.entity';
+import { UserProfiles } from './user-profile.entity'; 
+import { VersionHistory } from './version-history.entity'; 
+import { Roles } from './role.entity'; 
 
 @Entity('Users')
-export class User {
+export class Users {
   @PrimaryGeneratedColumn()
   UserID: number;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   Email: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   PasswordHash: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'nvarchar', length: 100, nullable: false })
   FullName: string;
 
   @Column({ type: 'int', nullable: true })
   RoleID: number;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
-  @ManyToOne(() => Role, role => role.users)
-  @JoinColumn({ name: 'RoleID' })
-  role: Role;
+  // --- RELATIONS ---
+  @OneToOne(() => UserProfiles, (profile) => profile.user)
+  profile: UserProfiles;
 
-  @OneToMany(() => Article, article => article.user)
-  articles: Article[];
+  @OneToMany(() => Articles, (article) => article.user)
+  articles: Articles[];
 
-  @OneToMany(() => Contribution, contribution => contribution.user)
-  contributions: Contribution[];
+  @OneToMany(() => Comments, (comment) => comment.user)
+  comments: Comments[];
 
-  @OneToMany(() => Feedback, feedback => feedback.user)
+  @OneToMany(() => Contributions, (contribution) => contribution.user)
+  contributions: Contributions[];
+
+  @OneToMany(() => Feedback, (feedback) => feedback.user)
   feedbacks: Feedback[];
 
-  @OneToMany(() => ModerationLog, moderationLog => moderationLog.moderator)
-  moderationLogs: ModerationLog[];
+  @OneToMany(() => Likes, (like) => like.user)
+  likes: Likes[];
 
-  @OneToMany(() => VersionHistory, versionHistory => versionHistory.user)
-  versionHistories: VersionHistory[];
+  @OneToMany(() => ModerationLogs, (log) => log.moderator)
+  moderationLogs: ModerationLogs[];
+
+  @OneToMany(() => Notifications, (notification) => notification.user)
+  notifications: Notifications[];
+
+  @OneToMany(() => VersionHistory, (versionHistory) => versionHistory.user)
+  versionHistory: VersionHistory[];
+
+  @ManyToOne(() => Roles, (role) => role.users)
+  @JoinColumn({ name: 'RoleID' })
+  role: Roles;
 }

@@ -8,7 +8,7 @@ const ImageLibraryInformation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const articleId = Number(id);
-  const article = articles.find(a => a.id === articleId);
+  const article = articles.find(a => a.ArticleID === articleId);
 
   if (!article) {
     return (
@@ -21,14 +21,17 @@ const ImageLibraryInformation = () => {
     );
   }
 
-  // Get related compare items
-  const relatedCompares = article.relatedCompares 
-    ? compareList.filter(c => article.relatedCompares.includes(c.id)).slice(0, 2)
-    : [];
+  // main image from Images.FilePath
+  const mainImage = article.images && article.images.length ? article.images[0].FilePath : '';
+
+  // related compares: article.relatedCompareIds may reference compareList.id or ComparisonID
+  const relatedCompares = (article.relatedCompareIds || [])
+    .map(refId => compareList.find(c => c.id === refId || c.ComparisonID === refId))
+    .filter(Boolean)
+    .slice(0, 2);
 
   return (
     <div className="lib-info-container">
-      {/* Header with back button */}
       <div className="lib-info-header">
         <button onClick={() => navigate(-1)} className="back-btn">
           <span>←</span> Quay lại
@@ -38,35 +41,40 @@ const ImageLibraryInformation = () => {
           <span>/</span>
           <Link to="/ImageLibrary">Thư viện ảnh</Link>
           <span>/</span>
-          <span>{article.title}</span>
+          <span>{article.Title}</span>
         </div>
       </div>
 
-      {/* Hero Section */}
       <div className="lib-info-hero">
-        <div className="hero-image" style={{ backgroundImage: `url(${article.image})` }}>
+        <div className="hero-image" style={{ backgroundImage: `url(${mainImage})` }}>
           <div className="hero-overlay">
-            <span className="hero-category">{article.category}</span>
+            <span className="hero-category">{article.categoryName}</span>
           </div>
         </div>
         <div className="hero-content">
-          <h1 className="hero-title">{article.title}</h1>
+          <h1 className="hero-title">{article.Title}</h1>
           <div className="hero-meta">
-            <span className="meta-item">📅 Năm {article.date}</span>
-            <span className="meta-item">❤️ {article.likes} lượt thích</span>
+            <span className="meta-item">📅 Năm {new Date(article.CreatedAt).getFullYear()}</span>
+            <span className="meta-item">❤️ {article.likes || 0} lượt thích</span>
           </div>
-          <p className="hero-description">{article.description}</p>
+          <p className="hero-description">{article.description || article.Content}</p>
         </div>
       </div>
 
-      {/* Related Compare Section */}
       {relatedCompares.length > 0 && (
         <div className="related-section">
           <h2 className="section-title">Ảnh Xưa và Nay</h2>
           <p className="section-subtitle">Khám phá sự thay đổi qua thời gian</p>
           <div className="compare-grid">
             {relatedCompares.map(compare => (
-              <div key={compare.id} className="compare-item" onClick={() => navigate(`/compare/${compare.id}`)}>
+              <div
+                key={compare.ComparisonID ?? compare.id}
+                className="compare-item"
+                onClick={() => navigate(`/compare/${compare.id ?? compare.ComparisonID}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/compare/${compare.id ?? compare.ComparisonID}`); }}
+              >
                 <div className="compare-images">
                   <div className="compare-old">
                     <img src={compare.oldSrc} alt={`${compare.title} - Xưa`} />
@@ -92,7 +100,6 @@ const ImageLibraryInformation = () => {
         </div>
       )}
 
-      {/* Call to Action */}
       <div className="cta-section">
         <h3>Khám phá thêm</h3>
         <div className="cta-buttons">

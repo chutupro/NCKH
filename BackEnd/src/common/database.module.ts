@@ -1,18 +1,23 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { 
-  Role, 
-  User, 
-  Article, 
-  Analytics, 
-  Contribution, 
-  Feedback, 
-  Image, 
-  ModerationLog, 
-  Timeline, 
-  VersionHistory 
-} from '../modules/entities';
+import { Roles } from 'src/modules/entities/role.entity';
+import { Users } from 'src/modules/entities/user.entity';
+import { UserProfiles } from 'src/modules/entities/user-profile.entity';
+import { Articles } from 'src/modules/entities/article.entity';
+import { Categories } from 'src/modules/entities/category.entity';
+import { Comments } from 'src/modules/entities/comment.entity';
+import { Likes } from 'src/modules/entities/like.entity';
+import { Analytics } from 'src/modules/entities/analytics.entity';
+import { Feedback } from 'src/modules/entities/feedback.entity';
+import { Contributions } from 'src/modules/entities/contribution.entity';
+import { Images } from 'src/modules/entities/image.entity';
+import { LearningMaterials } from 'src/modules/entities/learning-material.entity';
+import { Timelines } from 'src/modules/entities/timeline.entity';
+import { VersionHistory } from 'src/modules/entities/version-history.entity';
+import { Notifications } from 'src/modules/entities/notification.entity';
+import { MapLocations } from 'src/modules/entities/map-location.entity';
+import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
 
 @Module({
   imports: [
@@ -24,28 +29,35 @@ import {
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
-        host: configService.get('DB_HOST', 'localhost'),
-        port: configService.get('DB_PORT', 3310),
-        username: configService.get('DB_USERNAME', 'root'),
-        password: configService.get('DB_PASSWORD', '123456'),
-        database: configService.get('DB_NAME', 'DaNangDynamicVault'),
+        host: configService.get<string>('DB_HOST', 'localhost'),
+        port: configService.get<number>('DB_PORT', 3310),
+        username: configService.get<string>('DB_USERNAME', 'root'),
+        password: configService.get<string>('DB_PASSWORD', '123456'),
+        database: configService.get<string>('DB_NAME', 'DaNangDynamicVault'),
         entities: [
-          Role,
-          User,
-          Article,
+          Roles,
+          Users,
+          UserProfiles,
+          Articles,
+          Categories,
+          Comments,
+          Likes,
           Analytics,
-          Contribution,
           Feedback,
-          Image,
-          ModerationLog,
-          Timeline,
-          VersionHistory
+          Contributions,
+          Images,
+          LearningMaterials,
+          Timelines,
+          VersionHistory,
+          MapLocations,
+          Notifications,
+          ModerationLogs,
         ],
-        // synchronize: configService.get('NODE_ENV') === 'development',
-        // logging: configService.get('NODE_ENV') === 'development',
+        synchronize: false,
+        logging: false,
       }),
       inject: [ConfigService],
     }),
   ],
 })
-export class databaseModule {}
+export class DatabaseModule {}

@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Article } from './article.entity';
-import { User } from './user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Articles } from './article.entity';
+import { Users } from './user.entity'; 
 
 @Entity('VersionHistory')
 export class VersionHistory {
@@ -13,17 +13,18 @@ export class VersionHistory {
   @Column({ type: 'int', nullable: true })
   UserID: number;
 
-  @Column({ type: 'longtext', nullable: true })
+  @Column({ type: 'nvarchar', length: 100, nullable: true })
   Changes: string;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'datetime' })
   Timestamp: Date;
 
-  @ManyToOne(() => Article, article => article.versionHistories)
+  // --- RELATIONS ---
+  @ManyToOne(() => Articles, (article) => article.versionHistory)
   @JoinColumn({ name: 'ArticleID' })
-  article: Article;
+  article: Articles;
 
-  @ManyToOne(() => User, user => user.versionHistories)
+  @ManyToOne(() => Users, (user) => user.versionHistory)
   @JoinColumn({ name: 'UserID' })
-  user: User;
+  user: Users;
 }

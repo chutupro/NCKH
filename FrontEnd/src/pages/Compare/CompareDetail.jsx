@@ -12,11 +12,12 @@ const CompareDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const item = compareList.find(i => i.id === parseInt(id));
+  // find by id or ComparisonID for compatibility with DB-derived data
+  const item = compareList.find(i => i.id === parseInt(id, 10) || i.ComparisonID === parseInt(id, 10));
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+  }, [id]);
 
   if (!item) {
     return (
