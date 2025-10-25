@@ -1,7 +1,7 @@
 /* Modern vertical timeline */
 .timeline-wrapper {
   padding: 40px 20px;
-  background: #000000;
+
   min-height: 100vh;
   margin-top: 50px;
 }

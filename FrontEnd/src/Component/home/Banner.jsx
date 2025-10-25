@@ -1,48 +1,49 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import "../../Styles/Home/Banner.css";
-import { useAppContext } from '../../context/context';
+import { useAppContext } from '../../context/useAppContext';
 
 const Banner = () => {
-  const { images,locations, locIndex, showMap, setShowMap } = useAppContext();
+  const { t } = useTranslation();
+  const { images, locations, locIndex, showMap, setShowMap } = useAppContext();
 
-  const bg = images && images.length ? images[0] : '';
-  const currentLocation = locations && locations.length ? locations[locIndex % locations.length] : null;
-  const goldenBridgeImage = currentLocation ? currentLocation.image : '';
-  const mapEmbedUrl = currentLocation ? currentLocation.mapEmbed : '';
+  const bg = images?.[0] || '';
+  const currentLocation = locations?.[locIndex % locations.length] || null;
+  const goldenBridgeImage = currentLocation?.image || '';
+  const mapEmbedUrl = currentLocation?.mapEmbed || '';
 
   return (
-    <section className="banner-hero" style={{ ['--bg-image']: `url(${bg})`, padding: '40px' }}>
+    <section className="banner-hero" style={{ '--bg-image': `url(${bg})`, padding: '40px' }}>
       <div className="banner-inner">
         <div className="banner-left">
           <div className="kicker">Da Nang</div>
-          <h1 className="hero-title">Dynamic Vault</h1>
-          <p className="hero-sub">Bách khoa toàn thư kỹ thuật số tương tác về bảo tồn di sản</p>
-          <p className="hero-desc">Bảo tồn và chia sẻ di sản văn hóa phong phú của Đà Nẵng thông qua công nghệ tiên tiến, hợp tác cộng đồng và quản lý nội dung thông minh.</p>
+          <h1 className="hero-title">{t('banner.title')}</h1>
+          <p className="hero-sub">{t('banner.subtitle')}</p>
+          <p className="hero-desc">{t('banner.description')}</p>
           <div className="hero-ctas">
-            <button className="btn-primary">Bắt đầu <span className="arrow">→</span></button>
-            <input className="hero-search" placeholder="Tìm kiếm địa danh" aria-label="search" />
+            <button className="btn-primary">{t('banner.start')} <span className="arrow">→</span></button>
+            <input className="hero-search" placeholder={t('banner.search')} aria-label="search" />
           </div>
         </div>
 
         <div className="banner-right">
           <div className="image-card">
-
             <img
               src={goldenBridgeImage}
-              alt={currentLocation ? currentLocation.name : 'Location image'}
+              alt={currentLocation?.name || 'Location image'}
               style={{ cursor: 'pointer' }}
               role="button"
               tabIndex={0}
-              onClick={() => setShowMap((s) => !s)}
+              onClick={() => setShowMap(s => !s)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  setShowMap((s) => !s);
+                  setShowMap(s => !s);
                 }
               }}
             />
-            <div className="pin">{currentLocation ? currentLocation.name : 'Location'}</div>
+            <div className="pin">{currentLocation?.name || 'Location'}</div>
             {showMap && mapEmbedUrl && (
-              <div className="map-panel" role="dialog" aria-label={`Map for ${currentLocation ? currentLocation.name : 'location'}`}>
+              <div className="map-panel" role="dialog" aria-label={`Map for ${currentLocation?.name || 'location'}`}>
                 <button
                   className="map-close"
                   onClick={() => setShowMap(false)}
@@ -51,7 +52,7 @@ const Banner = () => {
                   ×
                 </button>
                 <iframe
-                  title={`${currentLocation ? currentLocation.name : 'Location'} Map`}
+                  title={`${currentLocation?.name || 'Location'} Map`}
                   src={mapEmbedUrl}
                   width="100%"
                   height="300"
@@ -61,7 +62,6 @@ const Banner = () => {
                 />
               </div>
             )}
-            
           </div>
         </div>
       </div>

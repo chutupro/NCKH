@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../Styles/CompareCard/CompareCard.css';
 import { useAppContext } from '../../context/useAppContext';
+import { useTranslation } from 'react-i18next';
 
 const CompareCard = ({ item }) => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const CompareCard = ({ item }) => {
   const [pos, setPos] = useState(50); // percentage
   const [dragging, setDragging] = useState(false);
   const { registerCompare, unregisterCompare, startCompareDrag, stopCompareDrag } = useAppContext();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const id = item?.id;
@@ -35,6 +37,7 @@ const CompareCard = ({ item }) => {
 
   const startDrag = (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent card click
     if (item?.id) startCompareDrag(item.id);
     setDragging(true);
 
@@ -71,18 +74,19 @@ const CompareCard = ({ item }) => {
   };
 
   const handleCardClick = (e) => {
-    // Don't navigate if user is dragging the slider
-    if (!dragging && e.target.closest('.cc-divider') === null) {
-      navigate(`/compare/${item.id}`);
+    // Don't navigate if user is dragging or clicking on the slider
+    if (dragging || e.target.closest('.cc-divider')) {
+      return;
     }
+    navigate(`/compare/${item.id}`);
   };
 
   return (
-    <div className="cc-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
+    <div className="cc-card" onClick={handleCardClick}>
       <div className="cc-media" ref={containerRef}>
-        <img src={item.oldSrc} alt={`${item.title} xưa`} className="cc-img cc-img-old" />
+        <img src={item.oldSrc} alt={`${item.title} ${t('compareCommon.altOld')}`} className="cc-img cc-img-old" />
         <div className="cc-img-wrap-new" style={{ width: `${pos}%` }}>
-          <img src={item.newSrc} alt={`${item.title} nay`} className="cc-img cc-img-new" />
+          <img src={item.newSrc} alt={`${item.title} ${t('compareCommon.altNew')}`} className="cc-img cc-img-new" />
         </div>
 
         <div
@@ -103,13 +107,13 @@ const CompareCard = ({ item }) => {
 
       <div className="cc-body">
         <div className="cc-tags">
-          <span className="cc-tag cc-old">Xưa</span>
-          <span className="cc-tag cc-new">Nay</span>
+          <span className="cc-tag cc-old">{t('compareCommon.oldShort')}</span>
+          <span className="cc-tag cc-new">{t('compareCommon.newShort')}</span>
         </div>
         <h3 className="cc-title">{item.title}</h3>
-        <p className="cc-post">Bài viết: {item.post}</p>
+        <p className="cc-post">📍 {item.location || t('compareDetail.defaultLocation')}</p>
         <div className="cc-meta">
-          <span className="cc-drag-tip">← Kéo để so sánh →</span>
+          <span className="cc-drag-tip">← {t('compareCommon.dragShort')} →</span>
           <div className="cc-likes">❤ {item.likes}</div>
         </div>
       </div>

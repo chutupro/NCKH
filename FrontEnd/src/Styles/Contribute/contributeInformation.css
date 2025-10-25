@@ -4,7 +4,6 @@
   align-items: center;
   justify-content: center;
   padding: 48px 20px;
-  background: linear-gradient(180deg, #1b1a19 0%, #191613 100%);
   min-height: 80vh;
 }
 .info-card {

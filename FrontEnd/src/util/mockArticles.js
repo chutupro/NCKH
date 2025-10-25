@@ -112,7 +112,74 @@ const articles = [
     ],
     relatedCompareIds: [6, 10]
   },
-  // ... thêm bài khác nếu cần (giữ cấu trúc tương tự)
+  {
+    ArticleID: 6,
+    Title: "Bảo tàng Điêu khắc Chăm - Đà Nẵng",
+    Content: "Bảo tàng lưu giữ những tác phẩm điêu khắc quý giá của nền văn hóa Chăm Pa...",
+    Language: "vi",
+    CreatedAt: "1985-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 6,
+    CategoryID: 1,
+    categoryName: "Văn hóa",
+    likes: 789,
+    description: "Nơi lưu giữ di sản văn hóa Chăm Pa cổ kính và tinh xảo.",
+    images: [
+      { ImageID: 106, FilePath: "https://statics.vinpearl.com/bao-tang-dieu-khac-cham-da-nang-05_1625911239.jpg", AltText: "Bảo tàng Chăm", Type: "main" }
+    ],
+    relatedCompareIds: [1]
+  },
+  {
+    ArticleID: 7,
+    Title: "Ngũ Hành Sơn - Núi Non Nước",
+    Content: "Ngũ Hành Sơn gồm 5 ngọn núi đá vôi tượng trưng cho ngũ hành...",
+    Language: "vi",
+    CreatedAt: "1988-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 7,
+    CategoryID: 4,
+    categoryName: "Thiên nhiên",
+    likes: 1123,
+    description: "Danh thắng nổi tiếng với động Huyền Không và chùa Linh Ứng.",
+    images: [
+      { ImageID: 107, FilePath: "https://tse3.mm.bing.net/th?id=OIP.8vYWfqYxK9rWAXX7LR0d3AHaE8&pid=Api", AltText: "Ngũ Hành Sơn", Type: "main" }
+    ],
+    relatedCompareIds: [2, 3]
+  },
+  {
+    ArticleID: 8,
+    Title: "Bãi biển Mỹ Khê - Đà Nẵng",
+    Content: "Một trong những bãi biển đẹp nhất thế giới theo bình chọn...",
+    Language: "vi",
+    CreatedAt: "1993-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 8,
+    CategoryID: 3,
+    categoryName: "Du lịch",
+    likes: 2045,
+    description: "Bãi biển với cát trắng mịn, nước trong xanh tuyệt đẹp.",
+    images: [
+      { ImageID: 108, FilePath: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=800", AltText: "Bãi biển Mỹ Khê", Type: "main" }
+    ],
+    relatedCompareIds: [3]
+  },
+  {
+    ArticleID: 9,
+    Title: "Cầu Vàng - Bà Nà Hills",
+    Content: "Cầu Vàng với đôi bàn tay khổng lồ nâng đỡ, biểu tượng kiến trúc độc đáo...",
+    Language: "vi",
+    CreatedAt: "1996-01-01T00:00:00.000Z",
+    UpdatedAt: "2024-01-01T00:00:00.000Z",
+    UserID: 9,
+    CategoryID: 2,
+    categoryName: "Kiến trúc",
+    likes: 3210,
+    description: "Công trình kiến trúc ấn tượng giữa núi rừng Bà Nà.",
+    images: [
+      { ImageID: 109, FilePath: "https://tse4.mm.bing.net/th?id=OIP.jQc5x3v6zTD5YW0fPzKZzgHaEK&pid=Api", AltText: "Cầu Vàng", Type: "main" }
+    ],
+    relatedCompareIds: [3]
+  },
 ];
 
 export default articles;

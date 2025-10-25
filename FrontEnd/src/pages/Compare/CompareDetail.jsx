@@ -7,10 +7,12 @@ import CompareDetailHero from '../../Component/Compare/CompareDetailHero';
 import CompareSlider from '../../Component/Compare/CompareSlider';
 import CompareContent from '../../Component/Compare/CompareContent';
 import CompareSidebar from '../../Component/Compare/CompareSidebar';
+import { useTranslation } from 'react-i18next';
 
 const CompareDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // find by id or ComparisonID for compatibility with DB-derived data
   const item = compareList.find(i => i.id === parseInt(id, 10) || i.ComparisonID === parseInt(id, 10));
@@ -22,9 +24,9 @@ const CompareDetail = () => {
   if (!item) {
     return (
       <div className="cd-not-found">
-        <h2>Không tìm thấy bài viết</h2>
+        <h2>{t('common.error')}</h2>
         <button onClick={() => navigate('/compare')} className="cd-back-btn">
-          Quay lại
+          {t('compareDetail.back')}
         </button>
       </div>
     );

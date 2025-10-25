@@ -28,7 +28,7 @@
 }
 
 .content-inf {
-  background: #0f0f0f;
+  background: rgba(45, 46, 41, 0.6);
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -72,7 +72,7 @@
 }
 
 .content-inf .media {
-  background: #1d1d1d;
+  background: rgba(35, 36, 31, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;

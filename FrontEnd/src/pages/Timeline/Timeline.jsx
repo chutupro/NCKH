@@ -1,11 +1,14 @@
 import "../../Styles/Timeline/Timeline.css";
 import { TIMELINE_ITEMS } from "../../util/constant";
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
+import { CODE_TO_VN, KNOWN_CODES, labelFor } from '../../util/categoryMap';
 
 const Timeline = () => {
+  const { t } = useTranslation();
   const [fromYear, setFromYear] = useState("");
   const [toYear, setToYear] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Thể loại");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const containerRef = useRef(null);
   const listRef = useRef(null);
   const dragRef = useRef({
@@ -16,7 +19,7 @@ const Timeline = () => {
   });
   const [lineWidth, setLineWidth] = useState(0);
 
-  const categories = ["Thể loại", "Tất cả", "Kiến trúc", "Văn hóa", "Du lịch", "Thiên nhiên"];
+  const categoryCodes = ["all", ...KNOWN_CODES];
 
   const parsed = (v) => {
     const n = parseInt(String(v), 10);
@@ -34,9 +37,15 @@ const Timeline = () => {
         if (t !== null && y > t) return false;
       }
       
-      // Filter by category
-      if (selectedCategory !== "Thể loại" && selectedCategory !== "Tất cả") {
-        if (it.category !== selectedCategory) return false;
+      // Filter by category (selectedCategory is a code)
+      if (selectedCategory !== 'all') {
+        const vn = CODE_TO_VN[selectedCategory];
+        if (vn) {
+          if (it.category !== vn) return false;
+        } else {
+          // 'other' or unknown: exclude known categories
+          if (KNOWN_CODES.includes(it.category)) return false;
+        }
       }
       
       return true;
@@ -46,7 +55,7 @@ const Timeline = () => {
   const clearFilters = () => {
     setFromYear("");
     setToYear("");
-    setSelectedCategory("Thể loại");
+  setSelectedCategory("all");
   };
 
   const fromVal = fromYear;
@@ -121,10 +130,10 @@ const Timeline = () => {
 
       <main className="timeline-wrapper">
         <header className="timeline-header">
-          <h1 className="timeline-main-title">Dòng thời gian</h1>
+          <h1 className="timeline-main-title">{t('timeline.title')}</h1>
           <div className="timeline-search">
             <div className="search-field">
-              <label> Từ năm </label>
+              <label> {t('timeline.fromYear')} </label>
               <input
                 type="number"
                 placeholder="1890"
@@ -133,7 +142,7 @@ const Timeline = () => {
               />
             </div>
             <div className="search-field">
-              <label> Đến năm </label>
+              <label> {t('timeline.toYear')} </label>
               <input
                 type="number"
                 placeholder="2025"
@@ -142,23 +151,23 @@ const Timeline = () => {
               />
             </div>
             <div className="search-actions">
-              <button className="btn" onClick={clearFilters} type="button">Reset</button>
+              <button className="btn" onClick={clearFilters} type="button">{t('timeline.reset')}</button>
             </div>
           </div>
-          {isInvalidRange() && <div className="timeline-error">Khoảng năm không hợp lệ (từ {'>'} đến)</div>}
+          {isInvalidRange() && <div className="timeline-error">{t('timeline.invalidRange')}</div>}
         </header>
 
         <div className="timeline-content-wrapper">
           <aside className="timeline-sidebar">
-            <h3 className="sidebar-title">{selectedCategory}</h3>
+            <h3 className="sidebar-title">{t('footer.categories')}</h3>
             <ul className="category-list">
-              {categories.slice(1).map((category) => (
+              {categoryCodes.map((code) => (
                 <li 
-                  key={category}
-                  className={`category-item ${selectedCategory === category ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(category)}
+                  key={code}
+                  className={`category-item ${selectedCategory === code ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(code)}
                 >
-                  {category}
+                  {labelFor(code, t)}
                 </li>
               ))}
             </ul>

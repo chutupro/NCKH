@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock } from '@fortawesome/free-solid-svg-icons';
 
@@ -6,6 +7,7 @@ const CompareSlider = ({ item }) => {
   const containerRef = useRef(null);
   const [pos, setPos] = useState(50);
   const [dragging, setDragging] = useState(false);
+  const { t } = useTranslation();
 
   const startDrag = (e) => {
     e.preventDefault();
@@ -45,21 +47,21 @@ const CompareSlider = ({ item }) => {
   return (
     <div className="cd-compare-section">
       <div className="cd-compare-header">
-        <h2>So sánh xưa - nay</h2>
+        <h2>{t('compareDetail.compareTitle')}</h2>
         <div className="cd-year-labels">
           <span className="cd-year-old">
-            <FontAwesomeIcon icon={faClock} /> {item.yearOld || 'Xưa'}
+            <FontAwesomeIcon icon={faClock} /> {item.yearOld || t('compareCommon.oldShort')}
           </span>
           <span className="cd-year-new">
-            <FontAwesomeIcon icon={faClock} /> {item.yearNew || 'Nay'}
+            <FontAwesomeIcon icon={faClock} /> {item.yearNew || t('compareCommon.newShort')}
           </span>
         </div>
       </div>
 
       <div className="cd-compare-container" ref={containerRef}>
-        <img src={item.oldSrc} alt={`${item.title} xưa`} className="cd-img cd-img-old" />
+        <img src={item.oldSrc} alt={`${item.title} ${t('compareCommon.altOld')}`} className="cd-img cd-img-old" />
         <div className="cd-img-wrap-new" style={{ width: `${pos}%` }}>
-          <img src={item.newSrc} alt={`${item.title} nay`} className="cd-img cd-img-new" />
+          <img src={item.newSrc} alt={`${item.title} ${t('compareCommon.altNew')}`} className="cd-img cd-img-new" />
         </div>
 
         <div
@@ -87,12 +89,12 @@ const CompareSlider = ({ item }) => {
         </div>
 
         <div className="cd-labels">
-          <span className="cd-label cd-label-old">XƯA</span>
-          <span className="cd-label cd-label-new">NAY</span>
+          <span className="cd-label cd-label-old">{t('compareCommon.oldLabel')}</span>
+          <span className="cd-label cd-label-new">{t('compareCommon.newLabel')}</span>
         </div>
       </div>
 
-      <p className="cd-drag-tip">← Kéo thanh trượt để so sánh →</p>
+      <p className="cd-drag-tip">← {t('compareCommon.dragTip')} →</p>
     </div>
   );
 };

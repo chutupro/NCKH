@@ -1,13 +1,54 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import '../../Styles/community/Community.css'
 import posts from '../../util/posts'
 import PostCard from '../../Component/Community/PostCard'
+import CommunitySidebar from '../../Component/Community/CommunitySidebar'
 import Headers from '../../Component/home/Headers'
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faUsers } from '@fortawesome/free-solid-svg-icons'
 
 const Community = () => {
+  const { t } = useTranslation();
+  const location = useLocation()
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    // Scroll đến bài viết cụ thể nếu có hash trong URL
+    if (location.hash) {
+      setTimeout(() => {
+        const element = document.querySelector(location.hash)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          // Thêm hiệu ứng highlight
+          element.style.transition = 'all 0.3s ease'
+          element.style.transform = 'scale(1.02)'
+          element.style.boxShadow = '0 8px 30px rgba(232, 215, 183, 0.4)'
+          setTimeout(() => {
+            element.style.transform = 'scale(1)'
+            element.style.boxShadow = ''
+          }, 1000)
+        }
+      }, 300)
+    }
+  }, [location])
+
+  // Lọc bài viết theo category và search query
+  const filteredPosts = posts.filter(post => {
+    // Lọc theo category
+    const matchCategory = activeFilter === 'all' || post.category.toLowerCase() === activeFilter.toLowerCase()
+    
+    // Lọc theo search query
+    const matchSearch = searchQuery === '' || 
+      post.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.category.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    return matchCategory && matchSearch
+  })
+
   return (
     <main className="community-page">
       <Headers />
@@ -16,18 +57,32 @@ const Community = () => {
           <div className="hero-avatar" aria-hidden>
             <FontAwesomeIcon icon={faUsers} className="hero-icon" />
           </div>
-          <h2 className="hero-title">Cộng đồng Di sản Đà Nẵng</h2>
-          <p className="hero-sub">Chia sẻ hình ảnh, kết nối với cộng đồng yêu thích di sản văn hóa</p>
+          <h2 className="hero-title">{t('community.title')}</h2>
+          <p className="hero-sub">{t('community.subtitle')}</p>
           <Link to='/contribute' className="contribute-primary">
             <FontAwesomeIcon icon={faPlus} />
-            Đăng ảnh mới
+            {t('community.createPost')}
           </Link>
         </div>
 
-        <div className="posts-list">
-          {posts.map((p) => (
-            <PostCard post={p} key={p.id} />
-          ))}
+        <div className="community-content">
+          <div className="posts-list">
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map((p) => (
+                <PostCard post={p} key={p.id} />
+              ))
+            ) : (
+              <div className="no-posts">
+                <p>{t('community.noPosts')}</p>
+              </div>
+            )}
+          </div>
+          
+          <CommunitySidebar 
+            activeFilter={activeFilter} 
+            onFilterChange={setActiveFilter}
+            onSearchChange={setSearchQuery}
+          />
         </div>
       </div>
     </main>

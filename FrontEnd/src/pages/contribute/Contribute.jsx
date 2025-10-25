@@ -1,8 +1,10 @@
 import React, { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import '../../Styles/Contribute/contribute.css'
 
 const Contribute = () => {
+  const { t } = useTranslation();
   const [dragOver, setDragOver] = useState(false)
   const [fileName, setFileName] = useState(null)
 
@@ -24,8 +26,8 @@ const Contribute = () => {
         <div className="contribute-card">
           <div className="contribute-top">
             <div className="contribute-icon">✦</div>
-            <h2>Đóng góp ảnh di sản văn hóa</h2>
-            <p className="contribute-sub">Tải lên hình ảnh lịch sử (xưa) về di sản văn hóa Đà Nẵng — hệ thống sẽ phân tích và gợi ý tiêu đề.</p>
+              <h2>{t('contributePage.title')}</h2>
+              <p className="contribute-sub">{t('contributePage.subtitle')}</p>
           </div>
 
           <div className="contribute-body">
@@ -38,33 +40,26 @@ const Contribute = () => {
               <input type="file" accept="image/*" onChange={onFileChange} />
               <div className="upload-inner">
                 <div className="upload-icon">⬆</div>
-                <div className="upload-text">Nhấn để chọn ảnh hoặc kéo thả vào đây</div>
-                <div className="upload-hint">Hỗ trợ: JPG, PNG, WEBP (tối đa 10MB)</div>
-                {fileName && <div className="upload-file">Chọn: {fileName}</div>}
+                  <div className="upload-text">{t('contributePage.uploadText')}</div>
+                  <div className="upload-hint">{t('contributePage.uploadHint')}</div>
+                  {fileName && <div className="upload-file">{t('contributePage.selected')}: {fileName}</div>}
               </div>
             </label>
 
             <div className="contribute-note">
-              <h4>Lưu ý khi chọn ảnh lịch sử:</h4>
+                <h4>{t('contributePage.noteTitle')}</h4>
               <ul>
-                <li>Chỉ nhận ảnh lịch sử (xưa) của di sản văn hóa Đà Nẵng</li>
-                <li>Tránh ảnh mờ, quá tối hoặc quá sáng</li>
-                <li>Ảnh nên thể hiện rõ di sản văn hóa cần đóng góp</li>
-                <li>AI sẽ phân tích tốt hơn với ảnh có góc chụp đẹp</li>
+                  <li>{t('contributePage.note1')}</li>
+                  <li>{t('contributePage.note2')}</li>
+                  <li>{t('contributePage.note3')}</li>
+                  <li>{t('contributePage.note4')}</li>
               </ul>
             </div>
           </div>
 
           <div className="contribute-footer">
-            <div className="contribute-footer-text">Sau khi phân tích, bạn sẽ được chuyển đến trang điền thông tin chi tiết</div>
-            {/* <button
-              className={`confirm-btn ${fileName ? 'enabled' : 'disabled'}`}
-              disabled={!fileName}
-              onClick={() => { if (fileName) alert('Xác nhận upload: ' + fileName) }}
-            >
-              Xác nhận
-            </button> */}
-            <Link to="/contributeinformation">Xác nhận</Link>
+              <div className="contribute-footer-text">{t('contributePage.footerText')}</div>
+              <Link to="/contributeinformation" className="confirm-btn enabled">{t('contributePage.confirm')}</Link>
           </div>
         </div>
       </div>

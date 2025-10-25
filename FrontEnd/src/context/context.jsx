@@ -1,5 +1,23 @@
 import React, { createContext, useEffect, useState, useMemo, useRef } from 'react';
-import constants from '../util/constant';
+
+// Banner images and locations - only used in this context
+const BANNER_IMAGES = [
+  'https://www.agoda.com/wp-content/uploads/2024/08/son-tra-da-nang-vietnam-featured.jpg',
+  'https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg'
+];
+
+const LOCATIONS = [
+  {
+    name: "Cầu Vàng",
+    image: "https://www.kkday.com/vi/blog/wp-content/uploads/B%C3%A0-N%C3%A0-2.jpg",
+    mapEmbed: "https://www.google.com/maps?q=Golden+Bridge+Ba+Na+Hills+Da+Nang&output=embed"
+  },
+  {
+    name: "Cầu Rồng",
+    image: "https://danangfantasticity.com/wp-content/uploads/2018/10/cau-rong-top-20-cay-cau-ky-quai-nhat-the-gioi-theo-boredom-therapy.jpg",
+    mapEmbed: "https://www.google.com/maps?q=Cau+Rong+Da+Nang&output=embed"
+  }
+];
 
 const AppContext = createContext(null);
 
@@ -12,11 +30,11 @@ export const AppProvider = ({ children }) => {
   const [locIndex, setLocIndex] = useState(0);
   const [showMap, setShowMap] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const locations = useMemo(() => constants.locations || [], []);
+  const locations = useMemo(() => LOCATIONS, []);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % (constants.IMAGES?.length || 1));
+      setCurrentImage((prev) => (prev + 1) % BANNER_IMAGES.length);
     }, 2000);
     return () => clearInterval(id);
   }, []);
@@ -94,7 +112,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const value = {
-    images: constants.IMAGES,
+    images: BANNER_IMAGES,
     currentImage,
     setCurrentImage,
     searchQuery,
@@ -120,6 +138,3 @@ export const AppProvider = ({ children }) => {
 };
 
 export default AppContext;
-
-// Re-export the hook for backwards compatibility (some files import it from context.jsx)
-export { useAppContext } from './useAppContext';

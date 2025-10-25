@@ -1,10 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt, faPhone, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { faFacebook, faTwitter, faInstagram, faLinkedin, faYoutube } from "@fortawesome/free-brands-svg-icons";
 import "../../Styles/Home/Footer.css";
 
 const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -15,54 +18,54 @@ const Footer = () => {
             <div className="footer-section">
               <h3 className="footer-logo">DynaVault</h3>
               <p className="footer-description">
-                Kho tàng di sản Đà Nẵng - Nơi lưu giữ và chia sẻ những giá trị văn hóa quý báu của thành phố.
+                {t('footer.description')}
               </p>
               <div className="social-links">
-                <a href="#" className="social-link facebook">
+                <button className="social-link facebook" aria-label="Facebook">
                   <FontAwesomeIcon icon={faFacebook} />
-                </a>
-                <a href="#" className="social-link twitter">
+                </button>
+                <button className="social-link twitter" aria-label="Twitter">
                   <FontAwesomeIcon icon={faTwitter} />
-                </a>
-                <a href="#" className="social-link instagram">
+                </button>
+                <button className="social-link instagram" aria-label="Instagram">
                   <FontAwesomeIcon icon={faInstagram} />
-                </a>
-                <a href="#" className="social-link linkedin">
+                </button>
+                <button className="social-link linkedin" aria-label="LinkedIn">
                   <FontAwesomeIcon icon={faLinkedin} />
-                </a>
-                <a href="#" className="social-link youtube">
+                </button>
+                <button className="social-link youtube" aria-label="YouTube">
                   <FontAwesomeIcon icon={faYoutube} />
-                </a>
+                </button>
               </div>
             </div>
 
             {/* Quick Links */}
             <div className="footer-section">
-              <h4 className="footer-title">Liên kết nhanh</h4>
+              <h4 className="footer-title">{t('footer.quickLinks')}</h4>
               <ul className="footer-links">
-                <li><a href="#explore">Khám phá</a></li>
-                <li><a href="#timeline">Dòng thời gian</a></li>
-                <li><a href="#top-news">Tin mới</a></li>
-                <li><a href="#connect">Kết nối</a></li>
-                <li><a href="#about">Về chúng tôi</a></li>
+                <li><a href="#explore">{t('footer.explore')}</a></li>
+                <li><a href="#timeline">{t('footer.timeline')}</a></li>
+                <li><a href="#top-news">{t('footer.news')}</a></li>
+                <li><a href="#connect">{t('footer.connect')}</a></li>
+                <li><a href="#about">{t('footer.aboutUs')}</a></li>
               </ul>
             </div>
 
             {/* Categories */}
             <div className="footer-section">
-              <h4 className="footer-title">Danh mục</h4>
+              <h4 className="footer-title">{t('footer.categories')}</h4>
               <ul className="footer-links">
-                <li><a href="#architecture">Kiến trúc</a></li>
-                <li><a href="#history">Lịch sử</a></li>
-                <li><a href="#culture">Văn hóa</a></li>
-                <li><a href="#traditions">Truyền thống</a></li>
-                <li><a href="#modern">Hiện đại</a></li>
+                <li><a href="#architecture">{t('footer.architecture')}</a></li>
+                <li><a href="#history">{t('footer.history')}</a></li>
+                <li><a href="#culture">{t('footer.culture')}</a></li>
+                <li><a href="#traditions">{t('footer.traditions')}</a></li>
+                <li><a href="#modern">{t('footer.modern')}</a></li>
               </ul>
             </div>
 
             {/* Contact Info */}
             <div className="footer-section">
-              <h4 className="footer-title">Liên hệ</h4>
+              <h4 className="footer-title">{t('footer.contact')}</h4>
               <div className="contact-info">
                 <div className="contact-item">
                   <FontAwesomeIcon icon={faMapMarkerAlt} className="contact-icon" />
@@ -85,11 +88,11 @@ const Footer = () => {
         <div className="footer-bottom">
           <div className="footer-bottom-content">
             <div className="copyright">
-              <p>&copy; 2024 DynaVault. Tất cả quyền được bảo lưu.</p>
+              <p>{t('footer.copyright')}</p>
             </div>
             <div className="footer-bottom-links">
-              <a href="#privacy">Chính sách bảo mật</a>
-              <a href="#terms">Điều khoản sử dụng</a>
+              <a href="#privacy">{t('footer.privacy')}</a>
+              <a href="#terms">{t('footer.terms')}</a>
               <a href="#cookies">Cookie Policy</a>
             </div>
           </div>

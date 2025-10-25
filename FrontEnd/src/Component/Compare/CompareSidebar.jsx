@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faEye } from '@fortawesome/free-solid-svg-icons';
 
 const CompareSidebar = ({ item }) => {
   const [liked, setLiked] = useState(false);
+  const { t } = useTranslation();
 
   const handleLike = () => {
     setLiked(!liked);
@@ -12,21 +14,21 @@ const CompareSidebar = ({ item }) => {
   return (
     <aside className="cd-sidebar">
       <div className="cd-info-card">
-        <h4>Thông tin</h4>
+        <h4>{t('compareDetail.info')}</h4>
         <div className="cd-info-item">
-          <span className="cd-info-label">Danh mục:</span>
+          <span className="cd-info-label">{t('compareDetail.category')}:</span>
           <span className="cd-info-value">{item.category}</span>
         </div>
         <div className="cd-info-item">
-          <span className="cd-info-label">Địa điểm:</span>
-          <span className="cd-info-value">{item.location || 'Đà Nẵng'}</span>
+          <span className="cd-info-label">{t('compareDetail.location')}:</span>
+          <span className="cd-info-value">{item.location || t('compareDetail.defaultLocation')}</span>
         </div>
         <div className="cd-info-item">
-          <span className="cd-info-label">Năm xưa:</span>
-          <span className="cd-info-value">{item.yearOld || 'Không rõ'}</span>
+          <span className="cd-info-label">{t('compareDetail.oldYear')}:</span>
+          <span className="cd-info-value">{item.yearOld || t('compareDetail.unknown')}</span>
         </div>
         <div className="cd-info-item">
-          <span className="cd-info-label">Năm nay:</span>
+          <span className="cd-info-label">{t('compareDetail.newYear')}:</span>
           <span className="cd-info-value">{item.yearNew || '2024'}</span>
         </div>
       </div>
@@ -37,7 +39,7 @@ const CompareSidebar = ({ item }) => {
           onClick={handleLike}
         >
           <FontAwesomeIcon icon={faHeart} />
-          <span>{liked ? 'Đã thích' : 'Yêu thích'}</span>
+          <span>{liked ? t('compareDetail.liked') : t('compareDetail.like')}</span>
         </button>
         <div className="cd-stats">
           <div className="cd-stat-item">

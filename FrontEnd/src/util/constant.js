@@ -5,79 +5,6 @@
  */
 
 // =============================================================================
-// ITEMS - Dữ liệu cũ (hiện không còn sử dụng trong UI chính)
-// =============================================================================
-// Legacy data - có thể xóa hoặc giữ lại để tham khảo
-export const items = [
-  {
-    title: "Tòa thị chính Đà Nẵng (nay là UBND Đà Nẵng)",
-    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-14.jpg",
-    href: "#",
-    author: "Nguyễn Văn A"
-  },
-  {
-    title: "Cầu chữ T sông Hàn trước tòa thị chính Đà Nẵng",
-    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-64.jpg",
-    href: "#",
-    author: "Trần Thị B"
-  },
-  {
-    title: "Tòa nhà tại góc ngã ba Bạch Đằng-Phan Đình Phùng",
-    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-22.jpg",
-    href: "#",
-    author: "Lê Văn C"
-  },
-  {
-    title: "Đường Trần Hưng Đạo, nay là đường Nguyễn Thái Học",
-    image: "https://nhacxua.vn/wp-content/uploads/2021/07/da-nang-57.jpg",
-    href: "#",
-    author: "Phạm Thị D"
-  }
-];
-
-// =============================================================================
-// IMAGES - Ảnh mẫu cho banner hoặc slideshow
-// =============================================================================
-// Sử dụng trong: Banner, Hero sections, hoặc slideshow
-export const IMAGES = [
-	'https://www.agoda.com/wp-content/uploads/2024/08/son-tra-da-nang-vietnam-featured.jpg',
-	'https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg'
-];
-
-// =============================================================================
-// TIMELINE - Metadata cho timeline (legacy - không còn sử dụng)
-// =============================================================================
-export const TIMELINE = [
-	{ label: 'Ancient Era', color: 'green' },
-	{ label: 'Colonial Period', color: 'blue' },
-	{ label: 'Modern Era', color: 'orange' }
-];
-
-// =============================================================================
-// LOCATIONS - Dữ liệu địa điểm với Google Maps embed
-// =============================================================================
-// Sử dụng trong: Trang Map/Location hoặc trang detail hiển thị bản đồ
-const locations = [
-  {
-    name: "Cầu Vàng",
-    image: "https://www.kkday.com/vi/blog/wp-content/uploads/B%C3%A0-N%C3%A0-2.jpg",
-    mapEmbed: "https://www.google.com/maps?q=Golden+Bridge+Ba+Na+Hills+Da+Nang&output=embed"
-  },
-  {
-    name: "Cầu Rồng",
-    image: "https://danangfantasticity.com/wp-content/uploads/2018/10/cau-rong-top-20-cay-cau-ky-quai-nhat-the-gioi-theo-boredom-therapy.jpg",
-    mapEmbed: "https://www.google.com/maps?q=Cau+Rong+Da+Nang&output=embed"
-  }
-];
-
-// Export default cho các module cần import nhiều constant
-export default {
-	IMAGES,
-	TIMELINE,
-	locations,
-};
-
-// =============================================================================
 // TIMELINE_ITEMS - Dữ liệu cho trang DÒNG THỜI GIAN
 // =============================================================================
 // Sử dụng trong: FrontEnd/src/pages/Timeline/Timeline.jsx
@@ -92,7 +19,6 @@ export default {
 //
 // Có 4 categories chính, mỗi category có 6 items = tổng 24 items
 // =============================================================================
-//dữ liệu trang timeline
 export const TIMELINE_ITEMS = [
   // =============================================================================
   // CATEGORY: KIẾN TRÚC - 6 items
