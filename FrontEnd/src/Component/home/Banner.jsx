@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import "../../Styles/Home/Banner.css";
 import { useAppContext } from '../../context/useAppContext';
+import MapPanel from './MapPanel';
 
 const Banner = () => {
   const { t } = useTranslation();
@@ -43,24 +44,11 @@ const Banner = () => {
             />
             <div className="pin">{currentLocation?.name || 'Location'}</div>
             {showMap && mapEmbedUrl && (
-              <div className="map-panel" role="dialog" aria-label={`Map for ${currentLocation?.name || 'location'}`}>
-                <button
-                  className="map-close"
-                  onClick={() => setShowMap(false)}
-                  aria-label="Close map"
-                >
-                  ×
-                </button>
-                <iframe
-                  title={`${currentLocation?.name || 'Location'} Map`}
-                  src={mapEmbedUrl}
-                  width="100%"
-                  height="300"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
+              <MapPanel
+                location={currentLocation}
+                mapEmbedUrl={mapEmbedUrl}
+                onClose={() => setShowMap(false)}
+              />
             )}
           </div>
         </div>
