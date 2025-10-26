@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
 import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
+import { JwtStrategy } from 'src/modules/common/strategies/jwt.strategy'; // 👈 thêm dòng này
 
 @Module({
   imports: [
@@ -21,7 +22,12 @@ import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
+  providers: [
+    AuthService,
+    AccessTokenStrategy,
+    RefreshTokenStrategy,
+    JwtStrategy, // 👈 thêm dòng này
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}
