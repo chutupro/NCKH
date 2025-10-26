@@ -17,21 +17,29 @@ async function bootstrap() {
 
   // --- Cấu hình Swagger ---
   const config = new DocumentBuilder()
-    .setTitle('API Example')
-    .setDescription('API description')
-    .setVersion('1.0')
+    .setTitle('API Example')                 // tiêu đề API
+    .setDescription('API description')       // mô tả
+    .setVersion('1.0')                       // version
+    // 👇 thêm phần Bearer Auth để có nút "Authorize"
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Nhập token theo dạng: Bearer <access_token>',
+        in: 'header',
+      },
+      'access-token', // 👈 tên scheme — sẽ dùng trong @ApiBearerAuth()
+    )
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  // --- Serve static files from uploads ---
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
-  });
 
   // --- Listen server ---
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  log(`Server listening on http://localhost:${port}/api`);
+  log(`🚀 Server running: http://localhost:${port}/api`);
 }
 bootstrap();

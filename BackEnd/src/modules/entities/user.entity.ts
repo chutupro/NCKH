@@ -70,4 +70,6 @@ export class Users {
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'RoleID' })
   role: Roles;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  RefreshTokenHash: string | null;
 }
