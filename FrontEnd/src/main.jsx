@@ -1,17 +1,29 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+// main.jsx
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import './index.css'
-import App from './App.jsx'
+import './index.css';
+import App from './App.jsx';
 import { AppProvider } from './context/context';
-import './config/i18n'; // Import i18n config
+import 'leaflet/dist/leaflet.css';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import mapLocationsReducer from './pages/map/mapLocationsSlice';
+
+const store = configureStore({
+  reducer: {
+    mapLocations: mapLocationsReducer,
+  },
+});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </AppProvider>
+    <Provider store={store}>
+      <AppProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AppProvider>
+    </Provider>
   </StrictMode>
-)
+);

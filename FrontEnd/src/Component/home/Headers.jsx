@@ -13,7 +13,7 @@ const Headers = () => {
         <div className="nav-links">
           <span className="font-handwriting">DynaVault</span>
           <Link to="/" className="nav-link">{t('nav.home')}</Link>
-          <Link to="/" className="nav-link">{t('nav.map')}</Link>
+          <Link to="/map" className="nav-link">Bản đồ</Link>
           <Link to="/timeline" className="nav-link">{t('nav.timeline')}</Link>
           <Link to="/community" className="nav-link">{t('nav.community')}</Link>
           <Link to="/ImageLibrary" className="nav-link">{t('nav.collection')}</Link>

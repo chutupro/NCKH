@@ -1,8 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+// entities/feedback.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Articles } from './article.entity';
-import { Users } from './user.entity'; 
+import { Users } from './user.entity';
+import { MapLocations } from './map-location.entity';
 
-@Entity('Feedback')
+@Entity('feedback')
 export class Feedback {
   @PrimaryGeneratedColumn()
   FeedbackID: number;
@@ -11,21 +13,27 @@ export class Feedback {
   ArticleID: number;
 
   @Column({ type: 'int', nullable: true })
+  LocationID: number;
+
+  @Column({ type: 'int', nullable: true })
   UserID: number;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'varchar', length: 500, nullable: true })
   Comment: string;
 
   @Column({ type: 'int', nullable: true })
   Rating: number;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @Column({ type: 'datetime', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
   CreatedAt: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.feedbacks)
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
+
+  @ManyToOne(() => MapLocations, (location) => location.feedbacks)
+  @JoinColumn({ name: 'LocationID' })
+  location: MapLocations;
 
   @ManyToOne(() => Users, (user) => user.feedbacks)
   @JoinColumn({ name: 'UserID' })
