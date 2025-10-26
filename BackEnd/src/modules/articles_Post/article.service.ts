@@ -3,11 +3,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Articles } from '../entities/article.entity';
 import { Users } from '../entities/user.entity';
-import { UserProfiles } from '../entities/user-profile.entity';
 import { Categories } from '../entities/category.entity';
 import { Images } from '../entities/image.entity';
 import { Analytics } from '../entities/analytics.entity';
 import { Likes } from '../entities/like.entity';
+
+interface CreateArticleDto {
+  title: string;
+  content?: string;
+  categoryId: number;
+  userId: number;
+  email?: string;
+  imageDescription?: string;
+  imagePath?: string;
+}
 
 @Injectable()
 export class ArticleService {
@@ -16,8 +25,6 @@ export class ArticleService {
     private articleRepo: Repository<Articles>,
     @InjectRepository(Users)
     private userRepo: Repository<Users>,
-    @InjectRepository(UserProfiles)
-    private profileRepo: Repository<UserProfiles>,
     @InjectRepository(Categories)
     private categoryRepo: Repository<Categories>,
     @InjectRepository(Images)
@@ -28,6 +35,7 @@ export class ArticleService {
     private likeRepo: Repository<Likes>,
   ) {}
 
+  // --- GET ALL ARTICLES ---
   async getAllArticles() {
     const articles = await this.articleRepo
       .createQueryBuilder('article')
@@ -37,10 +45,9 @@ export class ArticleService {
       .leftJoinAndSelect('article.images', 'images')
       .leftJoinAndSelect('article.analytics', 'analytics')
       .loadRelationCountAndMap('article.likeCount', 'article.likes')
-      .orderBy('article.createdAt', 'DESC')
+      .orderBy('article.CreatedAt', 'DESC')
       .getMany();
 
-    // Chuẩn hóa dữ liệu trả về
     return articles.map((a) => ({
       id: a.ArticleID,
       title: a.Title,
@@ -56,5 +63,48 @@ export class ArticleService {
       viewCount: a.analytics?.[0]?.ViewCount || 0,
       likeCount: (a as any).likeCount || 0,
     }));
+  }
+
+  // --- CREATE NEW ARTICLE ---
+  async createArticle(dto: CreateArticleDto) {
+    const user = await this.userRepo.findOne({ where: { UserID: dto.userId } });
+    const category = await this.categoryRepo.findOne({ where: { CategoryID: dto.categoryId } });
+
+    if (!user) throw new Error('User not found');
+    if (!category) throw new Error('Category not found');
+
+    const article = this.articleRepo.create({
+      Title: dto.title,
+      Content: dto.content,
+      UserID: dto.userId,
+      CategoryID: dto.categoryId,
+      user,
+      category,
+    });
+    await this.articleRepo.save(article);
+
+    if (dto.imagePath) {
+      const image = this.imageRepo.create({
+        FilePath: dto.imagePath,
+        AltText: dto.imageDescription || '',
+        ArticleID: article.ArticleID,
+        article,
+      });
+      await this.imageRepo.save(image);
+    }
+
+    return {
+      id: article.ArticleID,
+      title: article.Title,
+      content: article.Content,
+      category: category.Name,
+      author: {
+        id: user.UserID,
+        fullName: user.FullName,
+        email: dto.email || user.Email,
+      },
+      image: dto.imagePath || null,
+      imageDescription: dto.imageDescription || null,
+    };
   }
 }
