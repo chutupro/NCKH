@@ -1,6 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Articles } from './article.entity'; 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
+import { Articles } from './article.entity';
 import { Timelines } from './timeline.entity';
+import { Feedback } from './feedback.entity';
 
 @Entity('MapLocations')
 export class MapLocations {
@@ -25,7 +33,27 @@ export class MapLocations {
   @Column({ type: 'int', nullable: true })
   TimelineID: number;
 
-  // --- RELATIONS ---
+  @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
+  Rating: number;
+
+  @Column({ type: 'int', nullable: true })
+  Reviews: number;
+
+  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  Address: string;
+
+  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  Image: string;
+
+  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  OldImage: string;
+
+  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  Desc: string;
+
+  @Column({ type: 'nvarchar', length: 2000, nullable: true })
+  FullDesc: string;
+
   @ManyToOne(() => Articles, (article) => article.mapLocations)
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
@@ -33,4 +61,7 @@ export class MapLocations {
   @ManyToOne(() => Timelines, (timeline) => timeline.mapLocations)
   @JoinColumn({ name: 'TimelineID' })
   timeline: Timelines;
+
+  @OneToMany(() => Feedback, (feedback) => feedback.location)
+  feedbacks: Feedback[];
 }
