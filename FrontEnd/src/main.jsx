@@ -1,6 +1,7 @@
 // main.jsx
 import { StrictMode } from 'react';
 import './config/i18n';
+import ScrollToTop from './Component/common/ScrollToTop';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
@@ -22,6 +23,7 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <AppProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <App />
         </BrowserRouter>
       </AppProvider>
