@@ -3,6 +3,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
+// initialize i18n before the app renders so react-i18next hooks work
+import './config/i18n';
 import App from './App.jsx';
 import { AppProvider } from './context/context';
 import 'leaflet/dist/leaflet.css';
