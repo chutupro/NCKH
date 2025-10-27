@@ -64,4 +64,8 @@ export class MapLocations {
 
   @OneToMany(() => Feedback, (feedback) => feedback.location)
   feedbacks: Feedback[];
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes
