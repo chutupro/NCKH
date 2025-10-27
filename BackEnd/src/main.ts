@@ -17,7 +17,6 @@ async function bootstrap() {
 
   // --- Cấu hình Swagger ---
   const config = new DocumentBuilder()
-<<<<<<< Updated upstream
     .setTitle('API Example')                 // tiêu đề API
     .setDescription('API description')       // mô tả
     .setVersion('1.0')                       // version
@@ -33,23 +32,15 @@ async function bootstrap() {
       },
       'access-token', // 👈 tên scheme — sẽ dùng trong @ApiBearerAuth()
     )
-=======
-    .setTitle('API Example')
-    .setDescription('API description')
-    .setVersion('1.0')
->>>>>>> Stashed changes
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-<<<<<<< Updated upstream
-=======
 
   // --- Serve static files from uploads ---
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
->>>>>>> Stashed changes
 
   // --- Listen server ---
   const port = process.env.PORT ?? 3000;
