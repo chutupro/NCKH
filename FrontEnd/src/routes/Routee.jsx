@@ -35,6 +35,7 @@ const Routee = () => {
         <Route path='/community' element={<Community />} />
       </Route>
 
+<<<<<<< Updated upstream
       {/* TRANG KHÔNG LAYOUT */}
       <Route path='/login' element={<Login />} />
       <Route path='/register' element={<Register />} />
@@ -46,3 +47,6 @@ const Routee = () => {
 }
 
 export default Routee
+=======
+export default Routee;
+>>>>>>> Stashed changes

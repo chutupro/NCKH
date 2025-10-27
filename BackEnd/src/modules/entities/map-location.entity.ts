@@ -33,4 +33,11 @@ export class MapLocations {
   @ManyToOne(() => Timelines, (timeline) => timeline.mapLocations)
   @JoinColumn({ name: 'TimelineID' })
   timeline: Timelines;
+<<<<<<< Updated upstream
 }
+=======
+
+  @OneToMany(() => Feedback, (feedback) => feedback.location)
+  feedbacks: Feedback[];
+}
+>>>>>>> Stashed changes

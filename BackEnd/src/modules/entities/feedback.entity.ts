@@ -1,4 +1,9 @@
+<<<<<<< Updated upstream
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+=======
+// src/modules/entities/feedback.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+>>>>>>> Stashed changes
 import { Articles } from './article.entity';
 import { Users } from './user.entity'; 
 
