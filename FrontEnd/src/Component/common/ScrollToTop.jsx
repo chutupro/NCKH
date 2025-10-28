@@ -2,15 +2,13 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const ScrollToTop = () => {
-  const { pathname, hash } = useLocation()
+  const { pathname } = useLocation()
 
   useEffect(() => {
-    // Nếu có hash (như #post-1), không scroll to top
-    // Điều này cho phép scroll đến bài viết cụ thể
-    if (!hash) {
-      window.scrollTo(0, 0)
-    }
-  }, [pathname, hash])
+    // Always scroll to top when the pathname changes (navigation between pages)
+    // This ensures each new route starts at the top of the page.
+    window.scrollTo({ top: 0, left: 0 })
+  }, [pathname])
 
   return null
 }

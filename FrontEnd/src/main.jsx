@@ -6,6 +6,7 @@ import './index.css';
 // initialize i18n before the app renders so react-i18next hooks work
 import './config/i18n';
 import App from './App.jsx';
+import ScrollToTop from './Component/common/ScrollToTop'
 import { AppProvider } from './context/context';
 import 'leaflet/dist/leaflet.css';
 import { Provider } from 'react-redux';
@@ -23,6 +24,7 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <AppProvider>
         <BrowserRouter>
+          <ScrollToTop />
           <App />
         </BrowserRouter>
       </AppProvider>
