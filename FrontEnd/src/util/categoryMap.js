@@ -15,7 +15,23 @@ export const KNOWN_CODES = ['architecture', 'culture', 'tourism', 'nature'];
 
 export function getCodeFromName(name) {
   if (!name) return 'other';
-  return VN_TO_CODE[name] || 'other';
+  // direct VN lookup
+  if (VN_TO_CODE[name]) return VN_TO_CODE[name];
+  // support common English labels as well
+  const EN_TO_CODE = {
+    'Architecture': 'architecture',
+    'Culture': 'culture',
+    'Tourism': 'tourism',
+    'Nature': 'nature',
+  };
+  const maybe = EN_TO_CODE[name] || EN_TO_CODE[String(name).trim()];
+  if (maybe) return maybe;
+  // case-insensitive English match
+  const lower = String(name).toLowerCase()
+  for (const [k, v] of Object.entries(EN_TO_CODE)) {
+    if (k.toLowerCase() === lower) return v
+  }
+  return 'other';
 }
 
 export function labelFor(code, t) {

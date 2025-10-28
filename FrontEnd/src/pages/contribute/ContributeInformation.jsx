@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import '../../Styles/Contribute/contributeInformation.css'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { KNOWN_CODES, CODE_TO_VN, labelFor, getCodeFromName } from '../../util/categoryMap'
+import CustomSelect from '../../Component/common/CustomSelect'
 
 const ContributeInformation = () => {
   const loc = useLocation()
@@ -26,16 +28,20 @@ const ContributeInformation = () => {
   const [alt, setAlt] = useState('')
   const [content, setContent] = useState('')
 
-  // helpers to get/set title/category based on language
+  // helpers to get/set title based on language
   const getTitle = () => (i18n.language === 'vi' ? (ai.title_vi || ai.title_en) : (ai.title_en || ai.title_vi))
   const setTitleForCurrentLang = (val) => {
     if (i18n.language === 'vi') setAi(prev => ({ ...prev, title_vi: val }))
     else setAi(prev => ({ ...prev, title_en: val }))
   }
-  const getCategory = () => (i18n.language === 'vi' ? (ai.category_vi || ai.category_en) : (ai.category_en || ai.category_vi))
-  const setCategoryForCurrentLang = (val) => {
-    if (i18n.language === 'vi') setAi(prev => ({ ...prev, category_vi: val }))
-    else setAi(prev => ({ ...prev, category_en: val }))
+
+  const getCurrentCode = () => {
+    // Prefer english field, fallback to vietnamese
+    const codeFromEn = getCodeFromName(ai.category_en)
+    if (codeFromEn && codeFromEn !== 'other') return codeFromEn
+    const codeFromVi = getCodeFromName(ai.category_vi)
+    if (codeFromVi && codeFromVi !== 'other') return codeFromVi
+    return 'other'
   }
 
   const handleSubmit = (e) => {
@@ -59,12 +65,20 @@ const ContributeInformation = () => {
           </div>
 
           <div className="ai-result">
-            <div className="ai-row">
-              <label>{t('contributeInfo.aiCategory')}</label>
-              <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                <input style={{flex: 1}} value={getCategory()} onChange={(e)=>setCategoryForCurrentLang(e.target.value)} />
-              </div>
+          <div className="ai-row">
+            <label>{t('contributeInfo.aiCategory')}</label>
+            <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+              <CustomSelect
+                value={getCurrentCode() !== 'other' ? getCurrentCode() : KNOWN_CODES[0]}
+                options={KNOWN_CODES.map(code => ({ value: code, label: labelFor(code, t) }))}
+                onChange={(code) => {
+                  const enLabel = code ? (code.charAt(0).toUpperCase() + code.slice(1)) : ''
+                  const viLabel = CODE_TO_VN[code] || enLabel
+                  setAi(prev => ({ ...prev, category_en: enLabel, category_vi: viLabel }))
+                }}
+              />
             </div>
+          </div>
               <div className="ai-row">
                 <label>{t('contributeInfo.aiTitle')}</label>
                 <input value={getTitle()} onChange={(e)=>setTitleForCurrentLang(e.target.value)} />

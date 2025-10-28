@@ -93,7 +93,7 @@ const Contribute = () => {
           window.alert(msg)
           // after user dismisses the alert, clear the file so image is removed
           clearFile()
-        } catch (e) {
+        } catch {
           /* ignore in non-browser env */
         }
         setAnalysis(null)
@@ -104,10 +104,11 @@ const Contribute = () => {
       const mapAiToFeCategory = (aiLabel) => {
         if (!aiLabel) return { category_en: null, category_vi: null }
         const key = aiLabel.toLowerCase()
-  if (key.includes('nature') || key.includes('landscape') || key.includes('thiên nhiên')) return { category_en: 'Nature', category_vi: 'Thiên nhiên' }
-  if (key.includes('heritage') || key.includes('architecture') || key.includes('kiến trúc')) return { category_en: 'Heritage', category_vi: 'Kiến trúc' }
-  if (key.includes('culture') || key.includes('art') || key.includes('văn hóa')) return { category_en: 'Culture', category_vi: 'Văn hóa' }
-  if (key.includes('people') || key.includes('event') || key.includes('sự kiện')) return { category_en: 'People', category_vi: 'Du lịch' }
+      if (key.includes('nature') || key.includes('landscape') || key.includes('thiên nhiên')) return { category_en: 'Nature', category_vi: 'Thiên nhiên' }
+      // map legacy/ambiguous heritage -> Architecture as requested
+      if (key.includes('heritage') || key.includes('architecture') || key.includes('kiến trúc')) return { category_en: 'Architecture', category_vi: 'Kiến trúc' }
+      if (key.includes('culture') || key.includes('art') || key.includes('văn hóa')) return { category_en: 'Culture', category_vi: 'Văn hóa' }
+      if (key.includes('people') || key.includes('event') || key.includes('sự kiện')) return { category_en: 'People', category_vi: 'Du lịch' }
         // fallback: return original label for both
         return { category_en: aiLabel, category_vi: aiLabel }
       }

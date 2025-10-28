@@ -1,4 +1,4 @@
-/* Styles for ContributeInformation page */
+/* Styles for ContributeInformation page - polished */
 .info-page {
   display: flex;
   align-items: center;
@@ -7,57 +7,62 @@
   min-height: 80vh;
 }
 .info-card {
-  width: 760px;
-  max-width: calc(100% - 32px);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 12px;
-  padding: 26px;
+  width: 820px;
+  max-width: calc(100% - 40px);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.008)
+  );
+  border-radius: 14px;
+  padding: 28px;
   color: #e6d9c6;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.03);
 }
 .info-top {
   text-align: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .info-icon {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .info-top h2 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
+  margin: 0 0 6px 0;
+  font-size: 20px;
 }
 .info-sub {
-  color: rgba(246, 233, 219, 0.7);
+  color: rgba(246, 233, 219, 0.75);
   font-size: 13px;
 }
 
 .info-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 .preview {
   background: #fff;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
 }
 .preview img {
   width: 100%;
-  height: 220px;
+  height: 240px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 .preview-empty {
-  height: 220px;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,30 +71,92 @@
 
 .ai-result {
   display: flex;
-  gap: 12px;
+  gap: 14px;
 }
 .ai-row {
   flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 .ai-row label {
   font-size: 13px;
-  color: rgba(230, 217, 198, 0.9);
-  margin-bottom: 6px;
+  color: rgba(230, 217, 198, 0.95);
+  margin-bottom: 8px;
 }
-.ai-row input {
-  padding: 8px 10px;
-  border-radius: 8px;
+.ai-row input,
+.ai-row select {
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(0, 0, 0, 0.12);
   color: #fff;
+  transition: box-shadow 0.12s ease, transform 0.08s;
+}
+.ai-row input:focus,
+.ai-row select:focus {
+  outline: none;
+  box-shadow: 0 8px 30px rgba(6, 43, 39, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Styled select with custom arrow */
+.ai-row select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 44px; /* room for custom arrow */
+  /* sync with primary action gradient (Confirm button) */
+  background: linear-gradient(90deg, #2dd4bf, #06b6d4);
+  color: #012525; /* darker text on bright gradient for readability */
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ai-row select::-ms-expand {
+  display: none;
+}
+.ai-row select option {
+  color: #012525;
+  background: transparent;
+}
+
+/* custom white arrow to sit on the colored select */
+.ai-row select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><path fill='%23ffffff' d='M5.5 7l4.5 4.5L14.5 7z'/></svg>");
+  background-position: right 12px center;
+  background-size: 14px;
+}
+
+/* hover / focus variants for select - keep synchronized with button hover */
+.ai-row select:hover {
+  background: linear-gradient(90deg, #1fc7b4, #0ea5a4);
+}
+.ai-row select:focus {
+  background: linear-gradient(90deg, #1fc7b4, #0ea5a4);
+  box-shadow: 0 12px 40px rgba(6, 182, 185, 0.14);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+/* Note: styling <option> backgrounds is limited on some browsers (Chrome uses native UI). For perfect control across browsers, consider a custom dropdown component. */
+
+/* hover / focus variants for select */
+.ai-row select:hover {
+  background: linear-gradient(90deg, #0b6b6b, #29c7bd);
+}
+.ai-row select:focus {
+  background: linear-gradient(90deg, #0b6b6b, #29c7bd);
+  box-shadow: 0 10px 36px rgba(10, 167, 159, 0.14);
+  transform: translateY(-2px);
 }
 
 .fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 .field-row {
   display: flex;
@@ -102,52 +169,65 @@
 }
 .field label {
   font-size: 13px;
-  color: rgba(230, 217, 198, 0.9);
+  color: rgba(230, 217, 198, 0.95);
   margin-bottom: 6px;
 }
 .field input,
 .field textarea {
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(0, 0, 0, 0.12);
   color: #fff;
 }
 .field textarea {
-  min-height: 100px;
+  min-height: 120px;
   resize: vertical;
 }
 
 .process-box {
-  background: rgba(0, 0, 0, 0.12);
-  padding: 12px;
-  border-radius: 8px;
-  color: rgba(230, 217, 198, 0.9);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08));
+  padding: 14px;
+  border-radius: 10px;
+  color: rgba(230, 217, 198, 0.95);
 }
 
 .form-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  align-items: center;
 }
 .btn-back {
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
   color: #f5e9d8;
   border: none;
 }
 .btn-submit {
   padding: 10px 16px;
-  border-radius: 8px;
-  background: #d6c6a7;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f1c27d, #d6c6a7);
   color: #081312;
   border: none;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(214, 198, 167, 0.12);
+}
+.btn-submit:hover {
+  transform: translateY(-3px);
+}
+
+/* small helpers */
+.small-muted {
+  font-size: 12px;
+  color: rgba(230, 217, 198, 0.75);
 }
 
 @media (max-width: 900px) {
   .info-card {
     width: 100%;
+    padding: 18px;
   }
   .ai-result {
     flex-direction: column;
@@ -157,5 +237,78 @@
   }
   .form-actions {
     justify-content: center;
+  }
+}
+
+/* Custom select styles */
+.custom-select {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+
+.custom-select-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px; /* match input height */
+}
+.custom-select-toggle:focus {
+  outline: none;
+  box-shadow: 0 8px 30px rgba(6, 43, 39, 0.06);
+}
+.custom-select-value {
+  display: inline-block;
+}
+.custom-select-arrow {
+  margin-left: 12px;
+  color: rgba(230, 230, 230, 0.9);
+  font-size: 14px;
+}
+.custom-select-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  z-index: 60;
+  list-style: none;
+  padding: 6px;
+  border-radius: 10px;
+  background: rgba(6, 10, 12, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
+  max-height: 260px;
+  overflow: auto;
+}
+.custom-select-item {
+  padding: 10px 12px;
+  color: #e6f7f5;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.custom-select-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  color: #e6f7f5;
+}
+.custom-select-item.selected {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e6f7f5;
+  font-weight: 700;
+}
+
+/* make sure the custom select matches small screens */
+@media (max-width: 900px) {
+  .custom-select-list {
+    position: static;
+    box-shadow: none;
+    margin-top: 6px;
   }
 }
