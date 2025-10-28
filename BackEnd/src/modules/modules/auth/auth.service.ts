@@ -36,7 +36,11 @@ export class AuthService {
   }
 
   async getTokens(user: any) {
-    const payload = { sub: user.UserID, email: user.Email, role: user.RoleID };
+    const payload = {
+      sub: user.UserID,
+      email: user.Email,
+      role: user.RoleID,
+    };
 
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.config.get<string>('ACCESS_TOKEN_SECRET') ?? 'access_secret',
@@ -54,27 +58,46 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
     const tokens = await this.getTokens(user);
+    // Hash and store refresh token for revocation control
     const hash = await bcrypt.hash(tokens.refresh_token, 10);
     await this.userService.setRefreshTokenHash(user.UserID, hash);
     return tokens;
   }
 
   async refreshTokens(userId: number, refreshToken: string) {
-    const user = await this.userService.findById(userId);
-    if (!user || !user.RefreshTokenHash)
-      throw new UnauthorizedException('Không tìm thấy user hoặc chưa đăng nhập');
+    // Verify refresh token signature first
+    let payload: any;
+    try {
+      payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.config.get<string>('REFRESH_TOKEN_SECRET') ?? 'refresh_secret',
+      });
+    } catch (err) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
 
-    const match = await bcrypt.compare(refreshToken, user.RefreshTokenHash);
+    if (!payload || payload.sub !== userId) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
+
+    const user = await this.userService.findById(userId);
+    if (!user) throw new UnauthorizedException('Không tìm thấy user');
+
+    const storedHash = await this.userService.getRefreshTokenHash(userId);
+    if (!storedHash) throw new UnauthorizedException('Refresh token không hợp lệ');
+
+    const match = await bcrypt.compare(refreshToken, storedHash);
     if (!match) throw new UnauthorizedException('Refresh token không hợp lệ');
 
-    const tokens = await this.getTokens(user);
-    const hash = await bcrypt.hash(tokens.refresh_token, 10);
-    await this.userService.setRefreshTokenHash(user.UserID, hash);
+    // rotate refresh token: issue new refresh token and replace hash in DB
+    const newTokens = await this.getTokens(user);
+    const newHash = await bcrypt.hash(newTokens.refresh_token, 10);
+    await this.userService.setRefreshTokenHash(user.UserID, newHash);
 
-    return { access_token: tokens.access_token };
+    return { access_token: newTokens.access_token, refresh_token: newTokens.refresh_token };
   }
 
   async logout(userId: number) {
+    // Remove stored refresh token hash so refresh token is revoked
     await this.userService.setRefreshTokenHash(userId, null);
     return { message: 'Đăng xuất thành công' };
   }

@@ -1,13 +1,10 @@
 // main.jsx
 import { StrictMode } from 'react';
-<<<<<<< Updated upstream
-import './config/i18n';
-import ScrollToTop from './Component/common/ScrollToTop';
-=======
->>>>>>> Stashed changes
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
+// initialize i18n before the app renders so react-i18next hooks work
+import './config/i18n';
 import App from './App.jsx';
 import { AppProvider } from './context/context';
 import 'leaflet/dist/leaflet.css';
@@ -26,10 +23,6 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <AppProvider>
         <BrowserRouter>
-<<<<<<< Updated upstream
-          <ScrollToTop />
-=======
->>>>>>> Stashed changes
           <App />
         </BrowserRouter>
       </AppProvider>

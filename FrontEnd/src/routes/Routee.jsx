@@ -56,8 +56,4 @@ const Routee = () => {
   );
 };
 
-<<<<<<< Updated upstream
 export default Routee;
-=======
-export default Routee;
->>>>>>> Stashed changes

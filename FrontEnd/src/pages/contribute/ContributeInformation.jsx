@@ -6,10 +6,18 @@ import { useTranslation } from 'react-i18next'
 const ContributeInformation = () => {
   const loc = useLocation()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   // try to get file data from location state (set by previous page)
   const initialImage = loc.state?.filePreview || null
-  const initialAI = loc.state?.aiResult || { category: 'Ẩm thực', title: 'Làng nghề mộc Kim Bồng' }
+  const incomingAi = loc.state?.aiResult || null
+
+  // normalize ai result to include both title_en/title_vi and category_en/category_vi
+  const initialAI = incomingAi ? {
+    category_en: incomingAi.category_en || incomingAi.category || '',
+    category_vi: incomingAi.category_vi || incomingAi.category || '',
+    title_en: incomingAi.title_en || incomingAi.title || '',
+    title_vi: incomingAi.title_vi || incomingAi.title || ''
+  } : { category_en: 'Travel', category_vi: 'Du lịch', title_en: 'Kim Bong wood village', title_vi: 'Làng nghề mộc Kim Bồng' }
 
   const [imageSrc] = useState(initialImage)
   const [ai, setAi] = useState(initialAI)
@@ -17,6 +25,18 @@ const ContributeInformation = () => {
   const [email, setEmail] = useState('')
   const [alt, setAlt] = useState('')
   const [content, setContent] = useState('')
+
+  // helpers to get/set title/category based on language
+  const getTitle = () => (i18n.language === 'vi' ? (ai.title_vi || ai.title_en) : (ai.title_en || ai.title_vi))
+  const setTitleForCurrentLang = (val) => {
+    if (i18n.language === 'vi') setAi(prev => ({ ...prev, title_vi: val }))
+    else setAi(prev => ({ ...prev, title_en: val }))
+  }
+  const getCategory = () => (i18n.language === 'vi' ? (ai.category_vi || ai.category_en) : (ai.category_en || ai.category_vi))
+  const setCategoryForCurrentLang = (val) => {
+    if (i18n.language === 'vi') setAi(prev => ({ ...prev, category_vi: val }))
+    else setAi(prev => ({ ...prev, category_en: val }))
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -41,12 +61,14 @@ const ContributeInformation = () => {
           <div className="ai-result">
             <div className="ai-row">
               <label>{t('contributeInfo.aiCategory')}</label>
-              <input value={ai.category} onChange={(e)=>setAi({...ai, category: e.target.value})} />
+              <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                <input style={{flex: 1}} value={getCategory()} onChange={(e)=>setCategoryForCurrentLang(e.target.value)} />
+              </div>
             </div>
-            <div className="ai-row">
-              <label>{t('contributeInfo.aiTitle')}</label>
-              <input value={ai.title} onChange={(e)=>setAi({...ai, title: e.target.value})} />
-            </div>
+              <div className="ai-row">
+                <label>{t('contributeInfo.aiTitle')}</label>
+                <input value={getTitle()} onChange={(e)=>setTitleForCurrentLang(e.target.value)} />
+              </div>
           </div>
 
           <div className="fields">
