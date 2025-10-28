@@ -92,6 +92,29 @@
   font-size: 22px;
   margin-bottom: 10px;
 }
+.preview-wrap {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 5;
+}
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
+  opacity: 1;
+  display: block;
+}
+
+/* button confirmed state */
+.confirm-btn.confirmed {
+  background: #28a745;
+  color: #fff;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
 .upload-text {
   color: #f6e9db;
   font-size: 13.5px;
@@ -154,6 +177,31 @@
   cursor: pointer;
   transition: transform 0.12s ease, background 0.12s ease;
 }
+.upload-message {
+  margin-top: 10px;
+  background: linear-gradient(90deg, #ff4d4f, #e74c3c);
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 6px 18px rgba(231,76,60,0.25);
+  border: 1px solid rgba(0,0,0,0.2);
+}
+.upload-message-text {
+  color: #fff;
+  font-weight: 600;
+  flex: 1;
+}
+.message-actions .btn-ok {
+  background: rgba(0,0,0,0.12);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.message-actions .btn-ok:hover { opacity: 0.95 }
 .confirm-btn:hover {
   background: #333;
 }
@@ -164,6 +212,25 @@
 .confirm-btn.disabled {
   opacity: 0.48;
   cursor: not-allowed;
+}
+
+.confirm-btn.loading {
+  opacity: 0.95;
+  cursor: progress;
+  background: #4ecdc4;
+  color: #062b27;
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(6,43,39,0.2);
+  border-top-color: rgba(6,43,39,0.9);
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+  animation: spin 0.9s linear infinite;
 }
 
 @media (max-width: 900px) {
