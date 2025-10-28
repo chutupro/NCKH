@@ -55,7 +55,7 @@ import { ImageComparison } from '../modules/entities/image-comparison.entity'; /
           ModerationLogs,
           ImageComparison, 
         ],
-        synchronize: true, // <-- turn off automatic schema sync in dev when tables conflict
+        synchronize: false, // <-- turn off automatic schema sync in dev when tables conflict
         logging: false,
       }),
       inject: [ConfigService],

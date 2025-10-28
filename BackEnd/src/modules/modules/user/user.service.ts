@@ -34,7 +34,7 @@ export class UserService {
   async findById(id: number) {
     return this.userRepo.findOne({ where: { UserID: id } });
   }
-
+  
   async setRefreshTokenHash(userId: number, refreshTokenHash: string | null) {
     await this.userRepo.update({ UserID: userId }, { RefreshTokenHash: refreshTokenHash });
   }
@@ -43,4 +43,5 @@ export class UserService {
     const user = await this.findById(userId);
     return user?.RefreshTokenHash ?? null;
   }
+  
 }

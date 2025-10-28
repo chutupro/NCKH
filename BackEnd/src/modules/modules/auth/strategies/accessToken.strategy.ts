@@ -8,13 +8,14 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.get<string>('JWT_ACCESS_SECRET', 'access_secret'),
+      // Use same env key as AuthService.getTokens
+      secretOrKey: config.get<string>('ACCESS_TOKEN_SECRET', 'access_secret'),
       ignoreExpiration: false,
     });
   }
 
   async validate(payload: any) {
-    // payload contains user info
+    // Stateless validation: payload was already verified by passport-jwt
     return { userId: payload.sub, email: payload.email, role: payload.role };
   }
 }
