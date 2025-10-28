@@ -185,7 +185,12 @@ const Timeline = () => {
             {filtered.map((item, idx) => (
               <li className="timeline-item" key={item.id || idx}>
                 <div className="timeline-card">
-                  <div className="timeline-card-image" style={{backgroundImage: `url(${item.image})`}} />
+                  <div className="timeline-card-image" style={{backgroundImage: `url(${item.image})`}}>
+                    {/* category badge inside image */}
+                    {item.category && (
+                      <span className="timeline-badge">{item.category}</span>
+                    )}
+                  </div>
                   <div className="timeline-card-body">
                     <time className="timeline-date">{item.date}</time>
                     <h3 className="timeline-title">{item.title}</h3>
