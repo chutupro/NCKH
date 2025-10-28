@@ -6,7 +6,6 @@ import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
 import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
-import { JwtStrategy } from 'src/modules/common/strategies/jwt.strategy'; // 👈 thêm dòng này
 
 @Module({
   imports: [
@@ -26,7 +25,7 @@ import { JwtStrategy } from 'src/modules/common/strategies/jwt.strategy'; // �
     AuthService,
     AccessTokenStrategy,
     RefreshTokenStrategy,
-    JwtStrategy, // 👈 thêm dòng này
+  // JwtStrategy removed to avoid duplicate 'jwt' strategy registration — AccessTokenStrategy is used
   ],
   exports: [AuthService],
 })
