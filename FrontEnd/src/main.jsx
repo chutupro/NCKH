@@ -1,10 +1,5 @@
 // main.jsx
 import { StrictMode } from 'react';
-<<<<<<< Updated upstream
-import './config/i18n';
-import ScrollToTop from './Component/common/ScrollToTop';
-=======
->>>>>>> Stashed changes
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
@@ -26,10 +21,6 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <AppProvider>
         <BrowserRouter>
-<<<<<<< Updated upstream
-          <ScrollToTop />
-=======
->>>>>>> Stashed changes
           <App />
         </BrowserRouter>
       </AppProvider>
