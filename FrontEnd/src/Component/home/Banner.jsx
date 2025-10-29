@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import "../../Styles/Home/Banner.css";
 import { useAppContext } from '../../context/useAppContext';
 import MapPanel from './MapPanel';
 
 const Banner = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { images, locations, locIndex, showMap, setShowMap } = useAppContext();
+  const [query, setQuery] = useState('');
 
   const bg = images?.[0] || '';
   const currentLocation = locations?.[locIndex % locations.length] || null;
@@ -22,8 +25,25 @@ const Banner = () => {
           <p className="hero-sub">{t('banner.subtitle')}</p>
           <p className="hero-desc">{t('banner.description')}</p>
           <div className="hero-ctas">
-            <button className="btn-primary">{t('banner.start')} <span className="arrow">→</span></button>
-            <input className="hero-search" placeholder={t('banner.search')} aria-label="search" />
+            <button
+              className="btn-primary"
+              onClick={() => navigate('/community')}
+            >
+              {t('banner.start')}
+            </button>
+            <input
+              className="hero-search"
+              placeholder={t('banner.search')}
+              aria-label="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const q = (query || '').trim();
+                  if (q) navigate(`/ImageLibrary?query=${encodeURIComponent(q)}`);
+                }
+              }}
+            />
           </div>
         </div>
 

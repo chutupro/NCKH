@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils';
 import '../../Styles/Contribute/contribute.css'
 
 const Contribute = () => {
@@ -173,7 +174,7 @@ const Contribute = () => {
                   {analysis && (
                     <div className="analysis-result">
                       <div className="analysis-label">{t('contributePage.detectedLabel')}: {analysis.label || '-'}</div>
-                      <div className="analysis-caption">{i18n.language === 'vi' ? (analysis.caption_vi || analysis.caption_en) : (analysis.caption_en || analysis.caption_vi)}</div>
+                      <div className="analysis-caption">{(typeof window !== 'undefined' ? getGoogleTranslateLanguage() : i18n.language) === 'vi' ? (analysis.caption_vi || analysis.caption_en) : (analysis.caption_en || analysis.caption_vi)}</div>
                       {/* language is controlled by header global switcher; no local buttons here */}
                     </div>
                   )}

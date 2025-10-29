@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import '../../Styles/Contribute/contributeInformation.css'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils'
 import { KNOWN_CODES, CODE_TO_VN, labelFor, getCodeFromName } from '../../util/categoryMap'
 import CustomSelect from '../../Component/common/CustomSelect'
 
@@ -28,10 +29,11 @@ const ContributeInformation = () => {
   const [alt, setAlt] = useState('')
   const [content, setContent] = useState('')
 
-  // helpers to get/set title based on language
-  const getTitle = () => (i18n.language === 'vi' ? (ai.title_vi || ai.title_en) : (ai.title_en || ai.title_vi))
+  // helpers to get/set title based on language (use Google Translate language when available)
+  const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : (i18n && i18n.language) || 'en'
+  const getTitle = () => (currentLang === 'vi' ? (ai.title_vi || ai.title_en) : (ai.title_en || ai.title_vi))
   const setTitleForCurrentLang = (val) => {
-    if (i18n.language === 'vi') setAi(prev => ({ ...prev, title_vi: val }))
+    if (currentLang === 'vi') setAi(prev => ({ ...prev, title_vi: val }))
     else setAi(prev => ({ ...prev, title_en: val }))
   }
 

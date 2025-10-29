@@ -15,6 +15,13 @@ const Community = () => {
   const [activeFilter, setActiveFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Nếu URL có query param ?query=..., dùng nó làm searchQuery ban đầu
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const q = params.get('query') || ''
+    if (q) setSearchQuery(q)
+  }, [location.search])
+
   useEffect(() => {
     // Scroll đến bài viết cụ thể nếu có hash trong URL
     if (location.hash) {
@@ -66,6 +73,12 @@ const Community = () => {
         </div>
 
         <div className="community-content">
+          {/* Hiển thị trạng thái tìm kiếm nếu có query */}
+          {searchQuery && (
+            <div className="searching-indicator" style={{ margin: '12px 0', padding: '8px 12px', background: '#fff9e6', borderRadius: 6, border: '1px solid #ffe8a8' }}>
+              {`Đang tìm kiếm "${searchQuery}"...`}
+            </div>
+          )}
           <div className="posts-list">
             {filteredPosts.length > 0 ? (
               filteredPosts.map((p) => (

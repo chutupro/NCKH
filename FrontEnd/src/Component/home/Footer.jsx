@@ -16,7 +16,7 @@ const Footer = () => {
           <div className="footer-content">
             {/* Company Info */}
             <div className="footer-section">
-              <h3 className="footer-logo">DynaVault</h3>
+              <h3 className="footer-logo notranslate" translate="no">DynaVault</h3>
               <p className="footer-description">
                 {t('footer.description')}
               </p>

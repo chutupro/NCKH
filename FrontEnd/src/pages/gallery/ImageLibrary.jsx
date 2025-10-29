@@ -1,6 +1,6 @@
 import "../../Styles/ImageLibrary/ImageLibrary.css";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import articlesData from "../../util/mockArticles";
 import { getCodeFromName, labelFor, CODE_TO_VN, KNOWN_CODES, displayCategoryName } from "../../util/categoryMap";
@@ -58,6 +58,18 @@ const ImageLibrary = () => {
     if (page !== clampedPage) setPage(clampedPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clampedPage]);
+
+  // Nếu URL có ?query=..., khởi tạo giá trị search từ query param để tự động tìm
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get('query') || '';
+    if (q && q !== search) {
+      setSearch(q);
+      setPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   // Handlers
   const handleSearch = e => { setSearch(e.target.value); setPage(1); };
