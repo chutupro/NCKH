@@ -9,6 +9,7 @@ import Contribute from "../pages/contribute/Contribute";
 import ContributeInformation from "../pages/contribute/ContributeInformation";
 import ImageLibrary from "../pages/gallery/ImageLibrary";
 import ImageLibraryInformation from "../pages/gallery/ImageLibraryInformation";
+import About from "../pages/about/About";
 import Login from "../pages/common/Login";
 import Register from "../pages/common/Register";
 import Community from "../pages/community/Community";
@@ -41,6 +42,7 @@ const Routee = () => {
         />
         <Route path="/ImageLibrary" element={<ImageLibrary />} />
         <Route path="/ImageLibrary/:id" element={<ImageLibraryInformation />} />
+  <Route path="/about" element={<About />} />
         <Route path="/compare" element={<CompareGallery />} />
         <Route path="/compare/:id" element={<CompareDetail />} />
         <Route path="/community" element={<Community />} />

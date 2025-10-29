@@ -110,7 +110,12 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  /* allow this column to shrink inside the grid and not force the sidebar to move */
+  min-width: 0;
 }
+
+/* compact search indicator placed inside posts column */
+/* searching-indicator removed */
 
 .no-posts {
   background: linear-gradient(

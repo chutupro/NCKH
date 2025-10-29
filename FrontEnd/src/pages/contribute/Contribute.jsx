@@ -53,11 +53,23 @@ const Contribute = () => {
   useEffect(() => {
     if (!file) {
       setPreviewUrl(null)
+      // remove persisted preview when there's no file
+  try { sessionStorage.removeItem('contribute_filePreview') } catch (e) { console.debug('sessionStorage remove error', e) }
       return
     }
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
+
+    // Read file as data URL so preview survives page reloads (sessionStorage)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result
+  setPreviewUrl(dataUrl)
+  try { sessionStorage.setItem('contribute_filePreview', dataUrl) } catch (e) { console.debug('sessionStorage set error', e) }
+    }
+    reader.onerror = () => {
+      setError('Không thể đọc file')
+    }
+    reader.readAsDataURL(file)
+    // no cleanup needed for FileReader
   }, [file])
 
   const navigate = useNavigate()

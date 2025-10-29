@@ -73,13 +73,8 @@ const Community = () => {
         </div>
 
         <div className="community-content">
-          {/* Hiển thị trạng thái tìm kiếm nếu có query */}
-          {searchQuery && (
-            <div className="searching-indicator" style={{ margin: '12px 0', padding: '8px 12px', background: '#fff9e6', borderRadius: 6, border: '1px solid #ffe8a8' }}>
-              {`Đang tìm kiếm "${searchQuery}"...`}
-            </div>
-          )}
-          <div className="posts-list">
+            <div className="posts-list">
+              {/* search indicator removed (handled via UI elsewhere or not shown) */}
             {filteredPosts.length > 0 ? (
               filteredPosts.map((p) => (
                 <PostCard post={p} key={p.id} />

@@ -11,7 +11,17 @@ const ContributeInformation = () => {
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   // try to get file data from location state (set by previous page)
-  const initialImage = loc.state?.filePreview || null
+  // fallback to sessionStorage so image persists across reloads
+  let initialImage = null
+  if (loc.state?.filePreview) initialImage = loc.state.filePreview
+  else {
+    try {
+      initialImage = sessionStorage.getItem('contribute_filePreview') || null
+    } catch (e) {
+      console.debug('sessionStorage get error', e)
+      initialImage = null
+    }
+  }
   const incomingAi = loc.state?.aiResult || null
 
   // normalize ai result to include both title_en/title_vi and category_en/category_vi

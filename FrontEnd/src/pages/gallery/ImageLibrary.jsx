@@ -64,9 +64,18 @@ const ImageLibrary = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const q = params.get('query') || '';
+    const c = params.get('category') || '';
     if (q && q !== search) {
       setSearch(q);
       setPage(1);
+    }
+    // if category provided in query, set it
+    if (c) {
+      // only update if different
+      if (c !== category) {
+        setCategory(c);
+        setPage(1);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
