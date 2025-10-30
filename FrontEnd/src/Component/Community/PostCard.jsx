@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/community/Community.css'
+import ImageModal from '../common/ImageModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart, faComment, faShareNodes, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
 
@@ -13,6 +14,8 @@ const PostCard = ({ post }) => {
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [showShareMenu, setShowShareMenu] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalSrc, setModalSrc] = useState(null)
 
   const toggleLike = () => {
     setLiked((s) => !s)
@@ -83,6 +86,9 @@ const PostCard = ({ post }) => {
             className="post-image crisper"
             src={post.image}
             alt={`Ảnh bài đăng của ${post.author}`}
+            style={{cursor: 'zoom-in'}}
+            onClick={() => { setModalSrc(post.image); setModalOpen(true) }}
+            role="button"
           />
         </div>
       </div>
@@ -157,6 +163,15 @@ const PostCard = ({ post }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {modalOpen && (
+        <ImageModal
+          src={modalSrc}
+          alt={`Ảnh lớn của ${post.author}`}
+          caption={post.text}
+          onClose={() => setModalOpen(false)}
+        />
       )}
     </article>
   )
