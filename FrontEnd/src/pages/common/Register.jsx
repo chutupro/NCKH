@@ -12,19 +12,89 @@ const Register = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Password validation state
+  const [passwordChecks, setPasswordChecks] = useState({
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    hasSpecialChar: false,
+    hasMinLength: false,
+    noSpaces: true
+  })
+
+  const [showPasswordHints, setShowPasswordHints] = useState(false)
+  const [confirmPasswordError, setConfirmPasswordError] = useState('')
+
+  // Validate password real-time
+  const handlePasswordChange = (value) => {
+    setPassword(value)
+    setShowPasswordHints(value.length > 0)
+    
+    setPasswordChecks({
+      hasUpperCase: /[A-Z]/.test(value),
+      hasLowerCase: /[a-z]/.test(value),
+      hasNumber: /[0-9]/.test(value),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(value),
+      hasMinLength: value.length >= 6,
+      noSpaces: !/\s/.test(value)
+    })
+
+    // Clear confirm password error if passwords now match
+    if (confirmPassword && value === confirmPassword) {
+      setConfirmPasswordError('')
+    }
+  }
+
+  // Validate confirm password real-time
+  const handleConfirmPasswordChange = (value) => {
+    setConfirmPassword(value)
+    
+    if (value && value !== password) {
+      setConfirmPasswordError('Mật khẩu không khớp.')
+    } else {
+      setConfirmPasswordError('')
+    }
+  }
+
+  // Validate full name (no special chars)
+  const validateFullName = (name) => {
+    const nameRegex = /^[a-zA-ZÀ-ỹ\s]+$/
+    return nameRegex.test(name)
+  }
+
   const onSubmit = async (e) => {
     e.preventDefault()
     setError('')
     
-    // Validate password match
-    if (password !== confirmPassword) {
-      setError('Mật khẩu không khớp!')
+    // Validate không để trống
+    if (!fullName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError('Không được để trống.')
       return
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự!')
+    // Validate full name: không ký tự đặc biệt
+    if (!validateFullName(fullName)) {
+      setError('Họ và tên không được chứa ký tự đặc biệt.')
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Email không hợp lệ.')
+      return
+    }
+
+    // Check all password requirements
+    const allChecksPassed = Object.values(passwordChecks).every(check => check === true)
+    if (!allChecksPassed) {
+      setError('Mật khẩu quá yếu.')
+      return
+    }
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      setError('Mật khẩu không khớp.')
       return
     }
 
@@ -38,7 +108,12 @@ const Register = () => {
       navigate('/login')
     } catch (err) {
       console.error('Register error:', err)
-      setError(err.message || 'Đăng ký thất bại. Email có thể đã được sử dụng.')
+      // Xử lý lỗi từ backend
+      if (err.message && err.message.includes('Email')) {
+        setError('Email đã được sử dụng.')
+      } else {
+        setError(err.message || 'Đăng ký thất bại.')
+      }
     } finally {
       setLoading(false)
     }
@@ -120,9 +195,40 @@ const Register = () => {
               type="password"
               placeholder="••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => handlePasswordChange(e.target.value)}
+              onFocus={() => setShowPasswordHints(true)}
               required
             />
+            
+            {/* Password Strength Hints (Facebook-style) */}
+            {showPasswordHints && (
+              <div className="password-hints">
+                <div className={`hint-item ${passwordChecks.hasMinLength ? 'valid' : ''}`}>
+                  <span className="hint-icon">{passwordChecks.hasMinLength ? '✓' : '○'}</span>
+                  <span className="hint-text">Tối thiểu 6 ký tự</span>
+                </div>
+                <div className={`hint-item ${passwordChecks.hasUpperCase ? 'valid' : ''}`}>
+                  <span className="hint-icon">{passwordChecks.hasUpperCase ? '✓' : '○'}</span>
+                  <span className="hint-text">Có chữ hoa (A-Z)</span>
+                </div>
+                <div className={`hint-item ${passwordChecks.hasLowerCase ? 'valid' : ''}`}>
+                  <span className="hint-icon">{passwordChecks.hasLowerCase ? '✓' : '○'}</span>
+                  <span className="hint-text">Có chữ thường (a-z)</span>
+                </div>
+                <div className={`hint-item ${passwordChecks.hasNumber ? 'valid' : ''}`}>
+                  <span className="hint-icon">{passwordChecks.hasNumber ? '✓' : '○'}</span>
+                  <span className="hint-text">Có số (0-9)</span>
+                </div>
+                <div className={`hint-item ${passwordChecks.hasSpecialChar ? 'valid' : ''}`}>
+                  <span className="hint-icon">{passwordChecks.hasSpecialChar ? '✓' : '○'}</span>
+                  <span className="hint-text">Có ký tự đặc biệt (!@#$...)</span>
+                </div>
+                <div className={`hint-item ${passwordChecks.noSpaces ? 'valid' : 'invalid'}`}>
+                  <span className="hint-icon">{passwordChecks.noSpaces ? '✓' : '✕'}</span>
+                  <span className="hint-text">Không có khoảng trắng</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -132,12 +238,19 @@ const Register = () => {
               type="password"
               placeholder="••••••"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => handleConfirmPasswordChange(e.target.value)}
               required
             />
+            
+            {/* Confirm Password Error (Real-time) */}
+            {confirmPasswordError && (
+              <div className="field-error">
+                {confirmPasswordError}
+              </div>
+            )}
           </div>
 
-          <button className="btn-primary" type="submit" disabled={loading}>
+          <button className="auth-btn-submit" type="submit" disabled={loading}>
             {loading ? 'Đang đăng ký...' : 'ĐĂNG KÝ'}
           </button>
         </form>

@@ -17,7 +17,7 @@ export class AuthController {
       type: 'object',
       properties: {
         email: { type: 'string', example: 'test@gmail.com' },
-        password: { type: 'string', example: '123456' },
+        password: { type: 'string', example: 'Password123!' },
         fullName: { type: 'string', example: 'Lê Văn Nghĩa' },
         role: { type: 'string', example: '1' },
       },

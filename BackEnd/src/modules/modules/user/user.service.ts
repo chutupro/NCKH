@@ -13,7 +13,7 @@ export class UserService {
 
   async createUser(email: string, password: string, fullName?: string, role?: string) {
     const existing = await this.userRepo.findOne({ where: { Email: email } });
-    if (existing) throw new Error('Email đã tồn tại');
+    if (existing) throw new Error('Email đã được sử dụng.');
 
     const hash = await bcrypt.hash(password, 10);
     const user = this.userRepo.create({

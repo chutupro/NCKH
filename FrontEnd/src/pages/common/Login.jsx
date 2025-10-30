@@ -16,6 +16,20 @@ const Login = () => {
   const onSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    // Validation
+    if (!email.trim() || !password.trim()) {
+      setError('Không được để trống.')
+      return
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Email không hợp lệ.')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -29,7 +43,8 @@ const Login = () => {
       navigate('/')
     } catch (err) {
       console.error('Login error:', err)
-      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.')
+      // Message thống nhất cho bảo mật
+      setError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.')
     } finally {
       setLoading(false)
     }
@@ -116,7 +131,7 @@ const Login = () => {
             <Link to="/forgot-password" className="link-primary">Quên mật khẩu?</Link>
           </div>
 
-          <button className="btn-primary" type="submit" disabled={loading}>
+          <button className="auth-btn-submit" type="submit" disabled={loading}>
             {loading ? 'Đang đăng nhập...' : 'ĐĂNG NHẬP'}
           </button>
         </form>
