@@ -61,7 +61,17 @@ export class AuthService {
     // Hash and store refresh token for revocation control
     const hash = await bcrypt.hash(tokens.refresh_token, 10);
     await this.userService.setRefreshTokenHash(user.UserID, hash);
-    return tokens;
+    
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      user: {
+        UserID: user.UserID,
+        Email: user.Email,
+        FullName: user.FullName,
+        RoleID: user.RoleID,
+      },
+    };
   }
 
   async refreshTokens(userId: number, refreshToken: string) {
@@ -93,7 +103,10 @@ export class AuthService {
     const newHash = await bcrypt.hash(newTokens.refresh_token, 10);
     await this.userService.setRefreshTokenHash(user.UserID, newHash);
 
-    return { access_token: newTokens.access_token, refresh_token: newTokens.refresh_token };
+    return { 
+      accessToken: newTokens.access_token, 
+      refreshToken: newTokens.refresh_token 
+    };
   }
 
   async logout(userId: number) {
