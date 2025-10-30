@@ -1,0 +1,223 @@
+========================================
+   AI TITLE SERVICE - SETUP MÁY MỚI
+========================================
+
+HƯỚNG DẪN CÀI ĐẶT MÔI TRƯỜNG VENV CHO MÁY MỚI
+
+========================================
+   YÊU CẦU HỆ THỐNG
+========================================
+- Windows 10/11, Linux, hoặc macOS
+- Python 3.8+ (khuyến nghị Python 3.10 hoặc 3.11)
+- Kết nối internet ổn định
+- 2GB RAM trống
+- 1GB dung lượng ổ cứng
+
+========================================
+   BƯỚC 1: CÀI ĐẶT PYTHON
+========================================
+
+Windows:
+1. Tải Python từ: https://www.python.org/downloads/
+2. Chọn Python 3.10 hoặc 3.11
+py -3.10 -m venv .venv
+
+3. QUAN TRỌNG: Tích chọn "Add Python to PATH"
+4. Cài đặt và khởi động lại máy
+
+Linux (Ubuntu/Debian):
+sudo apt update
+sudo apt install python3.10 python3.10-venv python3.10-pip
+
+Linux (CentOS/RHEL):
+sudo yum install python3.10 python3.10-pip
+
+macOS:
+brew install python@3.10
+# Hoặc tải từ: https://www.python.org/downloads/
+
+========================================
+   BƯỚC 2: KIỂM TRA PYTHON
+========================================
+
+Mở Command Prompt/Terminal và chạy:
+python --version
+# Hoặc
+python3 --version
+
+Kết quả phải hiển thị: Python 3.8.x hoặc cao hơn
+
+========================================
+   BƯỚC 3: TẠO VIRTUAL ENVIRONMENT
+========================================
+
+Windows:
+python -m venv ai-venv
+py -0
+2. Chọn Python 3.10 hoặc 3.11
+py -3.10 -m venv .venv
+Linux/macOS:
+python3 -m venv ai-venv
+
+========================================
+   BƯỚC 4: KÍCH HOẠT VENV
+========================================
+
+Windows:
+ai-venv\Scripts\activate
+
+Linux/macOS:
+source ai-venv/bin/activate
+
+Sau khi kích hoạt, prompt sẽ hiển thị: (ai-venv)
+
+========================================
+   BƯỚC 5: CẬP NHẬT PIP
+========================================
+
+python -m pip install --upgrade pip
+
+========================================
+   BƯỚC 6: CÀI ĐẶT PACKAGES
+========================================
+
+Cài đặt từng package để tránh lỗi:
+
+pip install fastapi
+pip install uvicorn
+pip install onnxruntime
+pip install pillow
+pip install numpy
+pip install python-multipart
+pip install requests
+
+Cài đặt PyTorch (CPU version):
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+========================================
+   BƯỚC 7: KIỂM TRA CÀI ĐẶT
+========================================
+
+Test các packages:
+python -c "import fastapi; print('FastAPI: OK')"
+python -c "import uvicorn; print('Uvicorn: OK')"
+python -c "import onnxruntime; print('ONNX Runtime: OK')"
+python -c "import torch; print('PyTorch version:', torch.__version__)"
+python -c "import PIL; print('Pillow: OK')"
+python -c "import numpy; print('NumPy: OK')"
+
+========================================
+   BƯỚC 8: CHẠY AI SERVICE
+========================================
+
+1. Đảm bảo venv đang kích hoạt: (ai-venv)
+2. Vào thư mục ai:
+cd ai
+3. Chạy service:
+python app.py
+
+========================================
+   BƯỚC 9: TEST SERVICE
+========================================
+
+Mở browser hoặc curl:
+http://localhost:8000/health
+
+Test với ảnh:
+curl -X POST "http://localhost:8000/analyze" -F "file=@path/to/image.jpg"
+
+========================================
+   SCRIPT TỰ ĐỘNG (COPY-PASTE)
+========================================
+
+Windows - Tạo file setup.bat:
+@echo off
+echo Setting up AI Title Service...
+python -m venv ai-venv
+call ai-venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install fastapi uvicorn onnxruntime pillow numpy python-multipart requests
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+echo Setup completed! Run: ai-venv\Scripts\activate && cd ai && python app.py
+pause
+
+Linux/macOS - Tạo file setup.sh:
+#!/bin/bash
+echo "Setting up AI Title Service..."
+python3 -m venv ai-venv
+source ai-venv/bin/activate
+python -m pip install --upgrade pip
+pip install fastapi uvicorn onnxruntime pillow numpy python-multipart requests
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+echo "Setup completed! Run: source ai-venv/bin/activate && cd ai && python app.py"
+
+========================================
+   LỆNH CHẠY NHANH (COPY-PASTE)
+========================================
+
+Windows:
+python -m venv ai-venv
+ai-venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install fastapi uvicorn onnxruntime pillow numpy python-multipart requests torch torchvision --index-url https://download.pytorch.org/whl/cpu
+cd ai
+python app.py
+
+Linux/macOS:
+python3 -m venv ai-venv
+source ai-venv/bin/activate
+python -m pip install --upgrade pip
+pip install fastapi uvicorn onnxruntime pillow numpy python-multipart requests torch torchvision --index-url https://download.pytorch.org/whl/cpu
+cd ai
+python app.py
+
+========================================
+   QUẢN LÝ VENV
+========================================
+
+Kích hoạt venv:
+Windows: ai-venv\Scripts\activate
+Linux/macOS: source ai-venv/bin/activate
+
+Thoát venv:
+deactivate
+
+Xóa venv (nếu cần):
+Windows: rmdir /s ai-venv
+Linux/macOS: rm -rf ai-venv
+
+========================================
+   TROUBLESHOOTING
+========================================
+
+1. "python not found":
+   - Cài đặt Python và thêm vào PATH
+   - Khởi động lại Command Prompt
+
+2. "pip not found":
+   - Cài đặt pip: python -m ensurepip --upgrade
+   - Hoặc: python -m pip install --upgrade pip
+
+3. "venv not found":
+   - Cài đặt venv: pip install virtualenv
+   - Hoặc dùng: python -m venv
+
+4. Packages không cài được:
+   - Cập nhật pip: python -m pip install --upgrade pip
+   - Thử: pip install --no-cache-dir package_name
+
+5. PyTorch lỗi:
+   - Dùng CPU version: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+   - Hoặc: pip install torch torchvision
+
+6. Port 8000 bị chiếm:
+   - Đổi port trong app.py: uvicorn.run(app, host="0.0.0.0", port=8001)
+
+========================================
+   SERVICES URLS
+========================================
+AI Service: http://localhost:8000
+Health Check: http://localhost:8000/health
+Analyze Image: http://localhost:8000/analyze
+
+========================================

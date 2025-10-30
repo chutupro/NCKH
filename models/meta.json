@@ -1,0 +1,16 @@
+{
+  "labels": [
+    "Heritage & Architecture",
+    "Culture & Art",
+    "Nature & Landscape",
+    "People & Events"
+  ],
+  "threshold": 0.5,
+  "best_f1": 0.9829816201497618,
+  "dataset_mapping": {
+    "heritage": "Heritage & Architecture",
+    "culture": "Culture & Art",
+    "nature": "Nature & Landscape",
+    "people": "People & Events"
+  }
+}

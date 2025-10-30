@@ -1,0 +1,281 @@
+========================================
+   AI TITLE SERVICE - THƯ VIỆN SỬ DỤNG
+========================================
+
+Danh sách đầy đủ các thư viện Python cần thiết cho dự án
+
+========================================
+   1. CORE FRAMEWORK
+========================================
+
+fastapi==0.115.5
+- Mô tả: Web framework hiện đại cho Python API
+- Công dụng: Xây dựng REST API endpoints
+- Tài liệu: https://fastapi.tiangolo.com/
+- Kích thước: ~100MB (bao gồm dependencies)/TIENVUC
+
+
+pydantic==2.10.3
+- Mô tả: Data validation và settings management
+- Công dụng: Validate request/response data
+- Tài liệu: https://docs.pydantic.dev/
+- Kích thước: ~20MB
+
+uvicorn[standard]==0.32.1
+- Mô tả: ASGI web server cho FastAPI
+- Công dụng: Chạy FastAPI application
+- Tài liệu: https://www.uvicorn.org/
+- Kích thước: ~50MB (bao gồm extras)
+
+python-multipart>=0.0.12
+- Mô tả: File upload handling
+- Công dụng: Xử lý upload ảnh từ client
+- Tài liệu: https://github.com/andrew-d/python-multipart
+- Kích thước: ~5MB
+
+========================================
+   2. DEEP LEARNING FRAMEWORKS
+========================================
+
+torch>=2.1.0
+- Mô tả: PyTorch deep learning framework
+- Công dụng: Load và chạy AI models (BLIP, MarianMT)
+- Tài liệu: https://pytorch.org/docs/
+- Kích thước: ~700MB (CPU version)
+- Lưu ý: Có thể dùng GPU version nếu có CUDA
+
+torchvision>=0.16.0
+- Mô tả: Computer vision utilities cho PyTorch
+- Công dụng: Image preprocessing, transforms
+- Tài liệu: https://pytorch.org/vision/
+- Kích thước: ~50MB
+
+onnxruntime>=1.17.0
+- Mô tả: ONNX model inference runtime
+- Công dụng: Chạy classifier model (cls.onnx)
+- Tài liệu: https://onnxruntime.ai/
+- Kích thước: ~50MB (CPU version)
+- Lưu ý: Nhanh hơn PyTorch cho inference
+
+========================================
+   3. AI MODELS & NLP
+========================================
+
+transformers>=4.40.0
+- Mô tả: Hugging Face transformers library
+- Công dụng: Load BLIP caption model và MarianMT translator
+- Tài liệu: https://huggingface.co/docs/transformers/
+- Kích thước: ~200MB
+- Models được tải:
+  * Salesforce/blip-image-captioning-base (~990MB)
+  * Helsinki-NLP/opus-mt-en-vi (~300MB)
+  * LukeJacob2023/nsfw-image-detector (~500MB)
+
+sentencepiece>=0.2.0
+- Mô tả: Text tokenization library
+- Công dụng: Tokenizer cho MarianMT translation
+- Tài liệu: https://github.com/google/sentencepiece
+- Kích thước: ~10MB
+- Lưu ý: BẮT BUỘC cho MarianMT
+
+accelerate>=0.20.0
+- Mô tả: Training và inference acceleration
+- Công dụng: Tối ưu hóa loading models lớn
+- Tài liệu: https://huggingface.co/docs/accelerate/
+- Kích thước: ~30MB
+
+llama-cpp-python>=0.2.90
+- Mô tả: Python bindings for llama.cpp (LLM inference)
+- Công dụng: Chạy LLM models (Qwen2-1.5B) cho title generation
+- Tài liệu: https://llama-cpp-python.readthedocs.io/
+- Kích thước: ~10MB (binary), model ~1GB GGUF riêng
+- Cài đặt CUDA: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
+- Lưu ý: Cần CUDA 12.1 cho GPU inference, hoặc CPU mode
+
+huggingface-hub>=0.20.0
+- Mô tả: Client library cho Hugging Face Hub
+- Công dụng: Download models từ Hugging Face
+- Tài liệu: https://huggingface.co/docs/huggingface_hub/
+- Kích thước: ~5MB
+- Lưu ý: Dùng để download LLM model (Qwen2-1.5B-Instruct-GGUF)
+
+========================================
+   4. IMAGE PROCESSING
+========================================
+
+pillow>=10.0.0
+- Mô tả: Python Imaging Library
+- Công dụng: Đọc, xử lý, resize ảnh
+- Tài liệu: https://pillow.readthedocs.io/
+- Kích thước: ~20MB
+
+numpy>=1.26.0
+- Mô tả: Numerical computing library
+- Công dụng: Array operations, matrix math
+- Tài liệu: https://numpy.org/doc/
+- Kích thước: ~50MB
+- Lưu ý: Core dependency cho hầu hết ML libraries
+
+========================================
+   5. UTILITIES
+========================================
+
+requests>=2.31.0
+- Mô tả: HTTP library
+- Công dụng: Download models, API calls
+- Tài liệu: https://requests.readthedocs.io/
+- Kích thước: ~5MB
+
+========================================
+   TỔNG DUNG LƯỢNG ƯỚC TÍNH
+========================================
+
+Python Packages:           ~1.2 GB
+AI Models (khi tải):       ~2.8 GB
+  - Classification model: ~15 MB
+  - BLIP caption: ~900 MB
+  - MarianMT translation: ~300 MB
+  - NSFW detector: ~500 MB
+  - LLM (Qwen2-1.5B): ~1 GB
+Project Files:             ~50 MB
+-------------------------------------------
+TỔNG CỘNG:                 ~4.0 GB
+
+========================================
+   CÁCH CÀI ĐẶT
+========================================
+
+Cách 1: Cài từ requirements.txt (KHUYÊN DÙNG)
+----------------------------------------------
+pip install -r requirements.txt
+
+Cách 2: Cài từng package
+-------------------------
+pip install fastapi==0.115.5
+pip install pydantic==2.10.3
+pip install uvicorn[standard]==0.32.1
+pip install torch>=2.1.0 torchvision>=0.16.0
+pip install onnxruntime>=1.17.0
+pip install pillow>=10.0.0
+pip install numpy>=1.26.0
+pip install python-multipart>=0.0.12
+pip install requests>=2.31.0
+pip install transformers>=4.40.0
+pip install accelerate>=0.20.0
+pip install sentencepiece>=0.2.0
+
+Cách 3: Cài PyTorch CPU version (tiết kiệm dung lượng)
+-------------------------------------------------------
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+========================================
+   DEPENDENCY TREE (Đơn giản hóa)
+========================================
+
+FastAPI App
+├── fastapi → pydantic, starlette
+├── uvicorn → httptools, websockets
+├── python-multipart (file uploads)
+│
+AI Models
+├── transformers → torch, numpy
+│   ├── BLIP (caption generation)
+│   ├── MarianMT (translation)
+│   │   └── sentencepiece (tokenizer)
+│   └── NSFW Detector
+│
+├── torch → numpy
+├── torchvision → pillow, torch
+├── onnxruntime (classifier inference)
+└── pillow (image processing)
+
+========================================
+   YÊU CẦU HỆ THỐNG TỐI THIỂU
+========================================
+
+CPU:        2 cores (Intel i3/AMD Ryzen 3 hoặc tương đương)
+RAM:        4GB (khuyên dùng 8GB để chạy mượt)
+Storage:    5GB dung lượng trống
+OS:         Windows 10/11, Linux (Ubuntu 20.04+), macOS 10.15+
+Python:     3.10, 3.11, 3.12 (KHÔNG dùng 3.13 - chưa ổn định)
+Internet:   Cần khi lần đầu tải models (~2GB)
+
+========================================
+   OPTIONAL: GPU SUPPORT
+========================================
+
+Nếu có GPU NVIDIA với CUDA:
+
+1. Cài CUDA Toolkit 11.8 hoặc 12.1
+   https://developer.nvidia.com/cuda-downloads
+
+2. Cài PyTorch với CUDA:
+   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+
+3. Kiểm tra GPU:
+   python -c "import torch; print(torch.cuda.is_available())"
+
+Lợi ích: Tăng tốc 5-10x cho caption generation
+
+========================================
+   TROUBLESHOOTING
+========================================
+
+1. Lỗi "sentencepiece not found"
+   → pip install sentencepiece
+
+2. Lỗi "The paging file is too small"
+   → Model quá lớn, tăng virtual memory trong Windows
+   → Hoặc dùng model nhỏ hơn
+
+3. Lỗi import torch
+   → Cài lại: pip uninstall torch && pip install torch
+
+4. Lỗi "No module named 'transformers'"
+   → pip install transformers
+
+5. Models tải chậm/bị lỗi
+   → Xóa cache: rm -rf ~/.cache/huggingface
+   → Tải lại models
+
+========================================
+   CACHE & STORAGE MANAGEMENT
+========================================
+
+Hugging Face models cache location:
+Windows:   C:\Users\{username}\.cache\huggingface\hub
+Linux/Mac: ~/.cache/huggingface/hub
+
+Để xóa models không dùng:
+rm -rf ~/.cache/huggingface/hub/models--{model-name}
+
+Để đổi cache directory:
+export HF_HOME=/path/to/new/cache
+
+========================================
+   BẢO MẬT & BEST PRACTICES
+========================================
+
+1. Luôn dùng virtual environment (venv)
+2. Không commit thư mục cache vào git
+3. Pin version chính xác trong requirements.txt
+4. Backup models sau khi tải xong
+5. Kiểm tra disk space trước khi cài đặt
+6. Sử dụng .gitignore để loại trừ:
+   - __pycache__/
+   - *.pyc
+   - .venv/
+   - .env
+   - models/*.pth (nếu lớn)
+
+========================================
+   HỖ TRỢ & LIÊN HỆ
+========================================
+
+GitHub Issues: [Your repository URL]
+Documentation: Xem docs/SETUP.txt
+API Guide: Xem docs/API.txt
+
+========================================
+
+
