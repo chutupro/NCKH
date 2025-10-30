@@ -134,7 +134,9 @@ const Contribute = () => {
       }
       setAnalysis({ label, caption_en: aiResult.title_en, caption_vi: aiResult.title_vi })
       // navigate to details page; keep loading spinner visible until navigation
-      navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult } })
+  // pass the original File object too so the details page can upload the
+  // original image (not a possibly-resized dataURL) and avoid blurriness
+  navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult, file } })
     } catch (err) {
       setError(err.message)
       setLoading(false)

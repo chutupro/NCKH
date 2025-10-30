@@ -5,6 +5,24 @@ import { useTranslation } from 'react-i18next'
 import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils'
 import { KNOWN_CODES, CODE_TO_VN, labelFor, getCodeFromName } from '../../util/categoryMap'
 import CustomSelect from '../../Component/common/CustomSelect'
+import { createArticlePost } from '../../API/articlesPost'
+import { getUserById } from '../../API/users'
+import { useEffect } from 'react'
+const BACKEND_BASE = 'http://localhost:3000'
+
+// helper: convert dataURL -> Blob
+function dataURLtoBlob(dataurl) {
+  const arr = dataurl.split(',')
+  const mimeMatch = arr[0].match(/:(.*?);/)
+  const mime = mimeMatch ? mimeMatch[1] : 'image/png'
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new Blob([u8arr], { type: mime })
+}
 
 const ContributeInformation = () => {
   const loc = useLocation()
@@ -34,10 +52,80 @@ const ContributeInformation = () => {
 
   const [imageSrc] = useState(initialImage)
   const [ai, setAi] = useState(initialAI)
+  const [uploadedPath, setUploadedPath] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [localObjectUrl, setLocalObjectUrl] = useState(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [alt, setAlt] = useState('')
   const [content, setContent] = useState('')
+
+  // Prefill contributor info from userId=1 (temporary)
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const user = await getUserById(1)
+        if (!mounted) return
+        if (user) {
+          setName(user.FullName || '')
+          setEmail(user.Email || '')
+        }
+      } catch (err) {
+        console.debug('Could not load user 1:', err)
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
+
+  // Prefer uploading the original File when available. The previous flow
+  // only had a dataURL preview; uploading that can produce a new image
+  // (or a different format) that looks blurry. We now look for a File in
+  // the navigation state and upload it. If that's not present, fall back to
+  // uploading a dataURL blob (legacy behavior).
+  useEffect(() => {
+    let mounted = true
+    const doUpload = async () => {
+      // If we already have a server path, nothing to do
+      if (uploadedPath) return
+      // First try to get a File object from location state (set by previous page)
+      const incomingFile = loc.state?.file || null
+      if (!imageSrc && !incomingFile) return
+
+      try {
+        setUploading(true)
+        const fd = new FormData()
+        if (incomingFile instanceof File) {
+          // upload original file to preserve quality
+          fd.append('file', incomingFile, incomingFile.name)
+        } else if (String(imageSrc).startsWith('data:')) {
+          // legacy: convert dataURL -> Blob and upload
+          const blob = dataURLtoBlob(imageSrc)
+          fd.append('file', blob, 'upload.png')
+        } else {
+          // imageSrc is probably already a server path; nothing to upload
+          return
+        }
+
+        const res = await fetch(`${BACKEND_BASE}/upload`, {
+          method: 'POST',
+          body: fd,
+        })
+        if (!res.ok) throw new Error('Upload failed: ' + res.status)
+        const json = await res.json()
+        const fp = json?.filePath || json?.file_path || null
+        if (fp && mounted) {
+          setUploadedPath(fp)
+        }
+      } catch (err) {
+        console.error('Failed to upload image to server:', err)
+      } finally {
+        if (mounted) setUploading(false)
+      }
+    }
+    doUpload()
+    return () => { mounted = false }
+  }, [imageSrc, loc.state, uploadedPath])
 
   // helpers to get/set title based on language (use Google Translate language when available)
   const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : (i18n && i18n.language) || 'en'
@@ -56,11 +144,56 @@ const ContributeInformation = () => {
     return 'other'
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-  // TODO: send payload to backend
-  alert(t('contributeInfo.submitDemoAlert'))
+    try {
+      const code = getCurrentCode()
+      const codeToId = { architecture: 1, culture: 2, tourism: 3, nature: 4 }
+      // Choose imagePath to send to backend API when creating article
+      // If we have an uploadedPath (backend returned '/uploads/xxx'), use that
+      // Otherwise if imageSrc already looks like a server-relative path use it
+      // Do not send data: URLs
+      const imgToSend = uploadedPath || (imageSrc && String(imageSrc).startsWith('/') ? imageSrc : undefined)
+
+      const payload = {
+        title: getTitle(),
+        content,
+        categoryId: codeToId[code] || 1,
+        userId: 1,
+        email,
+        imagePath: imgToSend,
+        imageDescription: alt || ai.title_en || ai.title_vi || ''
+      }
+      await createArticlePost(payload)
+      navigate('/community')
+    } catch (err) {
+      const serverMsg = err?.message || String(err)
+      alert((t('contributeInfo.submitError') || 'Error submitting: ') + serverMsg)
+    }
   }
+
+  // For preview, prefer the uploaded server file, then a native object URL
+  // from the original File (keeps full resolution), and finally the
+  // fallback dataURL preview.
+  let previewDisplay = null
+  if (uploadedPath) previewDisplay = `${BACKEND_BASE}${uploadedPath}`
+  else if (localObjectUrl) previewDisplay = localObjectUrl
+  else previewDisplay = imageSrc
+
+  // create/revoke object URL for original File when available
+  useEffect(() => {
+    const f = loc.state?.file
+    if (f instanceof File) {
+      const url = URL.createObjectURL(f)
+      setLocalObjectUrl(url)
+      return () => {
+        try { URL.revokeObjectURL(url) } catch { /* ignore */ }
+        setLocalObjectUrl(null)
+      }
+    }
+    // if no file provided, ensure we don't keep an old object URL
+  return () => { if (localObjectUrl) { try { URL.revokeObjectURL(localObjectUrl) } catch { /* ignore */ } ; setLocalObjectUrl(null) } }
+  }, [loc.state, /* eslint-disable-line react-hooks/exhaustive-deps */])
 
   return (
     <div className="info-page">
@@ -73,7 +206,12 @@ const ContributeInformation = () => {
 
         <form className="info-form" onSubmit={handleSubmit}>
           <div className="preview">
-            {imageSrc ? <img src={imageSrc} alt="preview" /> : <div className="preview-empty">{t('common.error')}</div>}
+            {previewDisplay ? (
+              <img src={previewDisplay} alt="preview" />
+            ) : (
+              <div className="preview-empty">{t('common.error')}</div>
+            )}
+            {uploading && <div className="uploading-indicator">{t('contributeInfo.uploading') || 'Đang tải ảnh...'}</div>}
           </div>
 
           <div className="ai-result">
@@ -115,7 +253,7 @@ const ContributeInformation = () => {
             </div>
 
             <div className="field">
-              <label>{t('contributeInfo.contentLabel')} *</label>
+              <label>{t('contributeInfo.contentLabel')}</label>
               <textarea placeholder={t('contributeInfo.contentPlaceholder')} value={content} onChange={(e)=>setContent(e.target.value)} />
             </div>
           </div>

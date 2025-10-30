@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/community/Community.css'
-import posts from '../../util/posts'
+// fetch posts from backend
+import { getArticlesPosts, deleteArticlePost } from '../../API/articlesPost'
+import postsMock from '../../util/posts'
+const BACKEND_BASE = 'http://localhost:3000'
 import PostCard from '../../Component/Community/PostCard'
 import CommunitySidebar from '../../Component/Community/CommunitySidebar'
 import Headers from '../../Component/home/Headers'
@@ -14,6 +17,9 @@ const Community = () => {
   const location = useLocation()
   const [activeFilter, setActiveFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   // Nếu URL có query param ?query=..., dùng nó làm searchQuery ban đầu
   useEffect(() => {
@@ -45,16 +51,80 @@ const Community = () => {
   // Lọc bài viết theo category và search query
   const filteredPosts = posts.filter(post => {
     // Lọc theo category
-    const matchCategory = activeFilter === 'all' || post.category.toLowerCase() === activeFilter.toLowerCase()
-    
+    const matchCategory = activeFilter === 'all' || (post.category || '').toLowerCase() === activeFilter.toLowerCase()
+
     // Lọc theo search query
+    const text = (post.text || '').toString()
+    const author = (post.author || '').toString()
+    const category = (post.category || '').toString()
     const matchSearch = searchQuery === '' || 
-      post.text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.category.toLowerCase().includes(searchQuery.toLowerCase())
-    
+      text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      category.toLowerCase().includes(searchQuery.toLowerCase())
+
     return matchCategory && matchSearch
   })
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await getArticlesPosts(controller.signal)
+        const mapped = data.map(a => {
+          // normalize image URL: backend may return '/uploads/xxx.jpg' (relative to backend)
+          let image = a.image || ''
+          if (image && !/^https?:\/\//i.test(image)) {
+            // ensure leading slash
+            if (!image.startsWith('/')) image = '/' + image
+            image = `${BACKEND_BASE}${image}`
+          }
+          return {
+            id: a.id,
+            author: a.author?.fullName || a.author?.FullName || 'Người dùng',
+            when: a.createdAt ? new Date(a.createdAt).toLocaleString() : '',
+            category: a.category || '',
+            text: a.title || a.content || '',
+            image,
+            likes: a.likeCount || 0,
+          }
+        })
+        setPosts(mapped)
+      } catch (err) {
+        // ignore abort/cancel errors (these happen when user navigates away or request is cancelled)
+        const isAxiosCanceled = err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError' || /canceled/i.test(err?.message || '')
+        if (isAxiosCanceled) return
+        if (err.name !== 'AbortError') {
+          const msg = err.message || String(err)
+          // If it's a network error (backend down / CORS / connection), fall back to local mock so UI remains usable
+          const isNetwork = /network error/i.test(msg) || err.cause === undefined || err.message === 'Network Error'
+          if (isNetwork) {
+            // map local mock posts to same shape
+            const mappedMock = postsMock.map(p => ({
+              id: p.id,
+              author: p.author || 'Người dùng',
+              when: p.when || '',
+              category: p.category || '',
+              text: p.text || '',
+              image: p.image || '',
+              likes: p.likes || 0,
+            }))
+            setPosts(mappedMock)
+            setError((t('community.apiFallback') || 'Đã xảy ra lỗi mạng — hiển thị dữ liệu cục bộ'))
+            console.warn('articles_post API failed, using local mock posts. Original error:', err)
+          } else {
+            setError(msg)
+            console.error('Failed to load articles_post:', err)
+          }
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [t])
 
   return (
     <main className="community-page">
@@ -75,10 +145,24 @@ const Community = () => {
         <div className="community-content">
             <div className="posts-list">
               {/* search indicator removed (handled via UI elsewhere or not shown) */}
-            {filteredPosts.length > 0 ? (
-              filteredPosts.map((p) => (
-                <PostCard post={p} key={p.id} />
-              ))
+            {loading ? (
+              <div className="loading">{t('common.loading') || 'Đang tải...'}</div>
+            ) : error ? (
+              <div className="error">{t('common.error') || 'Lỗi: '}{error}</div>
+            ) : filteredPosts.length > 0 ? (
+                      filteredPosts.map((p) => (
+                      <PostCard post={p} key={p.id} onDelete={async (id) => {
+                        // confirm then call API and remove from list
+                        const ok = window.confirm(t('community.confirmDelete') || 'Bạn có chắc muốn xóa bài viết này?')
+                        if (!ok) return
+                        try {
+                          await deleteArticlePost(id)
+                          setPosts((cur) => cur.filter(x => x.id !== id))
+                        } catch (err) {
+                          alert((t('community.deleteError') || 'Xóa thất bại: ') + (err?.message || String(err)))
+                        }
+                      }} />
+                    ))
             ) : (
               <div className="no-posts">
                 <p>{t('community.noPosts')}</p>
