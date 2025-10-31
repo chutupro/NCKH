@@ -1,3 +1,4 @@
+// src/pages/map/mapLocationsSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
@@ -16,10 +17,13 @@ export const fetchMapLocations = createAsyncThunk(
       oldImage: place.OldImage || '',
       desc: place.Desc || '',
       fullDesc: place.FullDesc || '',
+      categoryId: place.CategoryID || null,
+      categoryName: place.category?.Name || 'Chưa phân loại', // LẤY TÊN DANH MỤC
     }));
   }
 );
 
+// Các thunk khác giữ nguyên
 export const addMapLocation = createAsyncThunk(
   'mapLocations/addMapLocation',
   async (newLocation) => {
@@ -35,6 +39,7 @@ export const addMapLocation = createAsyncThunk(
       oldImage: newLocation.oldImage,
       desc: newLocation.desc,
       fullDesc: newLocation.fullDesc,
+      CategoryID: newLocation.categoryId,
     });
     return response.data;
   }
@@ -55,6 +60,7 @@ export const updateMapLocation = createAsyncThunk(
       oldImage: updatedLocation.oldImage,
       desc: updatedLocation.desc,
       fullDesc: updatedLocation.fullDesc,
+      CategoryID: updatedLocation.categoryId,
     });
     return response.data;
   }
@@ -122,9 +128,6 @@ const mapLocationsSlice = createSlice({
       })
       .addCase(fetchFeedback.fulfilled, (state, action) => {
         state.feedback = action.payload;
-      })
-      .addCase(fetchFeedback.rejected, (state, action) => {
-        state.error = action.error.message;
       })
       .addCase(addFeedback.fulfilled, (state, action) => {
         state.feedback.push(action.payload);
