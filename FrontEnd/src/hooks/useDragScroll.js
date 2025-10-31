@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 
-// Generic drag-to-scroll hook for horizontal carousels/lists
-// Returns: { scrollRef, isDragging, hasMoved, handlers, scrollBy }
+// Hook generic kéo để cuộn cho carousel/danh sách ngang
+// Trả về: { scrollRef, isDragging, hasMoved, handlers, scrollBy }
 export default function useDragScroll() {
   const scrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -29,7 +29,7 @@ export default function useDragScroll() {
     if (!isDragging || !scrollRef.current) return;
     e.preventDefault();
     const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // sensitivity
+  const walk = (x - startX) * 2; // độ nhạy
     if (Math.abs(walk) > 5) setHasMoved(true);
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };

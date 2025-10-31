@@ -34,24 +34,25 @@ export function getCodeFromName(name) {
   return 'other';
 }
 
-export function labelFor(code, t) {
+export function labelFor(code /*, t - kept for compatibility */) {
+  // Trả về nhãn tiếng Việt tương ứng với mã danh mục
   switch (code) {
     case 'architecture':
-      return t('sidebar.architecture');
+      return 'Kiến trúc';
     case 'culture':
-      return t('sidebar.culture');
+      return 'Văn hóa';
     case 'tourism':
-      return t('sidebar.tourism');
+      return 'Du lịch';
     case 'nature':
-      return t('sidebar.nature');
+      return 'Thiên nhiên';
     case 'all':
-      return t('sidebar.all');
+      return 'Tất cả';
     default:
-      return t('sidebar.other');
+      return 'Khác';
   }
 }
 
-export function displayCategoryName(vnName, t) {
+export function displayCategoryName(vnName /*, t - legacy param */) {
   const code = getCodeFromName(vnName);
-  return labelFor(code, t);
+  return labelFor(code);
 }

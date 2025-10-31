@@ -13,7 +13,7 @@ const TimelineDetail = () => {
   const related = useMemo(() => {
     if (!item) return [];
     const year = String(item.date).trim();
-    // related from timeline items (same category + same year)
+    // liên quan từ các mục timeline (cùng danh mục + cùng năm)
     const fromTimeline = TIMELINE_ITEMS
       .filter((it) => String(it.date).trim() === year && Number(it.id) !== itemId)
       .map((it) => ({
@@ -25,7 +25,7 @@ const TimelineDetail = () => {
         link: `/timeline/${it.id}`,
       }));
 
-    // related from image library / articles (match year by CreatedAt or date-like field)
+    // liên quan từ thư viện ảnh / bài viết (so sánh năm từ CreatedAt hoặc trường dạng date)
     const fromArticles = (mockArticles || [])
       .filter((a) => {
         // try CreatedAt (ISO) then fall back to a 'date' or year field
@@ -42,7 +42,7 @@ const TimelineDetail = () => {
         link: `/ImageLibrary/${a.ArticleID}`,
       }));
 
-    // Merge and return (timeline items first, then articles). Remove duplicates by link
+    // Gộp và trả về (mục timeline trước, sau đó là articles). Loại bỏ trùng lặp theo link
     const combined = [...fromTimeline, ...fromArticles];
     const seen = new Set();
     return combined.filter((c) => {
@@ -59,7 +59,7 @@ const TimelineDetail = () => {
   const onPointerDown = (e) => {
     const el = carouselRef.current;
     if (!el) return;
-    // If clicking on an interactive element (link/button), don't start dragging
+    // Nếu bấm vào phần tử tương tác (link/button), không khởi động drag
     try {
       const target = e.target;
       if (target && typeof target.closest === 'function') {

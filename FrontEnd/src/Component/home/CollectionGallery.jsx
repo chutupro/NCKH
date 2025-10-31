@@ -14,7 +14,7 @@ const CollectionGallery = () => {
   const navigate = useNavigate()
   const scroll = (direction) => scrollBy(direction)
 
-  // lightweight inline placeholder SVG (returned if an image fails to load)
+  // SVG placeholder nhẹ nhắt inline (trả về nếu ảnh không tải được)
   const placeholder = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='280'><rect width='100%' height='100%' fill='%23f3f3f3'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='20'>No image</text></svg>`
 
   const handleArticleClick = (articleId) => {
@@ -69,9 +69,9 @@ const CollectionGallery = () => {
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget
-                      // avoid infinite loop if placeholder somehow fails
+                      // Tránh vòng lặp vô hạn nếu placeholder cũng không tải được
                       if (target.dataset.fallbackSet) return
-                      // log the broken URL for diagnostics (check browser console to see which URLs are 404)
+                      // Ghi log URL bị lỗi để kiểm tra (xem console trình duyệt để biết URL nào 404)
                       console.warn('Image failed to load:', target.dataset.originalSrc || target.src)
                       target.dataset.fallbackSet = '1'
                       target.src = placeholder

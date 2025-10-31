@@ -2,11 +2,10 @@ import "../../Styles/Timeline/Timeline.css";
 import { TIMELINE_ITEMS } from "../../util/constant";
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from 'react-i18next';
 import { CODE_TO_VN, KNOWN_CODES, labelFor } from '../../util/categoryMap';
 
 const Timeline = () => {
-  const { t } = useTranslation();
+  // i18n removed: using Vietnamese literals directly
   const [fromYear, setFromYear] = useState("");
   const [toYear, setToYear] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -31,20 +30,20 @@ const Timeline = () => {
     const f = parsed(fromYear);
     const t = parsed(toYear);
     return TIMELINE_ITEMS.filter((it) => {
-      // Filter by year
+      // Lọc theo năm
       const y = parsed(it.date);
       if (y !== null) {
         if (f !== null && y < f) return false;
         if (t !== null && y > t) return false;
       }
       
-      // Filter by category (selectedCategory is a code)
+      // Lọc theo danh mục (selectedCategory là mã)
       if (selectedCategory !== 'all') {
         const vn = CODE_TO_VN[selectedCategory];
         if (vn) {
           if (it.category !== vn) return false;
         } else {
-          // 'other' or unknown: exclude known categories
+          // 'other' hoặc không rõ: loại bỏ các category đã biết
           if (KNOWN_CODES.includes(it.category)) return false;
         }
       }
@@ -84,15 +83,15 @@ const Timeline = () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", measure);
     };
-    // re-measure when the filtered items count changes
+    // đo lại khi số lượng mục lọc thay đổi
   }, [filtered.length]);
 
-  // Pointer-based drag-to-scroll handlers
+  // Các handler kéo bằng pointer để cuộn
   const onPointerDown = (e) => {
     const el = containerRef.current;
     if (!el) return;
-    // If the pointerdown started on an interactive element (link, button, input, etc.),
-    // don't start the timeline drag. This allows <Link> clicks to work normally.
+    // Nếu pointerdown bắt nguồn từ phần tử tương tác (a, button, input, ...),
+    // không bắt đầu drag timeline. Điều này cho phép các <Link> vẫn được click bình thường.
     try {
       const target = e.target;
       if (target && typeof target.closest === 'function') {
@@ -108,7 +107,7 @@ const Timeline = () => {
     try {
       el.setPointerCapture && el.setPointerCapture(e.pointerId);
     } catch {
-      /* noop: pointer capture may not be supported */
+      /* noop: pointer capture có thể không được hỗ trợ */
     }
     el.classList.add("is-dragging");
   };
@@ -118,7 +117,7 @@ const Timeline = () => {
     if (!el || !dragRef.current.isDown) return;
     const dx = e.clientX - dragRef.current.startX;
     el.scrollLeft = dragRef.current.scrollLeft - dx;
-    // Prevent text/image drag while panning
+    // Ngăn kéo text/ảnh trong khi đang pan
     if (typeof e.preventDefault === "function") e.preventDefault();
   };
 
@@ -129,7 +128,7 @@ const Timeline = () => {
       try {
         el.releasePointerCapture && el.releasePointerCapture(dragRef.current.pointerId);
       } catch {
-        /* noop: safe to ignore */
+        /* noop: an toàn để bỏ qua */
       }
       el.classList.remove("is-dragging");
     }
@@ -141,10 +140,10 @@ const Timeline = () => {
 
       <main className="timeline-wrapper">
         <header className="timeline-header">
-          <h1 className="timeline-main-title">{t('timeline.title')}</h1>
+          <h1 className="timeline-main-title">{'Dòng thời gian lịch sử'}</h1>
           <div className="timeline-search">
             <div className="search-field">
-              <label> {t('timeline.fromYear')} </label>
+              <label> {'Từ năm'} </label>
               <input
                 type="number"
                 placeholder="1890"
@@ -153,7 +152,7 @@ const Timeline = () => {
               />
             </div>
             <div className="search-field">
-              <label> {t('timeline.toYear')} </label>
+              <label> {'Đến năm'} </label>
               <input
                 type="number"
                 placeholder="2025"
@@ -162,15 +161,15 @@ const Timeline = () => {
               />
             </div>
             <div className="search-actions">
-              <button className="btn" onClick={clearFilters} type="button">{t('timeline.reset')}</button>
+              <button className="btn" onClick={clearFilters} type="button">{'Reset'}</button>
             </div>
           </div>
-          {isInvalidRange() && <div className="timeline-error">{t('timeline.invalidRange')}</div>}
+          {isInvalidRange() && <div className="timeline-error">{'Khoảng năm không hợp lệ (từ > đến)'}</div>}
         </header>
 
         <div className="timeline-content-wrapper">
           <aside className="timeline-sidebar">
-            <h3 className="sidebar-title">{t('footer.categories')}</h3>
+            <h3 className="sidebar-title">{'Danh mục'}</h3>
             <ul className="category-list">
               {categoryCodes.map((code) => (
                 <li 
@@ -178,7 +177,7 @@ const Timeline = () => {
                   className={`category-item ${selectedCategory === code ? 'active' : ''}`}
                   onClick={() => setSelectedCategory(code)}
                 >
-                  {labelFor(code, t)}
+                  {labelFor(code)}
                 </li>
               ))}
             </ul>

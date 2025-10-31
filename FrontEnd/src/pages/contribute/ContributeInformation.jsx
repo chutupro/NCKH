@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import '../../Styles/Contribute/contributeInformation.css'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
+// i18n removed: useTranslation import removed
 import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils'
 import { KNOWN_CODES, CODE_TO_VN, labelFor, getCodeFromName } from '../../util/categoryMap'
 import CustomSelect from '../../Component/common/CustomSelect'
@@ -27,7 +27,7 @@ function dataURLtoBlob(dataurl) {
 const ContributeInformation = () => {
   const loc = useLocation()
   const navigate = useNavigate()
-  const { t, i18n } = useTranslation()
+  // const { t, i18n } = useTranslation()  // no longer used
   // try to get file data from location state (set by previous page)
   // fallback to sessionStorage so image persists across reloads
   let initialImage = null
@@ -128,7 +128,7 @@ const ContributeInformation = () => {
   }, [imageSrc, loc.state, uploadedPath])
 
   // helpers to get/set title based on language (use Google Translate language when available)
-  const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : (i18n && i18n.language) || 'en'
+  const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'en'
   const getTitle = () => (currentLang === 'vi' ? (ai.title_vi || ai.title_en) : (ai.title_en || ai.title_vi))
   const setTitleForCurrentLang = (val) => {
     if (currentLang === 'vi') setAi(prev => ({ ...prev, title_vi: val }))
@@ -168,7 +168,7 @@ const ContributeInformation = () => {
       navigate('/community')
     } catch (err) {
       const serverMsg = err?.message || String(err)
-      alert((t('contributeInfo.submitError') || 'Error submitting: ') + serverMsg)
+  alert('Lỗi khi gửi: ' + serverMsg)
     }
   }
 
@@ -200,8 +200,8 @@ const ContributeInformation = () => {
       <div className="info-card">
         <div className="info-top">
           <div className="info-icon">✈</div>
-          <h2>{t('contributeInfo.title')}</h2>
-          <p className="info-sub">{t('contributeInfo.subtitle')}</p>
+          <h2>{'Hoàn tất thông tin đóng góp'}</h2>
+          <p className="info-sub">{'AI đã phân tích và gợi ý danh mục, tiêu đề cho ảnh của bạn. Vui lòng bổ sung thông tin để hoàn tất đóng góp.'}</p>
         </div>
 
         <form className="info-form" onSubmit={handleSubmit}>
@@ -209,18 +209,18 @@ const ContributeInformation = () => {
             {previewDisplay ? (
               <img src={previewDisplay} alt="preview" />
             ) : (
-              <div className="preview-empty">{t('common.error')}</div>
+              <div className="preview-empty">{'Đã xảy ra lỗi'}</div>
             )}
-            {uploading && <div className="uploading-indicator">{t('contributeInfo.uploading') || 'Đang tải ảnh...'}</div>}
+            {uploading && <div className="uploading-indicator">{'Đang tải ảnh...'}</div>}
           </div>
 
           <div className="ai-result">
           <div className="ai-row">
-            <label>{t('contributeInfo.aiCategory')}</label>
+            <label>{'Danh mục (AI gợi ý)'}</label>
             <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
               <CustomSelect
                 value={getCurrentCode() !== 'other' ? getCurrentCode() : KNOWN_CODES[0]}
-                options={KNOWN_CODES.map(code => ({ value: code, label: labelFor(code, t) }))}
+                options={KNOWN_CODES.map(code => ({ value: code, label: labelFor(code) }))}
                 onChange={(code) => {
                   const enLabel = code ? (code.charAt(0).toUpperCase() + code.slice(1)) : ''
                   const viLabel = CODE_TO_VN[code] || enLabel
@@ -230,7 +230,7 @@ const ContributeInformation = () => {
             </div>
           </div>
               <div className="ai-row">
-                <label>{t('contributeInfo.aiTitle')}</label>
+                <label>{'Tiêu đề (AI gợi ý)'}</label>
                 <input value={getTitle()} onChange={(e)=>setTitleForCurrentLang(e.target.value)} />
               </div>
           </div>
@@ -238,22 +238,22 @@ const ContributeInformation = () => {
           <div className="fields">
             <div className="field-row">
               <div className="field">
-                <label>{t('contributeInfo.fullName')} *</label>
+                <label>{'Họ và tên'} *</label>
                 {/* Fixed contributor name: not editable in this form */}
                 <input
                   className="fixed-field"
-                  placeholder={t('contributeInfo.fullNamePlaceholder')}
+                  placeholder={'Nhập họ và tên của bạn'}
                   value={name}
                   readOnly
                   disabled
                 />
               </div>
               <div className="field">
-                <label>{t('contributeInfo.email')} *</label>
+                <label>{'Email'} *</label>
                 {/* Fixed contributor email: not editable in this form */}
                 <input
                   className="fixed-field"
-                  placeholder={t('contributeInfo.emailPlaceholder')}
+                  placeholder={'email@example.com'}
                   value={email}
                   readOnly
                   disabled
@@ -262,28 +262,28 @@ const ContributeInformation = () => {
             </div>
 
             <div className="field">
-              <label>{t('contributeInfo.altLabel')}</label>
-              <input placeholder={t('contributeInfo.altPlaceholder')} value={alt} onChange={(e)=>setAlt(e.target.value)} />
+              <label>{'Mô tả ảnh (Alt Text)'}</label>
+              <input placeholder={'Mô tả ngắn gọn về nội dung hình ảnh'} value={alt} onChange={(e)=>setAlt(e.target.value)} />
             </div>
 
             <div className="field">
-              <label>{t('contributeInfo.contentLabel')}</label>
-              <textarea placeholder={t('contributeInfo.contentPlaceholder')} value={content} onChange={(e)=>setContent(e.target.value)} />
+              <label>{'Nội dung đóng góp'}</label>
+              <textarea placeholder={'Chia sẻ những gì bạn biết về di sản này...'} value={content} onChange={(e)=>setContent(e.target.value)} />
             </div>
           </div>
 
           <div className="process-box">
-            <h4>{t('contributeInfo.processTitle')}</h4>
+            <h4>{'Quy trình xử lý đóng góp:'}</h4>
             <ul>
-              <li>{t('contributeInfo.processPending')}</li>
-              <li>{t('contributeInfo.processReview')}</li>
-              <li>{t('contributeInfo.processEmail')}</li>
+              <li>{'Trạng thái: Đang chờ - Đóng góp của bạn sẽ được gửi để kiểm duyệt'}</li>
+              <li>{'Quản trị viên sẽ xem xét và phản hồi trong 24-48 giờ'}</li>
+              <li>{'Bạn sẽ nhận email thông báo khi đóng góp được chấp nhận hoặc từ chối'}</li>
             </ul>
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn-back" onClick={()=>navigate(-1)}>{t('contributeInfo.back')}</button>
-            <button type="submit" className="btn-submit">{t('contributeInfo.submit')}</button>
+            <button type="button" className="btn-back" onClick={()=>navigate(-1)}>{'Quay lại'}</button>
+            <button type="submit" className="btn-submit">{'Gửi đóng góp'}</button>
           </div>
         </form>
       </div>
