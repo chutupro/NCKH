@@ -182,4 +182,41 @@ const articles = [
   },
 ];
 
-export default articles;
+// Tự động sinh thêm nhiều bài mẫu để làm đầy bộ sưu tập (dùng cho phát triển / demo)
+const categories = [
+  { id: 1, name: "Văn hóa" },
+  { id: 2, name: "Kiến trúc" },
+  { id: 3, name: "Du lịch" },
+  { id: 4, name: "Thiên nhiên" },
+];
+
+const startId = Math.max(...articles.map(a => a.ArticleID)) + 1;
+const extraCount = 60; // thêm 60 bài mẫu
+const extra = Array.from({ length: extraCount }).map((_, idx) => {
+  const id = startId + idx;
+  const cat = categories[idx % categories.length];
+  // distribute years from 1900..2023 in a repeating pattern
+  const year = 1900 + (idx % 124);
+  return {
+    ArticleID: id,
+    Title: `Bài viết mẫu ${id} - ${cat.name}`,
+    Content: `Nội dung mẫu cho bài viết ${id}. Đây là nội dung demo được tạo tự động để làm đầy bộ sưu tập và kiểm thử giao diện.`,
+    Language: "vi",
+    CreatedAt: `${year}-01-01T00:00:00.000Z`,
+    UpdatedAt: new Date().toISOString(),
+    UserID: (idx % 10) + 1,
+    CategoryID: cat.id,
+    categoryName: cat.name,
+    likes: Math.floor(Math.random() * 5000),
+    description: `Mô tả ngắn cho bài viết mẫu ${id} thuộc thể loại ${cat.name}.`,
+    images: [
+      { ImageID: 1000 + id, FilePath: `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&auto=format&fit=crop&q=80&ixlib=rb-4.0.3&s=${id}` , AltText: `Hình ${id}`, Type: "main" }
+    ],
+    relatedCompareIds: []
+  };
+});
+
+// Gộp dữ liệu gốc và dữ liệu mẫu
+const allArticles = articles.concat(extra);
+
+export default allArticles;

@@ -14,10 +14,10 @@ const Footer = () => {
   return (
     <footer className="footer">
       <div className="footer-container">
-        {/* Footer Top */}
+  {/* Phần trên của Footer */}
         <div className="footer-top">
           <div className="footer-content">
-            {/* Company Info */}
+            {/* Thông tin công ty */}
             <div className="footer-section">
               <h3 className="footer-logo notranslate" translate="no">DynaVault</h3>
               <p className="footer-description">
@@ -42,7 +42,7 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Quick Links (use same routes as header) */}
+            {/* Liên kết nhanh (dùng cùng routes như header) */}
             <div className="footer-section">
               <h4 className="footer-title">{t('footer.quickLinks')}</h4>
               <ul className="footer-links">
@@ -55,7 +55,7 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Categories (dynamically from util/categoryMap) */}
+            {/* Các danh mục (lấy động từ util/categoryMap) */}
             <div className="footer-section">
               <h4 className="footer-title">{t('footer.categories')}</h4>
               <ul className="footer-links">
@@ -76,7 +76,7 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Contact Info */}
+            {/* Thông tin liên hệ */}
             <div className="footer-section">
               <h4 className="footer-title">{t('footer.contact')}</h4>
               <div className="contact-info">
@@ -97,7 +97,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Footer Bottom */}
+  {/* Phần dưới của Footer */}
         <div className="footer-bottom">
           <div className="footer-bottom-content">
             <div className="copyright">

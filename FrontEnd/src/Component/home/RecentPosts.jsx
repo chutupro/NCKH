@@ -31,15 +31,15 @@ const RecentPosts = () => {
       .then((data) => {
         if (!Array.isArray(data)) return setPosts([])
         const mapped = data.map(a => {
-          // normalize image: accept several common shapes
+          // Chuẩn hóa image: chấp nhận một số dạng phổ biến
           let image = a.image || a.Image || ''
-          // check for array of images (common in articles schema)
+          // Kiểm tra mảng images (thường thấy trong schema articles)
           if ((!image || image === '') && Array.isArray(a.images) && a.images.length > 0) {
             image = a.images[0].FilePath || a.images[0].filePath || a.images[0].url || ''
           }
           if ((!image || image === '') && a.thumbnail) image = a.thumbnail
 
-          // if image is relative path, make absolute to backend base
+          // Nếu image là đường dẫn tương đối, chuyển thành đường dẫn tuyệt đối kèm base của backend
           if (image && !/^https?:\/\//i.test(image)) {
             if (!image.startsWith('/')) image = '/' + image
             image = `${BACKEND_BASE}${image}`
@@ -102,7 +102,7 @@ const RecentPosts = () => {
               <div className="recent-post-error">{t('recentPosts.error') || 'Error loading posts'}</div>
             ) : (
               sortedPosts.map((post) => {
-                // Prevent rendering an object directly (some APIs return author as an object)
+                // Ngăn không render object trực tiếp (một vài API trả author dưới dạng object)
                 const authorName = typeof post.author === 'string'
                   ? post.author
                   : post.author && typeof post.author === 'object'

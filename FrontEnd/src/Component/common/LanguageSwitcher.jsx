@@ -4,12 +4,12 @@ import GoogleTranslate from './GoogleTranslate';
 import { setGoogleTranslateLanguage, getGoogleTranslateLanguage } from './googleTranslateUtils';
 
 const LanguageSwitcher = () => {
-  // getGoogleTranslateLanguage reads the `googtrans` cookie (or falls back to default)
-  // default site language is Vietnamese ('vi')
+  // getGoogleTranslateLanguage đọc cookie `googtrans` (hoặc mặc định)
+  // ngôn ngữ mặc định của site là tiếng Việt ('vi')
   const current = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'vi';
 
   const changeLanguage = (lng) => {
-    // persist choice and trigger reload via helper
+    // Lưu lựa chọn và gọi helper để reload
     localStorage.setItem('language', lng);
     setGoogleTranslateLanguage(lng);
   };

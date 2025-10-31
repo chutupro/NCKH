@@ -5,8 +5,8 @@ const ScrollToTop = () => {
   const { pathname } = useLocation()
 
   useEffect(() => {
-    // Always scroll to top when the pathname changes (navigation between pages)
-    // This ensures each new route starts at the top of the page.
+    // Luôn cuộn về đầu trang khi pathname thay đổi (chuyển trang)
+    // Điều này đảm bảo mỗi route mới bắt đầu ở đầu trang.
     window.scrollTo({ top: 0, left: 0 })
   }, [pathname])
 

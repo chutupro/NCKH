@@ -14,8 +14,6 @@ const PostCard = ({ post, onDelete }) => {
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [showShareMenu, setShowShareMenu] = useState(false)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalSrc, setModalSrc] = useState(null)
 
   const toggleLike = () => {
     setLiked((s) => !s)
@@ -102,13 +100,13 @@ const PostCard = ({ post, onDelete }) => {
               className="post-image crisper"
               src={post.image}
               alt={`Ảnh bài đăng của ${post.author}`}
-              style={{cursor: 'zoom-in'}}
-              onClick={() => { setModalSrc(post.image); setModalOpen(true) }}
+              style={{ cursor: 'zoom-in', imageRendering: 'auto' }}
               onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER_SVG }}
-              role="button"
+              decoding="async"
+              loading="lazy"
             />
           ) : (
-            <img className="post-image crisper" src={PLACEHOLDER_SVG} alt="no image" />
+            <img className="post-image crisper" src={PLACEHOLDER_SVG} alt="no image" decoding="async" />
           )}
         </div>
       </div>
@@ -173,7 +171,7 @@ const PostCard = ({ post, onDelete }) => {
             <input
               type="text"
               className="comment-input"
-                placeholder={t('postCard.writeComment')}
+              placeholder={t('postCard.writeComment')}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
@@ -185,14 +183,7 @@ const PostCard = ({ post, onDelete }) => {
         </div>
       )}
 
-      {modalOpen && (
-        <ImageModal
-          src={modalSrc}
-          alt={`Ảnh lớn của ${post.author}`}
-          caption={post.text}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+      {/* modal disabled: clicking the post should not open anything */}
     </article>
   )
 }
