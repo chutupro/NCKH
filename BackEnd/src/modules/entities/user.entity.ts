@@ -39,6 +39,16 @@ export class Users {
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
+  // Email Verification Fields
+  @Column({ type: 'boolean', default: false })
+  IsEmailVerified: boolean;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  EmailVerificationToken: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  EmailVerificationExpiry: Date | null;
+
   // --- RELATIONS ---
   @OneToOne(() => UserProfiles, (profile) => profile.user)
   profile: UserProfiles;
