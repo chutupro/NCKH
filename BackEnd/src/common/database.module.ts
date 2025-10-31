@@ -19,6 +19,7 @@ import { Notifications } from 'src/modules/entities/notification.entity';
 import { MapLocations } from 'src/modules/entities/map-location.entity';
 import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
 import { ImageComparison } from '../modules/entities/image-comparison.entity'; // <-- thêm nếu cần
+import { OTP } from 'src/modules/entities/otp.entity';
 
 @Module({
   imports: [
@@ -53,7 +54,8 @@ import { ImageComparison } from '../modules/entities/image-comparison.entity'; /
           MapLocations,
           Notifications,
           ModerationLogs,
-          ImageComparison, 
+          ImageComparison,
+          OTP, // <-- OTP entity
         ],
         synchronize: false, // <-- turn off automatic schema sync in dev when tables conflict
         logging: false,

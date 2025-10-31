@@ -13,6 +13,7 @@ import ImageLibraryInformation from "../pages/gallery/ImageLibraryInformation";
 import About from "../pages/about/About";
 import Login from "../pages/common/Login";
 import Register from "../pages/common/Register";
+import VerifyEmail from "../pages/common/VerifyEmail"; // 🔥 NEW
 import Community from "../pages/community/Community";
 import CompareGallery from "../pages/Compare/CompareGallery";
 import CompareDetail from "../pages/Compare/CompareDetail";
@@ -49,6 +50,7 @@ const Routee = () => {
       {/* TRANG KHÔNG LAYOUT */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} /> {/* 🔥 NEW */}
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
       <Route path="/map/admin" element={<MapAdmin />} />{" "}
