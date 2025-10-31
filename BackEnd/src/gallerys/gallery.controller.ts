@@ -1,4 +1,3 @@
-// ...existing code...
 import {
   Controller,
   Get,
@@ -11,14 +10,17 @@ import {
   UseInterceptors,
   Body,
   ParseIntPipe,
-  NotFoundException,
   HttpCode,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { GalleryService } from './gallery.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { CreateGalleryDto } from './dto/create-gallery.dto';
+import { UpdateGalleryDto } from './dto/update-gallery.dto';
 
 function ensureUploadsDir() {
   const dir = path.join(process.cwd(), 'uploads', 'gallery');
@@ -32,10 +34,17 @@ export class GalleryController {
 
   @Get()
   async list(
-    @Query('skip') skip?: number,
-    @Query('take') take?: number,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+    @Query('q') q?: string,
+    @Query('categoryId') categoryId?: string,
   ) {
-    return this.galleryService.findAll(skip ?? 0, take ?? 20);
+    return this.galleryService.findAll({
+      skip: Number(skip) || 0,
+      take: Number(take) || 20,
+      q,
+      categoryId: categoryId ? Number(categoryId) : undefined,
+    });
   }
 
   @Get(':id')
@@ -54,26 +63,20 @@ export class GalleryController {
           cb(null, `${timestamp}_${safe}`);
         },
       }),
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
     }),
   )
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async upload(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: any,
+    @Body() body: CreateGalleryDto,
   ) {
-    return this.galleryService.create(file, {
-      title: body.title,
-      description: body.description,
-      tags: body.tags,
-      categoryId: body.categoryId,
-    });
+    return this.galleryService.create(file, body);
   }
 
   @Put(':id')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: any,
-  ) {
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateGalleryDto) {
     return this.galleryService.update(id, body);
   }
 
@@ -83,4 +86,3 @@ export class GalleryController {
     await this.galleryService.remove(id);
   }
 }
-// ...existing code...

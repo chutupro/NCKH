@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@google-cloud/vision": "^5.3.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -32,11 +33,14 @@
     "@nestjs/typeorm": "^11.0.0",
     "axios": "^1.13.1",
     "bcrypt": "^6.0.0",
+    "cesium": "^1.134.1",
     "class-transformer": "^0.5.1",
     "cors": "^2.8.5",
     "deep-email-validator": "^0.1.21",
     "express": "^5.1.0",
     "i": "^0.3.7",
+    "leaflet": "^1.9.4",
+    "lodash": "^4.17.21",
     "multer": "^2.0.2",
     "mysql2": "^3.15.1",
     "nodemailer": "^7.0.10",
@@ -45,6 +49,8 @@
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
     "react-compare-image": "^3.5.10",
+    "react-leaflet": "^5.0.0",
+    "react-select": "^5.10.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.27"
