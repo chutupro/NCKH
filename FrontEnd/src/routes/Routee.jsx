@@ -21,47 +21,55 @@ import CompareDetail from "../pages/Compare/CompareDetail";
 import MapPage from "../pages/map/MapPage";
 import MapAdmin from "../pages/map/MapAdmin"; // Import MapAdmin
 import { fetchMapLocations } from "../pages/map/mapLocationsSlice";
-return (
+
+const Routee = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchMapLocations());
+  }, [dispatch]);
+
+  return (
     <Routes>
-      {/* TRANG CÓ LAYOUT */}
-      <Route element={<Lauput />}>
+      <Route path="/" element={<Lauput />}>
+        {/* Trang chính */}
         <Route index element={<Home />} />
-        <Route path="/Personal" element={<Personal />} />
+        <Route path="personal" element={<Personal />} />
 
         {/* Timeline */}
-        <Route path="/timeline" element={<Timeline />} />
-        <Route path="/timeline/:id" element={<TimelineDetail />} /> {/* khác → giữ thêm */}
+        <Route path="timeline" element={<Timeline />} />
+        <Route path="timeline/:id" element={<TimelineDetail />} />
 
-        {/* Contribute */}
-        <Route path="/contribute" element={<Contribute />} />
-        <Route
-          path="/contributeinformation"
-          element={<ContributeInformation />}
-        />
+        {/* Đóng góp */}
+        <Route path="contribute" element={<Contribute />} />
+        <Route path="contribute/info" element={<ContributeInformation />} />
 
-        {/* Gallery */}
-        <Route path="/ImageLibrary" element={<ImageLibrary />} />
-        <Route path="/ImageLibrary/:id" element={<ImageLibraryInformation />} />
+        {/* Thư viện hình ảnh */}
+        <Route path="gallery" element={<ImageLibrary />} />
+        <Route path="gallery/:id" element={<ImageLibraryInformation />} />
 
-        {/* Compare */}
-        <Route path="/compare" element={<CompareGallery />} />
-        <Route path="/compare/:id" element={<CompareDetail />} />
+        {/* So sánh */}
+        <Route path="compare" element={<CompareGallery />} />
+        <Route path="compare/:id" element={<CompareDetail />} />
 
-        {/* Community */}
-        <Route path="/community" element={<Community />} />
+        
 
-        {/* About */}
-        <Route path="/about" element={<About />} /> {/* khác → giữ thêm */}
+        {/* Khác */}
+        <Route path="community" element={<Community />} />
+        <Route path="about" element={<About />} />
       </Route>
 
-      {/* TRANG KHÔNG LAYOUT */}
+      {/* Xác thực */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* BẢN ĐỒ: FULL MÀN HÌNH */}
-      <Route path="/map" element={<MapPage />} />
-      <Route path="/map/admin" element={<MapAdmin />} /> {/* giữ lại */}
+      {/* Bản đồ */}
+        <Route path="map" element={<MapPage />} />
+        <Route path="map/admin" element={<MapAdmin />} />
     </Routes>
+
+    
+
   );
 };
 
