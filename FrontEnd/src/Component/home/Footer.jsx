@@ -4,19 +4,22 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt, faPhone, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { faFacebook, faTwitter, faInstagram, faLinkedin, faYoutube } from "@fortawesome/free-brands-svg-icons";
 import "../../Styles/Home/Footer.css";
+import { Link, useNavigate } from 'react-router-dom'
+import { KNOWN_CODES, labelFor } from '../../util/categoryMap'
 
 const Footer = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate()
 
   return (
     <footer className="footer">
       <div className="footer-container">
-        {/* Footer Top */}
+  {/* Phần trên của Footer */}
         <div className="footer-top">
           <div className="footer-content">
-            {/* Company Info */}
+            {/* Thông tin công ty */}
             <div className="footer-section">
-              <h3 className="footer-logo">DynaVault</h3>
+              <h3 className="footer-logo notranslate" translate="no">DynaVault</h3>
               <p className="footer-description">
                 {t('footer.description')}
               </p>
@@ -39,31 +42,41 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Quick Links */}
+            {/* Liên kết nhanh (dùng cùng routes như header) */}
             <div className="footer-section">
               <h4 className="footer-title">{t('footer.quickLinks')}</h4>
               <ul className="footer-links">
-                <li><a href="#explore">{t('footer.explore')}</a></li>
-                <li><a href="#timeline">{t('footer.timeline')}</a></li>
-                <li><a href="#top-news">{t('footer.news')}</a></li>
-                <li><a href="#connect">{t('footer.connect')}</a></li>
-                <li><a href="#about">{t('footer.aboutUs')}</a></li>
+                <li><Link to="/">{t('nav.home')}</Link></li>
+                <li><Link to="/map">{t('nav.map')}</Link></li>
+                <li><Link to="/timeline">{t('nav.timeline')}</Link></li>
+                <li><Link to="/community">{t('nav.community')}</Link></li>
+                <li><Link to="/ImageLibrary">{t('nav.collection')}</Link></li>
+                <li><Link to="/about">{t('footer.aboutUs')}</Link></li>
               </ul>
             </div>
 
-            {/* Categories */}
+            {/* Các danh mục (lấy động từ util/categoryMap) */}
             <div className="footer-section">
               <h4 className="footer-title">{t('footer.categories')}</h4>
               <ul className="footer-links">
-                <li><a href="#architecture">{t('footer.architecture')}</a></li>
-                <li><a href="#history">{t('footer.history')}</a></li>
-                <li><a href="#culture">{t('footer.culture')}</a></li>
-                <li><a href="#traditions">{t('footer.traditions')}</a></li>
-                <li><a href="#modern">{t('footer.modern')}</a></li>
+                {['all', ...KNOWN_CODES].map(code => (
+                  <li key={code}>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // navigate to ImageLibrary with category query param
+                        navigate({ pathname: '/ImageLibrary', search: `?category=${encodeURIComponent(code)}` });
+                      }}
+                    >
+                      {labelFor(code, t)}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* Contact Info */}
+            {/* Thông tin liên hệ */}
             <div className="footer-section">
               <h4 className="footer-title">{t('footer.contact')}</h4>
               <div className="contact-info">
@@ -84,7 +97,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Footer Bottom */}
+  {/* Phần dưới của Footer */}
         <div className="footer-bottom">
           <div className="footer-bottom-content">
             <div className="copyright">

@@ -1,10 +1,11 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils';
 import '../../Styles/Contribute/contribute.css'
 
 const Contribute = () => {
-  const { t, i18n } = useTranslation();
+  // i18n removed: use Google Translate helper to detect language when needed
+  const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'en'
   const [dragOver, setDragOver] = useState(false)
   const [fileName, setFileName] = useState(null)
   const [file, setFile] = useState(null)
@@ -52,11 +53,23 @@ const Contribute = () => {
   useEffect(() => {
     if (!file) {
       setPreviewUrl(null)
+      // remove persisted preview when there's no file
+  try { sessionStorage.removeItem('contribute_filePreview') } catch (e) { console.debug('sessionStorage remove error', e) }
       return
     }
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
-    return () => URL.revokeObjectURL(url)
+
+    // Read file as data URL so preview survives page reloads (sessionStorage)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result
+  setPreviewUrl(dataUrl)
+  try { sessionStorage.setItem('contribute_filePreview', dataUrl) } catch (e) { console.debug('sessionStorage set error', e) }
+    }
+    reader.onerror = () => {
+      setError('Không thể đọc file')
+    }
+    reader.readAsDataURL(file)
+    // no cleanup needed for FileReader
   }, [file])
 
   const navigate = useNavigate()
@@ -83,17 +96,17 @@ const Contribute = () => {
       const json = await res.json()
       const isViolation = json?.nsfw_check?.is_violation
       // show message and block navigation when AI marks image as violation (true)
-      if (isViolation === true) {
+  if (isViolation === true) {
         // stop loading and show message when AI blocks the image
         setLoading(false)
-        const msg = json?.nsfw_check?.message || (t('contributePage.analysisBlocked') || 'Image blocked by AI')
+  const msg = json?.nsfw_check?.message || 'Ảnh bị chặn bởi AI'
         setMessage(msg)
         // show a browser alert as a fallback so user definitely sees the message
         try {
           window.alert(msg)
           // after user dismisses the alert, clear the file so image is removed
           clearFile()
-        } catch (e) {
+        } catch {
           /* ignore in non-browser env */
         }
         setAnalysis(null)
@@ -104,10 +117,11 @@ const Contribute = () => {
       const mapAiToFeCategory = (aiLabel) => {
         if (!aiLabel) return { category_en: null, category_vi: null }
         const key = aiLabel.toLowerCase()
-  if (key.includes('nature') || key.includes('landscape') || key.includes('thiên nhiên')) return { category_en: 'Nature', category_vi: 'Thiên nhiên' }
-  if (key.includes('heritage') || key.includes('architecture') || key.includes('kiến trúc')) return { category_en: 'Heritage', category_vi: 'Kiến trúc' }
-  if (key.includes('culture') || key.includes('art') || key.includes('văn hóa')) return { category_en: 'Culture', category_vi: 'Văn hóa' }
-  if (key.includes('people') || key.includes('event') || key.includes('sự kiện')) return { category_en: 'People', category_vi: 'Du lịch' }
+      if (key.includes('nature') || key.includes('landscape') || key.includes('thiên nhiên')) return { category_en: 'Nature', category_vi: 'Thiên nhiên' }
+      // map legacy/ambiguous heritage -> Architecture as requested
+      if (key.includes('heritage') || key.includes('architecture') || key.includes('kiến trúc')) return { category_en: 'Architecture', category_vi: 'Kiến trúc' }
+      if (key.includes('culture') || key.includes('art') || key.includes('văn hóa')) return { category_en: 'Culture', category_vi: 'Văn hóa' }
+      if (key.includes('people') || key.includes('event') || key.includes('sự kiện')) return { category_en: 'People', category_vi: 'Du lịch' }
         // fallback: return original label for both
         return { category_en: aiLabel, category_vi: aiLabel }
       }
@@ -120,7 +134,9 @@ const Contribute = () => {
       }
       setAnalysis({ label, caption_en: aiResult.title_en, caption_vi: aiResult.title_vi })
       // navigate to details page; keep loading spinner visible until navigation
-      navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult } })
+  // pass the original File object too so the details page can upload the
+  // original image (not a possibly-resized dataURL) and avoid blurriness
+  navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult, file } })
     } catch (err) {
       setError(err.message)
       setLoading(false)
@@ -131,10 +147,10 @@ const Contribute = () => {
     <div>
       <div className="contribute-page">
         <div className="contribute-card">
-          <div className="contribute-top">
+              <div className="contribute-top">
             <div className="contribute-icon">✦</div>
-              <h2>{t('contributePage.title')}</h2>
-              <p className="contribute-sub">{t('contributePage.subtitle')}</p>
+              <h2>{'Đóng góp ảnh di sản văn hóa'}</h2>
+              <p className="contribute-sub">{'Tải lên hình ảnh lịch sử (xưa) về di sản văn hóa Đà Nẵng — hệ thống sẽ phân tích và gợi ý tiêu đề.'}</p>
           </div>
 
           <div className="contribute-body">
@@ -157,22 +173,22 @@ const Contribute = () => {
 
               <div className="upload-inner">
                 <div className="upload-icon">⬆</div>
-                  <div className="upload-text">{t('contributePage.uploadText')}</div>
-                  <div className="upload-hint">{t('contributePage.uploadHint')}</div>
-                  {fileName && <div className="upload-file">{t('contributePage.selected')}: {fileName}</div>}
+                  <div className="upload-text">{'Nhấn để chọn ảnh hoặc kéo thả vào đây'}</div>
+                  <div className="upload-hint">{'Hỗ trợ: JPG, PNG, WEBP (tối đa 10MB)'}</div>
+                  {fileName && <div className="upload-file">{'Chọn'}: {fileName}</div>}
                   {message && (
                     <div className="upload-message">
                       <div className="upload-message-text">{message}</div>
                       <div className="message-actions">
-                        <button type="button" className="btn-ok" onClick={handleMessageOk}>{t('contributePage.ok') || 'OK'}</button>
+                        <button type="button" className="btn-ok" onClick={handleMessageOk}>{'OK'}</button>
                       </div>
                     </div>
                   )}
                   {error && <div className="upload-error">{error}</div>}
                   {analysis && (
                     <div className="analysis-result">
-                      <div className="analysis-label">{t('contributePage.detectedLabel')}: {analysis.label || '-'}</div>
-                      <div className="analysis-caption">{i18n.language === 'vi' ? (analysis.caption_vi || analysis.caption_en) : (analysis.caption_en || analysis.caption_vi)}</div>
+                      <div className="analysis-label">{'Phát hiện'}: {analysis.label || '-'}</div>
+                        <div className="analysis-caption">{currentLang === 'vi' ? (analysis.caption_vi || analysis.caption_en) : (analysis.caption_en || analysis.caption_vi)}</div>
                       {/* language is controlled by header global switcher; no local buttons here */}
                     </div>
                   )}
@@ -180,18 +196,18 @@ const Contribute = () => {
             </label>
 
             <div className="contribute-note">
-                <h4>{t('contributePage.noteTitle')}</h4>
+                <h4>{'Lưu ý khi chọn ảnh lịch sử:'}</h4>
               <ul>
-                  <li>{t('contributePage.note1')}</li>
-                  <li>{t('contributePage.note2')}</li>
-                  <li>{t('contributePage.note3')}</li>
-                  <li>{t('contributePage.note4')}</li>
+                  <li>{'Chỉ nhận ảnh lịch sử (xưa) của di sản văn hóa Đà Nẵng'}</li>
+                  <li>{'Tránh ảnh mờ, quá tối hoặc quá sáng'}</li>
+                  <li>{'Ảnh nên thể hiện rõ di sản văn hóa cần đóng góp'}</li>
+                  <li>{'AI sẽ phân tích tốt hơn với ảnh có góc chụp đẹp'}</li>
               </ul>
             </div>
           </div>
 
           <div className="contribute-footer">
-              <div className="contribute-footer-text">{t('contributePage.footerText')}</div>
+              <div className="contribute-footer-text">{'Sau khi phân tích, bạn sẽ được chuyển đến trang điền thông tin chi tiết'}</div>
               {/* Confirm button triggers AI analyze then navigates with state */}
               <button
                 type="button"
@@ -202,7 +218,7 @@ const Contribute = () => {
                 {loading ? (
                   <span className="btn-spinner" aria-hidden="true" />
                 ) : (
-                  <span>{t('contributePage.confirm')}</span>
+                  <span>{'Xác nhận'}</span>
                 )}
               </button>
           </div>

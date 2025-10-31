@@ -4,11 +4,13 @@ import { Routes, Route } from "react-router-dom";
 import Lauput from "../layout/Lauput";
 import Personal from "../pages/common/Personal";
 import Timeline from "../pages/Timeline/Timeline";
+import TimelineDetail from "../pages/Timeline/TimelineDetail";
 import Home from "../pages/common/Home";
 import Contribute from "../pages/contribute/Contribute";
 import ContributeInformation from "../pages/contribute/ContributeInformation";
 import ImageLibrary from "../pages/gallery/ImageLibrary";
 import ImageLibraryInformation from "../pages/gallery/ImageLibraryInformation";
+import About from "../pages/about/About";
 import Login from "../pages/common/Login";
 import Register from "../pages/common/Register";
 import VerifyEmail from "../pages/common/VerifyEmail"; // 🔥 NEW
@@ -35,13 +37,12 @@ const Routee = () => {
         <Route index element={<Home />} />
         <Route path="/Personal" element={<Personal />} />
         <Route path="/timeline" element={<Timeline />} />
+        <Route path="/timeline/:id" element={<TimelineDetail />} />
         <Route path="/contribute" element={<Contribute />} />
-        <Route
-          path="/contributeinformation"
-          element={<ContributeInformation />}
-        />
+        <Route path="/contributeinformation" element={<ContributeInformation />}/>
         <Route path="/ImageLibrary" element={<ImageLibrary />} />
         <Route path="/ImageLibrary/:id" element={<ImageLibraryInformation />} />
+        <Route path="/about" element={<About />} />
         <Route path="/compare" element={<CompareGallery />} />
         <Route path="/compare/:id" element={<CompareDetail />} />
         <Route path="/community" element={<Community />} />

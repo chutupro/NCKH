@@ -8,6 +8,8 @@
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   padding-right: 8px;
+  /* prevent being pushed by other grid items */
+  min-width: 0;
 }
 
 /* Custom scrollbar */

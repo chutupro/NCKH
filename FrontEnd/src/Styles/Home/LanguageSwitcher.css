@@ -5,32 +5,41 @@
 }
 
 .lang-btn {
-  padding: 6px 12px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: 2px solid #ddd;
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
   color: #555;
 }
 
 .lang-btn:hover {
   border-color: #4CAF50;
-  background: #f0f9ff;
-  color: #4CAF50;
+  background: #f6fff6;
   transform: translateY(-2px);
 }
 
 .lang-btn.active {
-  background: linear-gradient(135deg, #4CAF50, #45a049);
+  background: linear-gradient(135deg, #2e8b57, #45a049);
   color: white;
-  border-color: #4CAF50;
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+  border-color: #2e8b57;
+  box-shadow: 0 6px 12px rgba(46, 139, 87, 0.24);
 }
 
 .lang-btn.active:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 8px 16px rgba(46, 139, 87, 0.28);
+}
+
+.flag-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-block;
+  transform: translateY(-1px);
 }

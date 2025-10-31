@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/community/Community.css'
+import ImageModal from '../common/ImageModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart, faComment, faShareNodes, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
 
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, onDelete }) => {
   const { t } = useTranslation();
   const [liked, setLiked] = useState(false)
   const [likes, setLikes] = useState(post.likes || 0)
@@ -65,6 +66,10 @@ const PostCard = ({ post }) => {
     }
   })()
 
+  const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,` + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'><rect width='100%' height='100%' fill='%23221f1b'/><text x='50%' y='50%' fill='%23cccccc' font-size='20' font-family='Arial, Helvetica, sans-serif' text-anchor='middle' alignment-baseline='middle'>Ảnh không có sẵn</text></svg>`
+  )
+
   return (
     <article className="post-card" id={`post-${post.id}`}>
       <header className="post-header">
@@ -74,16 +79,35 @@ const PostCard = ({ post }) => {
           <div className="sub">{post.when} · {post.category}</div>
         </div>
         <div className="spacer" />
+        {/* delete button on the right */}
+        {onDelete && (
+          <button
+            type="button"
+            className="delete-btn"
+            onClick={() => onDelete(post.id)}
+            aria-label="Xóa bài"
+          >
+            Xóa
+          </button>
+        )}
       </header>
 
       <div className="post-body">
         <p className="post-text">{post.text}</p>
         <div className="post-image-wrap">
-          <img
-            className="post-image crisper"
-            src={post.image}
-            alt={`Ảnh bài đăng của ${post.author}`}
-          />
+          {post.image ? (
+            <img
+              className="post-image crisper"
+              src={post.image}
+              alt={`Ảnh bài đăng của ${post.author}`}
+              style={{ cursor: 'zoom-in', imageRendering: 'auto' }}
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER_SVG }}
+              decoding="async"
+              loading="lazy"
+            />
+          ) : (
+            <img className="post-image crisper" src={PLACEHOLDER_SVG} alt="no image" decoding="async" />
+          )}
         </div>
       </div>
 
@@ -147,7 +171,7 @@ const PostCard = ({ post }) => {
             <input
               type="text"
               className="comment-input"
-                placeholder={t('postCard.writeComment')}
+              placeholder={t('postCard.writeComment')}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
@@ -158,6 +182,8 @@ const PostCard = ({ post }) => {
           </div>
         </div>
       )}
+
+      {/* modal disabled: clicking the post should not open anything */}
     </article>
   )
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils';
 import './LanguageDemo.css';
 
 /**
@@ -8,6 +9,7 @@ import './LanguageDemo.css';
  */
 const LanguageDemo = () => {
   const { t, i18n } = useTranslation();
+  const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : i18n.language;
 
   return (
     <div className="language-demo">
@@ -18,8 +20,8 @@ const LanguageDemo = () => {
         <div className="demo-section">
           <h2>📋 {t('demo.currentLanguage')}</h2>
           <div className="language-info">
-            <strong>{i18n.language === 'vi' ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</strong>
-            <p>{t('demo.languageCode')}: <code>{i18n.language}</code></p>
+            <strong>{currentLang === 'vi' ? '🇻🇳 Tiếng Việt' : '🇬🇧 English'}</strong>
+            <p>{t('demo.languageCode')}: <code>{currentLang}</code></p>
           </div>
         </div>
 
