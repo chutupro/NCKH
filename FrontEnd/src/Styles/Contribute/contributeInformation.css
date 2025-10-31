@@ -185,6 +185,24 @@
   resize: vertical;
 }
 
+/* Visual treatment for fixed / disabled contributor fields */
+.field input[disabled], .field input[readonly], .fixed-field {
+  opacity: 0.72;
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(255, 255, 255, 0.78);
+  cursor: not-allowed;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+/* Add a small lock icon on the right to indicate immutability */
+.fixed-field {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'><path fill='%23d6c6a7' d='M12 1a4 4 0 00-4 4v3H6a2 2 0 00-2 2v9a2 2 0 002 2h12a2 2 0 002-2v-9a2 2 0 00-2-2h-2V5a4 4 0 00-4-4zm-2 7V5a2 2 0 114 0v3h-4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+  padding-right: 40px; /* room for lock icon */
+}
+
 .process-box {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.08));
   padding: 14px;

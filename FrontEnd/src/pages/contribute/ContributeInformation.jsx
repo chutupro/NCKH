@@ -239,11 +239,25 @@ const ContributeInformation = () => {
             <div className="field-row">
               <div className="field">
                 <label>{t('contributeInfo.fullName')} *</label>
-                <input placeholder={t('contributeInfo.fullNamePlaceholder')} value={name} onChange={(e)=>setName(e.target.value)} />
+                {/* Fixed contributor name: not editable in this form */}
+                <input
+                  className="fixed-field"
+                  placeholder={t('contributeInfo.fullNamePlaceholder')}
+                  value={name}
+                  readOnly
+                  disabled
+                />
               </div>
               <div className="field">
                 <label>{t('contributeInfo.email')} *</label>
-                <input placeholder={t('contributeInfo.emailPlaceholder')} value={email} onChange={(e)=>setEmail(e.target.value)} />
+                {/* Fixed contributor email: not editable in this form */}
+                <input
+                  className="fixed-field"
+                  placeholder={t('contributeInfo.emailPlaceholder')}
+                  value={email}
+                  readOnly
+                  disabled
+                />
               </div>
             </div>
 

@@ -1,0 +1,142 @@
+.article-page {
+  padding: 40px 20px;
+  min-height: 100vh;
+  margin-top: 50px;
+  display: flex;
+  justify-content: center;
+}
+
+.article-inner {
+  max-width: 900px;
+  width: 100%;
+  background: rgba(255,255,255,0.02);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* Make default text inside article white for better contrast */
+.article-inner { color: #ffffff; }
+
+.article-hero {
+  height: 360px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.article-badge {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.article-meta time {
+  color: #8b6f47;
+  font-weight: 700;
+}
+
+.meta-top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.article-year {
+  color: #d0c7b8;
+  font-weight: 700;
+}
+
+.article-category {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.article-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.article-top .btn { margin-right: 8px; }
+
+.article-title {
+  margin: 8px 0 18px 0;
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.article-body p {
+  line-height: 1.8;
+  margin-bottom: 14px;
+  color: #ffffff;
+}
+
+.related-section {
+  margin-top: 28px;
+}
+
+.related-section h3 {
+  margin: 0 0 12px 0;
+  color: white;
+  font-size: 28px;
+}
+
+.related-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+
+.related-carousel.is-dragging { cursor: grabbing; }
+
+.related-card {
+  min-width: 220px;
+  display: block;
+  background: #2b2a28; /* dark background so white text is readable */
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+}
+
+.related-image {
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+}
+
+.related-info {
+  padding: 10px;
+}
+
+.related-title {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.related-date {
+  font-size: 12px;
+  color: #d0c7b8;
+  margin-bottom: 6px;
+}
+
+.not-found { text-align: center; }
+
+.btn { margin: 6px; padding: 8px 12px; border-radius: 8px; background: linear-gradient(135deg,#8b6f47 0,#6b5638 100%); color: #fff; border: none; cursor: pointer; }

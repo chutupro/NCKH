@@ -23,7 +23,7 @@ const CollectionGallery = () => {
       window.scrollTo(0, 0)
       navigate(`/ImageLibrary/${articleId}`)
     }
-  }
+  } 
 
   const displayArticles = articles.slice(0, 8)
 

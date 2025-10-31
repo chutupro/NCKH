@@ -1,6 +1,7 @@
 import "../../Styles/Timeline/Timeline.css";
 import { TIMELINE_ITEMS } from "../../util/constant";
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { CODE_TO_VN, KNOWN_CODES, labelFor } from '../../util/categoryMap';
 
@@ -90,6 +91,16 @@ const Timeline = () => {
   const onPointerDown = (e) => {
     const el = containerRef.current;
     if (!el) return;
+    // If the pointerdown started on an interactive element (link, button, input, etc.),
+    // don't start the timeline drag. This allows <Link> clicks to work normally.
+    try {
+      const target = e.target;
+      if (target && typeof target.closest === 'function') {
+        const interactive = target.closest('a, button, input, textarea, select, label');
+        if (interactive) return;
+      }
+    } catch (err) { void err; }
+
     dragRef.current.isDown = true;
     dragRef.current.startX = e.clientX;
     dragRef.current.scrollLeft = el.scrollLeft;
@@ -184,19 +195,22 @@ const Timeline = () => {
           <ul className="timeline-list" ref={listRef}>
             {filtered.map((item, idx) => (
               <li className="timeline-item" key={item.id || idx}>
-                <div className="timeline-card">
-                  <div className="timeline-card-image" style={{backgroundImage: `url(${item.image})`}}>
-                    {/* category badge inside image */}
-                    {item.category && (
-                      <span className="timeline-badge">{item.category}</span>
-                    )}
+                {/* Link to article detail */}
+                <Link to={`/timeline/${item.id}`} className="timeline-card-link" style={{textDecoration: 'none'}}>
+                  <div className="timeline-card">
+                    <div className="timeline-card-image" style={{backgroundImage: `url(${item.image})`}}>
+                      {/* category badge inside image */}
+                      {item.category && (
+                        <span className="timeline-badge">{item.category}</span>
+                      )}
+                    </div>
+                    <div className="timeline-card-body">
+                      <time className="timeline-date">{item.date}</time>
+                      <h3 className="timeline-title">{item.title}</h3>
+                      <p className="timeline-desc">{item.desc}</p>
+                    </div>
                   </div>
-                  <div className="timeline-card-body">
-                    <time className="timeline-date">{item.date}</time>
-                    <h3 className="timeline-title">{item.title}</h3>
-                    <p className="timeline-desc">{item.desc}</p>
-                  </div>
-                </div>
+                </Link>
               </li>
             ))}
           </ul>
