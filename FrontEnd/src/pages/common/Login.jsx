@@ -43,7 +43,7 @@ const Login = () => {
       navigate('/')
     } catch (err) {
       console.error('Login error:', err)
-      // Message thống nhất cho bảo mật
+      // Message thống nhất cho bảo mật (không lộ thông tin email tồn tại hay không)
       setError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.')
     } finally {
       setLoading(false)
@@ -67,7 +67,7 @@ const Login = () => {
         {/* Left Side: Logo & Branding */}
         <div className="auth-left">
           <div className="auth-logo-large">
-            <div className="dragon-icon">🐉</div>
+            <div className="dragon-icon">🐉🪱</div>
             <h1 className="auth-brand-large">Đà Nẵng History</h1>
             <p className="auth-tagline">Khám phá lịch sử qua hình ảnh</p>
           </div>

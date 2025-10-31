@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -10,7 +10,39 @@ import { ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // --- Đăng ký ---
+  // --- Bước 1: Gửi OTP để đăng ký ---
+  @Post('send-otp')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'test@gmail.com' },
+      },
+    },
+  })
+  async sendOTP(@Body() body: { email: string }) {
+    return this.authService.sendOTPForRegistration(body.email);
+  }
+
+  // --- Bước 2: Xác thực OTP và hoàn tất đăng ký ---
+  @Post('verify-otp')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'test@gmail.com' },
+        otpCode: { type: 'string', example: '123456' },
+        password: { type: 'string', example: 'Password123!' },
+        fullName: { type: 'string', example: 'Lê Văn Nghĩa' },
+        role: { type: 'string', example: '1' },
+      },
+    },
+  })
+  async verifyOTP(@Body() body: { email: string; otpCode: string; password: string; fullName?: string; role?: string }) {
+    return this.authService.verifyOTPAndRegister(body.email, body.otpCode, body.password, body.fullName, body.role);
+  }
+
+  // --- Đăng ký (legacy - không dùng OTP) ---
   @Post('register')
   @ApiBody({
     schema: {
@@ -25,6 +57,7 @@ export class AuthController {
   })
   async register(@Body() body: RegisterDto) {
     const { email, password, fullName, role } = body;
+    // Quay lại dùng register() thông thường (không cần email verification)
     return this.authService.register(email, password, fullName, role);
   }
 

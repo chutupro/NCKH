@@ -8,7 +8,7 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty({ message: 'Mật khẩu không được để trống.' })
   @MinLength(6, { message: 'Mật khẩu phải có ít nhất 6 ký tự.' })
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, {
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>\-_=+\[\]\\/;'])(?!.*\s).{6,}$/, {
     message: 'Mật khẩu quá yếu.',
   })
   password: string;

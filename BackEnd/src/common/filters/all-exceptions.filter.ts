@@ -35,11 +35,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     // Log error for debugging
-    console.error(`[${new Date().toISOString()}] ${request.method} ${request.url}`, {
+    console.error(`❌ [ExceptionFilter] ${request.method} ${request.url}`, {
       status,
       error,
       message,
       stack: exception instanceof Error ? exception.stack : undefined,
+    });
+
+    console.log('🔄 [ExceptionFilter] Sending response:', {
+      status,
+      success: false,
+      statusCode: status,
+      error,
+      message: Array.isArray(message) ? message : [message],
     });
 
     // Standardized JSON response
