@@ -11,7 +11,7 @@ const Headers = () => {
     <header className="header">
       <nav className="navbar">
         <div className="nav-links">
-          <span className="font-handwriting">DynaVault</span>
+          <span className="font-handwriting notranslate" translate="no">DynaVault</span>
           <Link to="/" className="nav-link">{t('nav.home')}</Link>
           <Link to="/map" className="nav-link">{t('nav.map')}</Link>
           <Link to="/timeline" className="nav-link">{t('nav.timeline')}</Link>
@@ -20,7 +20,6 @@ const Headers = () => {
         </div>
         <div className="nav-buttons">
           <LanguageSwitcher />
-          <Link to="/community" className="nav-buttonDongGop">{t('nav.join')}</Link>
           <Link to="/login" className="nav-buttonThamGia">{t('nav.login')}</Link>
         </div>
       </nav>

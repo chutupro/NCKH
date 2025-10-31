@@ -1,9 +1,13 @@
 // main.jsx
-import { StrictMode } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
+// Removed react-i18next initialization (using Google Translate + local shim)
+// Google Translate widget (mounted once) - keeps react-i18next as backup
+import GoogleTranslate from './Component/common/GoogleTranslate';
 import App from './App.jsx';
+import ScrollToTop from './Component/common/ScrollToTop'
 import { AppProvider } from './context/context';
 import 'leaflet/dist/leaflet.css';
 import { Provider } from 'react-redux';
@@ -21,6 +25,8 @@ createRoot(document.getElementById('root')).render(
     <Provider store={store}>
       <AppProvider>
         <BrowserRouter>
+          <ScrollToTop />
+          <GoogleTranslate />
           <App />
         </BrowserRouter>
       </AppProvider>

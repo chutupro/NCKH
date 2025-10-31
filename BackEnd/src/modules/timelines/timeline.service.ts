@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Timelines } from '../entities/timeline.entity'; 
-import { Images } from '../entities/image.entity'; 
+import { Timelines } from '../entities/timeline.entity';
+import { Images } from '../entities/image.entity';
 
 @Injectable()
 export class TimelineService {
@@ -16,40 +16,39 @@ export class TimelineService {
   async getTimelineItems(categories?: string[]) {
     const validCategories = ['Kiến trúc', 'Văn hóa', 'Du lịch', 'Thiên nhiên'];
 
-    // Lọc category hợp lệ
+    // 🔹 Lọc category hợp lệ nếu có
     if (categories) {
-      categories = categories.filter(cat => validCategories.includes(cat));
+      categories = categories.filter((cat) => validCategories.includes(cat));
       if (categories.length === 0) return [];
     }
 
-    const query = this.timelineRepo.createQueryBuilder('timeline');
+    // 🔹 Lấy dữ liệu timeline
+    const timelines = await this.timelineRepo
+      .createQueryBuilder('timeline')
+      .where(categories ? 'timeline.Category IN (:...categories)' : '1=1', { categories })
+      .orderBy('timeline.EventDate', 'ASC')
+      .getMany();
 
-    if (categories) {
-      query.where('timeline.Category IN (:...categories)', { categories });
-    }
+    // 🔹 Lấy toàn bộ ảnh Type='timeline'
+    const images = await this.imageRepo.find({ where: { Type: 'timeline' } });
 
-    const timelines = await query.orderBy('timeline.EventDate', 'ASC').getMany();
+    // 🔹 Map ảnh theo thứ tự timeline → image
+    const items = timelines.map((tl, idx) => {
+      const image = images.length > 0 ? images[idx % images.length] : null; // quay vòng nếu thiếu ảnh
 
-    const items = await Promise.all(
-      timelines.map(async (tl) => {
-        const image = await this.imageRepo.findOne({ where: { ArticleID: tl.ArticleID } });
+      const dateStr = tl.EventDate
+        ? (tl.EventDate instanceof Date ? tl.EventDate : new Date(tl.EventDate)).toISOString().slice(0, 10)
+        : '';
 
-        let dateStr = '';
-        if (tl.EventDate) {
-          const eventDate = tl.EventDate instanceof Date ? tl.EventDate : new Date(tl.EventDate);
-          dateStr = eventDate.toISOString().slice(0, 10);
-        }
-
-        return {
-          id: tl.TimelineID,
-          date: dateStr,
-          title: tl.Title,
-          desc: tl.Description,
-          image: image ? image.FilePath : null,
-          category: tl.Category,
-        };
-      }),
-    );
+      return {
+        id: tl.TimelineID,
+        date: dateStr,
+        title: tl.Title,
+        desc: tl.Description,
+        image: image ? image.FilePath : null,
+        category: tl.Category,
+      };
+    });
 
     return items;
   }

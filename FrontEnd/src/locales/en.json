@@ -265,4 +265,16 @@
     "feature4": "Well-organized translation structure",
     "howToUse": "How to Use"
   }
+  ,
+  "about": {
+    "title": "About DynaVault",
+    "subtitle": "Preserving Da Nang's cultural heritage through community and technology",
+    "contributeNow": "Contribute Photos",
+    "browse": "Browse Collection",
+    "missionTitle": "Our Mission",
+    "mission": "We connect community and technology to preserve, digitize and share the cultural heritage of Da Nang. Each photo and story you contribute enriches our collective archive.",
+    "teamTitle": "Meet the Team",
+    "contactTitle": "Contact",
+    "contactText": "Questions or collaboration? Email us at phandoanh2110@gmail.com"
+  }
 }

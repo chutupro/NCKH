@@ -109,8 +109,21 @@
 .posts-list {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 10px;
+  /* posts column uses full width of the grid column */
+  width: 100%;
+  min-width: 0;
 }
+
+/* center cards in the posts column and cap their maximum width so they don't
+   become too wide on large viewports. This also makes small images avoid
+   being upscaled to a huge width. */
+.posts-list {
+  align-items: center;
+}
+
+/* compact search indicator placed inside posts column */
+/* searching-indicator removed */
 
 .no-posts {
   background: linear-gradient(
@@ -133,8 +146,13 @@
   );
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 10px;
-  padding: 16px;
+  /* center and constrain card width to avoid very wide cards */
+  width: 100%;
+  max-width: 760px;
+  margin: 8px 0; /* vertical spacing handled by gap; keep small margin */
+  padding: 14px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
 }
 
 .post-header {
@@ -176,14 +194,41 @@
   overflow: hidden;
 }
 .post-image {
-  width: 100%;
-  height: 420px;
-  object-fit: cover;
+  /* do not force images to stretch: keep their natural size up to the card width */
+  width: auto;        /* allow small images to remain small */
+  max-width: 100%;    /* but never exceed the card width */
+  height: auto;       /* preserve aspect ratio */
+  max-height: 420px;  /* cap extremely tall images */
   display: block;
+  margin: 0 auto;     /* center smaller images inside the card */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
 }
 .post-image.crisper {
-  image-rendering: crisp-edges;
-  filter: contrast(1.1) saturate(1.05) sharpness(1.2);
+  image-rendering: auto;
+  /* keep only gentle contrast/saturation; remove SVG sharpen which can amplify artifacts */
+  filter: contrast(1.04) saturate(1.03);
+}
+
+/* hover lift and subtle transition for nicer feel */
+.post-card {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.post-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
+
+/* typography tweaks inside card */
+.post-text {
+  font-size: 15px;
+  line-height: 1.45;
+}
+.meta .name {
+  font-size: 15px;
+}
+.meta .sub {
+  font-size: 12px;
 }
 
 .post-footer {

@@ -1,25 +1,5 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import vi from '../locales/vi.json';
-import en from '../locales/en.json';
+// react-i18next/i18next configuration removed.
+// This project now uses Google Translate + a lightweight local shim at `src/i18nShim.js`.
+// The old i18n initialization was intentionally removed — keep this file as a note.
 
-// Cấu hình i18next
-i18n
-  .use(initReactI18next) // kết nối với React
-  .init({
-    resources: {
-      vi: {
-        translation: vi
-      },
-      en: {
-        translation: en
-      }
-    },
-    lng: localStorage.getItem('language') || 'en', // ngôn ngữ mặc định
-    fallbackLng: 'en', // ngôn ngữ dự phòng nếu không tìm thấy
-    interpolation: {
-      escapeValue: false // React đã tự động escape
-    }
-  });
-
-export default i18n;
+export default null;

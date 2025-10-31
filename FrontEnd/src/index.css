@@ -1,0 +1,34 @@
+/* Hide Google Translate top banner and related floating UI injected by the widget.
+	When Google Translate injects the banner it creates iframes and elements with
+	these classes. Hiding them keeps the page clean while still allowing the
+	translate functionality to run in the background.
+*/
+
+/* hide the top banner iframe */
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+
+/* reset body offset that Google sets when banner is present */
+body { top: 0 !important; margin-top: 0 !important; padding-top: 0 !important; }
+
+/* hide small floating bubble and other auxiliary elements */
+.goog-te-menu-value, .goog-te-gadget-icon, .goog-tooltip, .goog-tooltip:hover,
+.goog-text-highlight, .goog-te-spinner, .goog-te-balloon-frame { display: none !important; }
+
+/* hide the default widget iframe container if present */
+iframe.goog-te-menu-frame { display: none !important; }
+
+/* additional selectors to remove remaining banner/white gap */
+.goog-te-banner-frame, /* banner iframe */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-balloon-frame,
+.goog-te-spinner-pos,
+#goog-gt-tt,
+.goog-popup,
+.goog-te-gadget { display: none !important; }
+
+/* ensure no top margin inserted by Google Translate */
+html, body { transform: none !important; margin-top: 0 !important; }
+
+/* ensure untranslated content layout isn't affected */
+html, body { transform: none !important; }
+

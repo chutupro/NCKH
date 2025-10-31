@@ -266,4 +266,16 @@
     "feature4": "Cấu trúc translation có tổ chức",
     "howToUse": "Cách sử dụng"
   }
+  ,
+  "about": {
+    "title": "Về DynaVault",
+    "subtitle": "Bảo tồn di sản văn hóa Đà Nẵng thông qua cộng đồng và công nghệ",
+    "contributeNow": "Đóng góp ảnh",
+    "browse": "Duyệt bộ sưu tập",
+    "missionTitle": "Sứ mệnh của chúng tôi",
+    "mission": "Chúng tôi kết nối cộng đồng và công nghệ để bảo tồn, số hóa và chia sẻ di sản văn hóa Đà Nẵng. Mỗi bức ảnh và câu chuyện bạn đóng góp giúp làm giàu kho tư liệu chung.",
+    "teamTitle": "Đội ngũ phát triển",
+    "contactTitle": "Liên hệ",
+    "contactText": "Bạn có câu hỏi hoặc muốn hợp tác? Gửi email đến phandoanh2110@gmail.com"
+  }
 }
