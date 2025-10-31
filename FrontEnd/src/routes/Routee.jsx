@@ -31,46 +31,47 @@ const Routee = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Lauput />}>
-        {/* Trang chính */}
+      {/* TRANG CÓ LAYOUT */}
+      <Route element={<Lauput />}>
         <Route index element={<Home />} />
-        <Route path="personal" element={<Personal />} />
+        <Route path="/Personal" element={<Personal />} />
 
         {/* Timeline */}
-        <Route path="timeline" element={<Timeline />} />
-        <Route path="timeline/:id" element={<TimelineDetail />} />
+        <Route path="/timeline" element={<Timeline />} />
+        <Route path="/timeline/:id" element={<TimelineDetail />} /> {/* khác → giữ thêm */}
 
-        {/* Đóng góp */}
-        <Route path="contribute" element={<Contribute />} />
-        <Route path="contribute/info" element={<ContributeInformation />} />
+        {/* Contribute */}
+        <Route path="/contribute" element={<Contribute />} />
+        <Route
+          path="/contributeinformation"
+          element={<ContributeInformation />}
+        />
 
-        {/* Thư viện hình ảnh */}
-        <Route path="gallery" element={<ImageLibrary />} />
-        <Route path="gallery/:id" element={<ImageLibraryInformation />} />
+        {/* Gallery */}
+        <Route path="/ImageLibrary" element={<ImageLibrary />} />
+        <Route path="/ImageLibrary/:id" element={<ImageLibraryInformation />} />
 
-        {/* So sánh */}
-        <Route path="compare" element={<CompareGallery />} />
-        <Route path="compare/:id" element={<CompareDetail />} />
+        {/* Compare */}
+        <Route path="/compare" element={<CompareGallery />} />
+        <Route path="/compare/:id" element={<CompareDetail />} />
 
-        
+        {/* Community */}
+        <Route path="/community" element={<Community />} />
 
-        {/* Khác */}
-        <Route path="community" element={<Community />} />
-        <Route path="about" element={<About />} />
+        {/* About */}
+        <Route path="/about" element={<About />} /> {/* khác → giữ thêm */}
       </Route>
 
-      {/* Xác thực */}
+      {/* TRANG KHÔNG LAYOUT */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Bản đồ */}
-        <Route path="map" element={<MapPage />} />
-        <Route path="map/admin" element={<MapAdmin />} />
+      {/* BẢN ĐỒ: FULL MÀN HÌNH */}
+      <Route path="/map" element={<MapPage />} />
+      <Route path="/map/admin" element={<MapAdmin />} /> {/* giữ lại */}
     </Routes>
-
-    
-
   );
 };
+
 
 export default Routee;
