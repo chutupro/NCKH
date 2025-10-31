@@ -1,21 +1,22 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseInterceptors, UploadedFiles, BadRequestException, Logger } from '@nestjs/common';
+// src/modules/maplocations/map-locations.controller.ts
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseInterceptors,
+  UploadedFiles,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { MapLocationsService } from './map-locations.service';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import type { Express } from 'express';
-
-interface MulterFile {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  size: number;
-  destination?: string;
-  filename: string;
-  path: string;
-  buffer?: Buffer;
-}
 
 @Controller('map-locations')
 export class MapLocationsController {
@@ -30,64 +31,98 @@ export class MapLocationsController {
 
   @Post()
   @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'image', maxCount: 1 },
-      { name: 'oldImage', maxCount: 1 },
-    ], {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const randomName = Array(32).fill(null).map(() => Math.round(Math.random() * 16).toString(16)).join('');
-          return cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
-    })
+    FileFieldsInterceptor(
+      [
+        { name: 'image', maxCount: 1 },
+        { name: 'oldImage', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads',
+          filename: (req, file, cb) => {
+            const randomName = Array(32)
+              .fill(null)
+              .map(() => Math.round(Math.random() * 16).toString(16))
+              .join('');
+            cb(null, `${randomName}${extname(file.originalname)}`);
+          },
+        }),
+      },
+    ),
   )
   async create(
-    @Body() createLocationDto: any,
-    @UploadedFiles() files: { image?: Express.Multer.File[]; oldImage?: Express.Multer.File[] },
+    @Body() body: any,
+    @UploadedFiles()
+    files: {
+      image?: Express.Multer.File[];
+      oldImage?: Express.Multer.File[];
+    },
   ) {
-    this.logger.log('Received create request with body:', createLocationDto);
-    if (!createLocationDto.latitude || !createLocationDto.longitude || !createLocationDto.title || !createLocationDto.address) {
-      throw new BadRequestException('Title, address, latitude, and longitude are required');
-    }
+    this.logger.log('POST /map-locations - Body:', body);
+    this.logger.log('Uploaded files:', files);
 
-    let imageUrl = createLocationDto.image || '';
-    if (files.image && files.image.length > 0) {
-      this.logger.log('Image file uploaded successfully:', files.image[0]);
-      imageUrl = `/uploads/${files.image[0].filename}`;
-    } else {
-      this.logger.warn('No image file uploaded, using existing image URL:', imageUrl);
-    }
+    const imageUrl =
+      files?.image?.[0] ? `/uploads/${files.image[0].filename}` : body.image || null;
 
-    let oldImageUrl = createLocationDto.oldImage || '';
-    if (files.oldImage && files.oldImage.length > 0) {
-      this.logger.log('Old image file uploaded successfully:', files.oldImage[0]);
-      oldImageUrl = `/uploads/${files.oldImage[0].filename}`;
-    } else {
-      this.logger.warn('No old image file uploaded, using existing old image URL:', oldImageUrl);
-    }
+    const oldImageUrl =
+      files?.oldImage?.[0] ? `/uploads/${files.oldImage[0].filename}` : body.oldImage || null;
 
-    const createLocationDtoWithImage = {
-      ...createLocationDto,
-      title: createLocationDto.title,
+    const dto = {
+      ...body,
       image: imageUrl,
       oldImage: oldImageUrl,
     };
 
-    try {
-      const result = await this.mapLocationsService.create(createLocationDtoWithImage);
-      this.logger.log('Location created successfully:', result);
-      return { ...result, image: imageUrl, oldImage: oldImageUrl };
-    } catch (error) {
-      this.logger.error('Error creating location:', error);
-      throw new BadRequestException(`Failed to create location: ${error.message}`);
-    }
+    return this.mapLocationsService.create(dto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateLocationDto: any) {
-    return this.mapLocationsService.update(+id, updateLocationDto);
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'image', maxCount: 1 },
+        { name: 'oldImage', maxCount: 1 },
+      ],
+      {
+        storage: diskStorage({
+          destination: './uploads',
+          filename: (req, file, cb) => {
+            const randomName = Array(32)
+              .fill(null)
+              .map(() => Math.round(Math.random() * 16).toString(16))
+              .join('');
+            cb(null, `${randomName}${extname(file.originalname)}`);
+          },
+        }),
+      },
+    ),
+  )
+  async update(
+    @Param('id') id: string,
+    @Body() body: any,
+    @UploadedFiles()
+    files: {
+      image?: Express.Multer.File[];
+      oldImage?: Express.Multer.File[];
+    },
+  ) {
+    const imageUrl =
+      files?.image?.[0]
+        ? `/uploads/${files.image[0].filename}`
+        : body.image || undefined;
+
+    const oldImageUrl =
+      files?.oldImage?.[0]
+        ? `/uploads/${files.oldImage[0].filename}`
+        : body.oldImage || undefined;
+
+    const dto = {
+      ...body,
+      image: imageUrl,
+      oldImage: oldImageUrl,
+    };
+
+    return this.mapLocationsService.update(+id, dto);
   }
 
   @Delete(':id')
@@ -101,7 +136,10 @@ export class MapLocationsController {
   }
 
   @Post(':id/feedback')
-  addFeedback(@Param('id') id: string, @Body() feedbackDto: { rating: number; comment: string; userId: number }) {
+  addFeedback(
+    @Param('id') id: string,
+    @Body() feedbackDto: { rating: number; comment: string; userId: number },
+  ) {
     return this.mapLocationsService.addFeedback(+id, feedbackDto.userId, feedbackDto);
   }
 }

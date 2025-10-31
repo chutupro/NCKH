@@ -16,62 +16,63 @@ export class MapLocationsService {
   ) {}
 
   async findAll() {
-    return await this.mapLocationsRepository.find();
+    return await this.mapLocationsRepository.find({
+      relations: ['category'],
+    });
   }
 
   async create(createLocationDto: any) {
     this.logger.log('Creating location with DTO:', createLocationDto);
 
     if (!createLocationDto.latitude || !createLocationDto.longitude || !createLocationDto.title || !createLocationDto.address) {
-      throw new Error('Title, address, latitude, and longitude are required');
+      throw new BadRequestException('Title, address, latitude, and longitude are required');
     }
 
     const newLocation = this.mapLocationsRepository.create({
       Name: createLocationDto.title,
       Latitude: createLocationDto.latitude,
       Longitude: createLocationDto.longitude,
-      Rating: createLocationDto.rating || 0,
-      Reviews: createLocationDto.reviews || 0,
+      Rating: createLocationDto.rating ?? 0,
+      Reviews: createLocationDto.reviews ?? 0,
       Address: createLocationDto.address,
       Image: createLocationDto.image || null,
       OldImage: createLocationDto.oldImage || null,
       Desc: createLocationDto.desc || null,
       FullDesc: createLocationDto.fullDesc || null,
-      ArticleID: createLocationDto.articleId || null,
-      TimelineID: createLocationDto.timelineId || null,
-    });
+      ArticleID: createLocationDto.articleId ?? null,
+      TimelineID: createLocationDto.timelineId ?? null,
+      CategoryID: createLocationDto.CategoryID ? parseInt(createLocationDto.CategoryID, 10) : null, // SỬA
+    } as MapLocations); // ÉP KIỂU ĐÚNG
 
-    this.logger.log('New location entity created:', newLocation);
     try {
       const savedLocation = await this.mapLocationsRepository.save(newLocation);
       this.logger.log('Location saved successfully:', savedLocation);
       return savedLocation;
     } catch (error) {
       this.logger.error('Error saving location:', error);
-      throw new Error(`Failed to save location: ${error.message}`);
+      throw new BadRequestException(`Failed to save location: ${error.message}`);
     }
   }
 
   async update(id: number, updateLocationDto: any) {
     const location = await this.mapLocationsRepository.findOneBy({ LocationID: id });
-    if (location) {
-      Object.assign(location, {
-        Name: updateLocationDto.title,
-        Latitude: updateLocationDto.latitude,
-        Longitude: updateLocationDto.longitude,
-        Rating: updateLocationDto.rating || null,
-        Reviews: updateLocationDto.reviews || null,
-        Address: updateLocationDto.address,
-        Image: updateLocationDto.image || null,
-        OldImage: updateLocationDto.oldImage || null,
-        Desc: updateLocationDto.desc || null,
-        FullDesc: updateLocationDto.fullDesc || null,
-        ArticleID: updateLocationDto.articleId || null,
-        TimelineID: updateLocationDto.timelineId || null,
-      });
-      return await this.mapLocationsRepository.save(location);
-    }
-    return null;
+    if (!location) return null;
+
+    Object.assign(location, {
+      Name: updateLocationDto.title || location.Name,
+      Latitude: updateLocationDto.latitude ?? location.Latitude,
+      Longitude: updateLocationDto.longitude ?? location.Longitude,
+      Address: updateLocationDto.address || location.Address,
+      Image: updateLocationDto.image || location.Image,
+      OldImage: updateLocationDto.oldImage || location.OldImage,
+      Desc: updateLocationDto.desc || location.Desc,
+      FullDesc: updateLocationDto.fullDesc || location.FullDesc,
+      ArticleID: updateLocationDto.articleId ?? location.ArticleID,
+      TimelineID: updateLocationDto.timelineId ?? location.TimelineID,
+      CategoryID: updateLocationDto.CategoryID ? parseInt(updateLocationDto.CategoryID, 10) : location.CategoryID,
+    });
+
+    return await this.mapLocationsRepository.save(location);
   }
 
   async remove(id: number) {
@@ -88,15 +89,12 @@ export class MapLocationsService {
   }
 
   async addFeedback(locationId: number, userId: number, feedbackDto: { rating: number; comment: string }) {
-    console.log("Received feedback:", { locationId, userId, ...feedbackDto }); // Kiểm tra dữ liệu
     if (!feedbackDto.rating || !feedbackDto.comment) {
       throw new BadRequestException('Rating and comment are required');
     }
 
     const location = await this.mapLocationsRepository.findOneBy({ LocationID: locationId });
-    if (!location) {
-      throw new BadRequestException('Location not found');
-    }
+    if (!location) throw new BadRequestException('Location not found');
 
     const feedback = this.feedbackRepository.create({
       LocationID: locationId,
@@ -109,8 +107,8 @@ export class MapLocationsService {
     const savedFeedback = await this.feedbackRepository.save(feedback);
 
     const feedbacks = await this.feedbackRepository.find({ where: { LocationID: locationId } });
-    const averageRating = feedbacks.reduce((sum, f) => sum + f.Rating, 0) / Math.max(feedbacks.length, 1);
-    location.Rating = parseFloat(averageRating.toFixed(1));
+    const avg = feedbacks.reduce((s, f) => s + f.Rating, 0) / feedbacks.length || 0;
+    location.Rating = parseFloat(avg.toFixed(1));
     location.Reviews = feedbacks.length;
     await this.mapLocationsRepository.save(location);
 
