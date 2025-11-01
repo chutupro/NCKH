@@ -86,14 +86,17 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      path: '/',
+      // Allow cross-site during development (OAuth flows). In production use 'none' with HTTPS.
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      path: '/',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Updated to dynamic setting
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -184,20 +187,22 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      path: '/',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      path: '/',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Redirect về frontend với token
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(`${frontendUrl}/auth/google/success?user=${encodeURIComponent(JSON.stringify(result.user))}`);
+  // Redirect về frontend với token (use /oauth/... to avoid dev proxy collision)
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  res.redirect(`${frontendUrl}/oauth/google/success?user=${encodeURIComponent(JSON.stringify(result.user))}`);
   }
 
   // ✅ FACEBOOK OAUTH - REDIRECT TO FACEBOOK
@@ -220,6 +225,7 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      path: '/',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
@@ -227,12 +233,43 @@ export class AuthController {
     res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      path: '/',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // Redirect về frontend với token
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(`${frontendUrl}/auth/facebook/success?user=${encodeURIComponent(JSON.stringify(result.user))}`);
+  // Redirect về frontend with token (use /oauth/... to avoid dev proxy collision)
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  res.redirect(`${frontendUrl}/oauth/facebook/success?user=${encodeURIComponent(JSON.stringify(result.user))}`);
+  }
+
+  // ✅ QUÊN MẬT KHẨU - Gửi OTP
+  @Post('forgot-password/send-otp')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+      },
+    },
+  })
+  async sendPasswordResetOTP(@Body() body: { email: string }) {
+    return this.authService.sendOTPForPasswordReset(body.email);
+  }
+
+  // ✅ QUÊN MẬT KHẨU - Xác thực OTP và đặt lại mật khẩu
+  @Post('forgot-password/reset')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        otpCode: { type: 'string', example: '123456' },
+        newPassword: { type: 'string', example: 'NewPassword123!' },
+      },
+    },
+  })
+  async resetPassword(@Body() body: { email: string; otpCode: string; newPassword: string }) {
+    return this.authService.resetPasswordWithOTP(body.email, body.otpCode, body.newPassword);
   }
 }

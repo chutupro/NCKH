@@ -15,4 +15,15 @@ export default defineConfig({
       'react-i18next': path.resolve(__dirname, 'src/i18nShim.js')
     }
   }
+  ,
+  server: {
+    // Dev proxy to avoid cross-origin cookie issues during local development
+    proxy: {
+      // Proxy API calls to backend running on port 3000
+      '/auth': 'http://localhost:3000',
+      '/users': 'http://localhost:3000',
+      '/map-locations': 'http://localhost:3000',
+      '/uploads': 'http://localhost:3000',
+    },
+  },
 })

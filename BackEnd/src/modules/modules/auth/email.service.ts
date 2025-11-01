@@ -400,6 +400,83 @@ export class EmailService {
     }
   }
 
+  // ✅ NEW: Send Password Reset OTP Email
+  async sendPasswordResetOTP(email: string, otpCode: string): Promise<{ 
+    success: boolean; 
+    error?: string;
+  }> {
+    try {
+      console.log('🔵 [EmailService] Sending password reset OTP to:', email);
+
+      const mailOptions = {
+        from: `"DynaVault - Đà Nẵng History" <${this.config.get<string>('SMTP_USER')}>`,
+        to: email,
+        subject: 'Đặt lại mật khẩu DynaVault',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 20px;">
+                🔒 Đặt lại mật khẩu
+              </h2>
+              
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Chào bạn,
+              </p>
+              
+              <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>DynaVault</strong> của bạn.
+                Vui lòng sử dụng mã OTP dưới đây để tiếp tục:
+              </p>
+              
+              <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
+                <p style="color: white; font-size: 14px; margin: 0 0 10px 0;">Mã OTP của bạn:</p>
+                <h1 style="color: white; font-size: 36px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">
+                  ${otpCode}
+                </h1>
+              </div>
+              
+              <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                ⏰ Mã này có hiệu lực trong vòng <strong>10 phút</strong>.<br>
+                🔒 Vui lòng không chia sẻ mã này với bất kỳ ai để đảm bảo an toàn tài khoản.
+              </p>
+              
+              <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                <p style="color: #856404; font-size: 14px; margin: 0;">
+                  ⚠️ <strong>Lưu ý:</strong> Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này và đảm bảo tài khoản của bạn an toàn.
+                </p>
+              </div>
+              
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+              
+              <p style="color: #666; font-size: 13px; line-height: 1.6;">
+                Cần hỗ trợ? Liên hệ qua <a href="mailto:support@dynavault.com" style="color: #ff6b6b;">support@dynavault.com</a>
+              </p>
+              
+              <p style="color: #333; font-size: 14px; margin-top: 20px;">
+                Trân trọng,<br>
+                <strong style="color: #4ecdc4;">Đội ngũ DynaVault</strong>
+              </p>
+            </div>
+            
+            <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+              © 2025 DynaVault. All rights reserved.
+            </p>
+          </div>
+        `,
+      };
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('✅ [EmailService] Password reset OTP sent! MessageID:', info.messageId);
+      return { success: true };
+    } catch (error) {
+      console.error('❌ [EmailService] Error sending password reset OTP:', error);
+      return { 
+        success: false, 
+        error: 'Không thể gửi email. Vui lòng thử lại.'
+      };
+    }
+  }
+
   // Translate validation reasons to Vietnamese
   private translateValidationReason(reason: string): string {
     const translations = {

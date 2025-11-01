@@ -430,4 +430,78 @@ export class AuthService {
       },
     };
   }
+
+  // ✅ QUÊN MẬT KHẨU - Bước 1: Gửi OTP
+  async sendOTPForPasswordReset(email: string): Promise<{ message: string }> {
+    console.log('🔵 [AuthService] Starting password reset for:', email);
+
+    // 1. Kiểm tra email có tồn tại trong DB không
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      console.log('❌ [AuthService] Email not found:', email);
+      throw new BadRequestException('Email không tồn tại trong hệ thống.');
+    }
+
+    // 2. Tạo OTP → Lưu Redis
+    const otpCode = this.generateOTP();
+    const redisKey = `password-reset-otp:${email}`;
+    
+    // Lưu OTP với TTL 10 phút
+    await this.redis.set(redisKey, otpCode, 600);
+    
+    console.log('✅ [AuthService] Password reset OTP created:', { email, code: otpCode });
+
+    // 3. Gửi email OTP
+    const emailResult = await this.emailService.sendPasswordResetOTP(email, otpCode);
+    
+    if (!emailResult.success) {
+      // Xóa OTP nếu gửi email thất bại
+      await this.redis.del(redisKey);
+      throw new BadRequestException(emailResult.error || 'Không thể gửi email. Vui lòng thử lại.');
+    }
+
+    console.log('✅ [AuthService] Password reset OTP sent successfully');
+    return {
+      message: 'Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.',
+    };
+  }
+
+  // ✅ QUÊN MẬT KHẨU - Bước 2: Xác thực OTP và đặt lại mật khẩu
+  async resetPasswordWithOTP(
+    email: string,
+    otpCode: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    console.log('🔵 [AuthService] Verifying OTP and resetting password for:', email);
+
+    // 1. Đọc OTP từ Redis
+    const redisKey = `password-reset-otp:${email}`;
+    const storedOTP = await this.redis.get(redisKey);
+
+    if (!storedOTP || storedOTP !== otpCode) {
+      console.log('❌ [AuthService] Invalid or expired OTP');
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn.');
+    }
+
+    // 2. Tìm user
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException('Email không tồn tại.');
+    }
+
+    // 3. Hash mật khẩu mới
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // 4. Cập nhật mật khẩu
+    user.PasswordHash = hashedPassword;
+    await this.userRepo.save(user);
+
+    // 5. Xóa OTP sau khi sử dụng
+    await this.redis.del(redisKey);
+
+    console.log('✅ [AuthService] Password reset successfully');
+    return {
+      message: 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.',
+    };
+  }
 } 

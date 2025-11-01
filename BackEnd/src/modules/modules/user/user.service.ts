@@ -49,6 +49,67 @@ export class UserService {
     return this.userRepo.findOne({ where: { UserID: id } });
   }
 
+  // ✅ Lấy thông tin User Profile đầy đủ
+  async getUserProfile(userId: number) {
+    const user = await this.userRepo.findOne({
+      where: { UserID: userId },
+      relations: ['profile'], // Load cả UserProfile
+    });
+
+    if (!user) {
+      throw new Error('User không tồn tại');
+    }
+
+    return {
+      userId: user.UserID,
+      email: user.Email,
+      fullName: user.FullName,
+      isEmailVerified: user.IsEmailVerified,
+      createdAt: user.CreatedAt,
+      profile: {
+        avatar: user.profile?.Avatar || '/img/default-avatar.png',
+        bio: user.profile?.Bio || '',
+        totalContributions: user.profile?.TotalContributions || 0,
+        totalEdits: user.profile?.TotalEdits || 0,
+        totalLikes: user.profile?.TotalLikes || 0,
+      },
+    };
+  }
+
+  // ✅ Cập nhật User Profile
+  async updateUserProfile(
+    userId: number,
+    data: {
+      avatar?: string;
+      bio?: string;
+      fullName?: string;
+    }
+  ) {
+    // Update User info (fullName)
+    if (data.fullName) {
+      await this.userRepo.update({ UserID: userId }, { FullName: data.fullName });
+    }
+
+    // Update Profile info (avatar, bio)
+    const profile = await this.profileRepo.findOne({ where: { UserID: userId } });
+    
+    if (!profile) {
+      throw new Error('Profile không tồn tại');
+    }
+
+    if (data.avatar !== undefined) {
+      profile.Avatar = data.avatar;
+    }
+    
+    if (data.bio !== undefined) {
+      profile.Bio = data.bio;
+    }
+
+    await this.profileRepo.save(profile);
+
+    return this.getUserProfile(userId);
+  }
+
   async createUserProfile(userId: number) {
     const existingProfile = await this.profileRepo.findOne({ where: { UserID: userId } });
     if (existingProfile) {
