@@ -8,14 +8,16 @@ import { EmailService } from './email.service';
 import { UserModule } from '../user/user.module';
 import { AccessTokenStrategy } from './strategies/accessToken.strategy';
 import { RefreshTokenStrategy } from './strategies/refreshToken.strategy';
-import { OTP } from '../../entities/otp.entity';
-import { Users } from '../../entities/user.entity'; // 🔥 NEW
+import { GoogleStrategy } from './strategies/google.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+import { Users } from '../../entities/user.entity';
+import { RedisService } from '../../../common/redis.service';
 
 @Module({
   imports: [
     ConfigModule,
     UserModule,
-    TypeOrmModule.forFeature([OTP, Users]), // 🔥 Thêm Users
+    TypeOrmModule.forFeature([Users]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (cs: ConfigService) => ({
@@ -29,8 +31,11 @@ import { Users } from '../../entities/user.entity'; // 🔥 NEW
   providers: [
     AuthService,
     EmailService,
+    RedisService,
     AccessTokenStrategy,
     RefreshTokenStrategy,
+    GoogleStrategy, // ✅ THÊM GOOGLE STRATEGY
+    FacebookStrategy, // ✅ THÊM FACEBOOK STRATEGY
   // JwtStrategy removed to avoid duplicate 'jwt' strategy registration — AccessTokenStrategy is used
   ],
   exports: [AuthService],

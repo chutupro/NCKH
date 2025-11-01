@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import authService from '../../services/authService'
 import OTPVerification from '../../Component/common/OTPVerification'
+import { toast } from 'react-toastify'
 import '../../Styles/login-register/login.css'
 
 const Register = () => {
@@ -153,8 +154,12 @@ const Register = () => {
         throw new Error(data.message || 'Xác thực OTP thất bại')
       }
 
-      alert('Đăng ký thành công!')
-      navigate('/login')
+      toast.success('Đăng ký thành công! Đang chuyển đến trang đăng nhập...', {
+        position: "top-right",
+        autoClose: 2000,
+      })
+      
+      setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
       setError(err.message)
       return false

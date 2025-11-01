@@ -3,29 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 import authService from '../../services/authService';
+import { useAppContext } from '../../context/useAppContext';
 import "../../Styles/Home/Header.css";
 
 const Headers = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, setUser, setAccessToken, setIsAuthenticated } = useAppContext(); // ✅ DÙNG CONTEXT
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    // Check if user is logged in
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-
-    // Listen for login events
-    const handleUserLogin = () => {
-      const updatedUser = authService.getCurrentUser();
-      setUser(updatedUser);
-    };
-
-    window.addEventListener('userLoggedIn', handleUserLogin);
-    return () => window.removeEventListener('userLoggedIn', handleUserLogin);
-  }, []);
 
   useEffect(() => {
     // Close dropdown when clicking outside
@@ -42,7 +28,10 @@ const Headers = () => {
   const handleLogout = async () => {
     try {
       await authService.logout();
+      // ✅ CLEAR CONTEXT
       setUser(null);
+      setAccessToken(null);
+      setIsAuthenticated(false);
       setShowDropdown(false);
       navigate('/');
     } catch (error) {

@@ -351,7 +351,7 @@ export class EmailService {
       const validationResult = await deepValidate({
         email: email,
         validateRegex: true,
-        validateMx: true,
+        validateMx: false, // ❌ TẮT MX CHECK - Gmail thường bị false negative
         validateTypo: false,
         validateDisposable: true,
         validateSMTP: false, // Keep disabled - unreliable

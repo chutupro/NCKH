@@ -1,12 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import authService from '../../services/authService'
+import AppContext from '../../context/context'
 import '../../Styles/login-register/login.css'
 
 const Login = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { setUser, setIsAuthenticated, setAccessToken } = useContext(AppContext); // ✅ THÊM
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -42,6 +44,11 @@ const Login = () => {
       const response = await authService.login(email, password)
       console.log('Login successful:', response)
       
+      // ✅ LƯU VÀO CONTEXT STATE (MEMORY)
+      setAccessToken(response.accessToken);
+      setUser(response.user);
+      setIsAuthenticated(true);
+      
       // Dispatch custom event để notify Header component
       window.dispatchEvent(new Event('userLoggedIn'))
       
@@ -57,13 +64,13 @@ const Login = () => {
   }
 
   const onGoogle = () => {
-    console.log('google sign in')
-    // TODO: trigger Google OAuth flow
+    // ✅ REDIRECT TO GOOGLE OAUTH
+    window.location.href = 'http://localhost:3000/auth/google';
   }
 
   const onFacebook = () => {
-    console.log('facebook sign in')
-    // TODO: trigger Facebook OAuth flow
+    // ✅ REDIRECT TO FACEBOOK OAUTH
+    window.location.href = 'http://localhost:3000/auth/facebook';
   }
 
   return (

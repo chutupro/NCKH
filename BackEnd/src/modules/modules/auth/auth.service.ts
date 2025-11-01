@@ -2,13 +2,13 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email.service';
-import { OTP } from '../../entities/otp.entity';
 import { Users } from '../../entities/user.entity';
+import { RedisService } from '../../../common/redis.service';
 
 @Injectable()
 export class AuthService {
@@ -17,10 +17,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly emailService: EmailService,
-    @InjectRepository(OTP)
-    private readonly otpRepo: Repository<OTP>,
     @InjectRepository(Users)
     private readonly userRepo: Repository<Users>,
+    private readonly redis: RedisService,
   ) {}
 
   // Tạo mã OTP 6 số ngẫu nhiên
@@ -48,25 +47,16 @@ export class AuthService {
     }
     console.log('✅ [AuthService] Email validation passed:', email);
 
-    // 3. Xóa các OTP cũ của email này (nếu có)
-    await this.otpRepo.delete({ Email: email });
-
-    // 4. Tạo OTP mới
+    // 🔥 3. Tạo OTP → LƯU REDIS (KHÔNG DB)
     const otpCode = this.generateOTP();
-    const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // Hết hạn sau 10 phút
+    const redisKey = `otp:${email}`;
+    
+    // redis.set('otp:email', code, 'EX', 600) - 10 phút = 600 seconds
+    await this.redis.set(redisKey, otpCode, 600);
+    
+    console.log('✅ [AuthService] OTP created in Redis:', { email, code: otpCode, ttl: '10 minutes' });
 
-    const otp = this.otpRepo.create({
-      Email: email,
-      Code: otpCode,
-      ExpiresAt: expiresAt,
-      IsUsed: false,
-    });
-
-    await this.otpRepo.save(otp);
-    console.log('✅ [AuthService] OTP created:', { email, code: otpCode, expiresAt });
-
-    // 5. Gửi email OTP
+    // 4. Gửi email OTP
     console.log('📧 [AuthService] Attempting to send email...');
     const emailResult = await this.emailService.sendOTPEmail(email, otpCode);
     
@@ -76,9 +66,9 @@ export class AuthService {
     });
     
     if (!emailResult.success) {
-      // Xóa OTP vì gửi email thất bại
-      console.log('❌ [AuthService] Email send failed, deleting OTP...');
-      await this.otpRepo.delete({ Email: email });
+      // 🔥 Xóa OTP từ Redis vì gửi email thất bại
+      console.log('❌ [AuthService] Email send failed, deleting OTP from Redis...');
+      await this.redis.del(`otp:${email}`);
       
       console.log('🚫 [AuthService] Throwing BadRequestException with message:', emailResult.error);
       throw new BadRequestException(emailResult.error || 'Không thể gửi email. Vui lòng thử lại.');
@@ -98,29 +88,18 @@ export class AuthService {
     fullName?: string,
     role?: string,
   ) {
-    // 1. Tìm OTP hợp lệ
-    const otp = await this.otpRepo.findOne({
-      where: {
-        Email: email,
-        Code: otpCode,
-        IsUsed: false,
-      },
-    });
+    // 🔥 1. ĐỌC OTP TỪ REDIS
+    const redisKey = `otp:${email}`;
+    const storedOTP = await this.redis.get(redisKey);
 
-    if (!otp) {
-      throw new BadRequestException('Mã OTP không hợp lệ.');
+    if (!storedOTP || storedOTP !== otpCode) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn.');
     }
 
-    // 2. Kiểm tra OTP đã hết hạn chưa
-    if (new Date() > otp.ExpiresAt) {
-      throw new BadRequestException('Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.');
-    }
+    // 🔥 2. XÓA OTP SAU KHI SỬ DỤNG
+    await this.redis.del(redisKey);
 
-    // 3. Đánh dấu OTP đã sử dụng
-    otp.IsUsed = true;
-    await this.otpRepo.save(otp);
-
-    // 4. Tạo tài khoản người dùng
+    // 3. Tạo tài khoản người dùng
     const user = await this.userService.createUser(email, password, fullName, role);
 
     return {
@@ -298,16 +277,21 @@ export class AuthService {
     return { access_token: accessToken, refresh_token: refreshToken };
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string, deviceInfo?: string) {
     const user = await this.validateUser(email, password);
     const tokens = await this.getTokens(user);
-    // Hash and store refresh token for revocation control
-    const hash = await bcrypt.hash(tokens.refresh_token, 10);
-    await this.userService.setRefreshTokenHash(user.UserID, hash);
     
+    // 🔥 HASH REFRESH_TOKEN → LƯU REDIS (KHÔNG DB)
+    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    const redisKey = `rt:${refreshTokenHash}`;
+    
+    // 🔥 redis.set('rt:hash', userId, 'EX', 7 ngày = 604800 seconds)
+    await this.redis.set(redisKey, user.UserID.toString(), 604800);
+    
+    // 🔥 TRẢ CẢ 2 TOKENS - Controller sẽ set vào HttpOnly cookie
     return {
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      accessToken: tokens.access_token,   // → HttpOnly cookie
+      refreshToken: tokens.refresh_token, // → HttpOnly cookie
       user: {
         UserID: user.UserID,
         Email: user.Email,
@@ -317,7 +301,7 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: number, refreshToken: string) {
+  async refreshTokens(userId: number, refreshToken: string, deviceInfo?: string) {
     // Verify refresh token signature first
     let payload: any;
     try {
@@ -335,16 +319,25 @@ export class AuthService {
     const user = await this.userService.findById(userId);
     if (!user) throw new UnauthorizedException('Không tìm thấy user');
 
-    const storedHash = await this.userService.getRefreshTokenHash(userId);
-    if (!storedHash) throw new UnauthorizedException('Refresh token không hợp lệ');
+    // 🔥 HASH REFRESH_TOKEN → CHECK REDIS
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+    const redisKey = `rt:${refreshTokenHash}`;
+    
+    const storedUserId = await this.redis.get(redisKey);
+    
+    if (!storedUserId || parseInt(storedUserId) !== userId) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
 
-    const match = await bcrypt.compare(refreshToken, storedHash);
-    if (!match) throw new UnauthorizedException('Refresh token không hợp lệ');
+    // 🔥 TOKEN ROTATION: XÓA KEY CŨ, TẠO TOKEN MỚI
+    await this.redis.del(redisKey);
 
-    // rotate refresh token: issue new refresh token and replace hash in DB
     const newTokens = await this.getTokens(user);
     const newHash = await bcrypt.hash(newTokens.refresh_token, 10);
-    await this.userService.setRefreshTokenHash(user.UserID, newHash);
+    const newRedisKey = `rt:${newHash}`;
+    
+    // Lưu token mới vào Redis - 7 ngày
+    await this.redis.set(newRedisKey, user.UserID.toString(), 604800);
 
     return { 
       accessToken: newTokens.access_token, 
@@ -352,18 +345,89 @@ export class AuthService {
     };
   }
 
-  async logout(userId: number) {
-    // Remove stored refresh token hash so refresh token is revoked
-    await this.userService.setRefreshTokenHash(userId, null);
+  async logout(userId: number, refreshToken?: string) {
+    // 🔥 REDIS DEL - TỨC THÌ
+    if (refreshToken) {
+      const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+      const redisKey = `rt:${refreshTokenHash}`;
+      await this.redis.del(redisKey);
+    } else {
+      // Xóa tất cả refresh tokens của user (tìm theo pattern)
+      await this.redis.delByPattern(`rt:*`);
+    }
     return { message: 'Đăng xuất thành công' };
   }
 
-  // Cleanup expired OTPs (chạy định kỳ hoặc gọi manual)
-  async cleanupExpiredOTPs() {
-    const result = await this.otpRepo.delete({
-      ExpiresAt: LessThan(new Date()),
-    });
-    console.log(`Cleaned up ${result.affected} expired OTPs`);
-    return { deleted: result.affected };
+  // ✅ GOOGLE OAUTH LOGIN
+  async googleLogin(googleUser: any) {
+    const { email, fullName, avatar, googleId } = googleUser;
+
+    // Tìm user theo email
+    let user = await this.userService.findByEmail(email);
+
+    if (!user) {
+      // Tạo user mới nếu chưa tồn tại
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      user = await this.userService.createUser(email, randomPassword, fullName, '2'); // Role 2 = User
+
+      // Tự động xác thực email
+      user.IsEmailVerified = true;
+      await this.userRepo.save(user);
+    }
+
+    // Generate tokens
+    const tokens = await this.getTokens(user);
+
+    // Lưu refresh token vào Redis
+    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
+
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      user: {
+        userId: user.UserID,
+        email: user.Email,
+        fullName: user.FullName,
+        isEmailVerified: user.IsEmailVerified,
+      },
+    };
   }
-}
+
+  // ✅ FACEBOOK OAUTH LOGIN
+  async facebookLogin(facebookUser: any) {
+    const { email, fullName, avatar, facebookId } = facebookUser;
+
+    // ✅ Email luôn có (đã tạo từ Facebook ID trong strategy nếu không có email thật)
+    // Tìm user theo email
+    let user = await this.userService.findByEmail(email);
+
+    if (!user) {
+      // Tạo user mới nếu chưa tồn tại
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      user = await this.userService.createUser(email, randomPassword, fullName || 'Facebook User', '2'); // Role 2 = User
+
+      // Tự động xác thực email
+      user.IsEmailVerified = true;
+      await this.userRepo.save(user);
+    }
+
+    // Generate tokens
+    const tokens = await this.getTokens(user);
+
+    // Lưu refresh token vào Redis
+    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
+
+    return {
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      user: {
+        userId: user.UserID,
+        email: user.Email,
+        fullName: user.FullName,
+        isEmailVerified: user.IsEmailVerified,
+      },
+    };
+  }
+} 

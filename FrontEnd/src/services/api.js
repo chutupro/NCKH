@@ -3,6 +3,16 @@ import axios from 'axios';
 // Base URL của backend API
 const API_BASE_URL = 'http://localhost:3000';
 
+// ✅ GLOBAL VARIABLE để lưu accessToken getter (sẽ được set từ Context)
+let getAccessToken = null;
+let setAccessToken = null;
+
+// Function để setup token getters từ Context
+export const setupTokenGetters = (getTokenFn, setTokenFn) => {
+  getAccessToken = getTokenFn;
+  setAccessToken = setTokenFn;
+};
+
 // Tạo axios instance với config mặc định
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -10,12 +20,14 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 seconds
+  withCredentials: true, // ✅ QUAN TRỌNG: Cho phép gửi/nhận cookie
 });
 
 // Interceptor để tự động thêm access token vào headers
 apiClient.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem('accessToken');
+    // ✅ LẤY TOKEN TỪ MEMORY (Context state)
+    const accessToken = getAccessToken ? getAccessToken() : null;
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -37,30 +49,26 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Lấy refresh token và userId
-        const refreshToken = localStorage.getItem('refreshToken');
-        const userId = localStorage.getItem('userId');
+        // ✅ GỌI REFRESH - Cookie tự động gửi
+        const { data } = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
 
-        if (refreshToken && userId) {
-          // Gọi API refresh token
-          const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            userId: parseInt(userId),
-            refresh_token: refreshToken,
-          });
-
-          // Lưu tokens mới
-          localStorage.setItem('accessToken', data.accessToken);
-          localStorage.setItem('refreshToken', data.refreshToken);
-
-          // Retry request với token mới
-          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-          return apiClient(originalRequest);
+        // ✅ LƯU ACCESS_TOKEN MỚI VÀO STATE
+        if (setAccessToken && data.accessToken) {
+          setAccessToken(data.accessToken);
         }
+
+        // Retry request với token mới
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        return apiClient(originalRequest);
       } catch (refreshError) {
-        // Nếu refresh thất bại, xóa tokens và redirect login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
+        // Nếu refresh thất bại → logout
+        if (setAccessToken) {
+          setAccessToken(null);
+        }
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

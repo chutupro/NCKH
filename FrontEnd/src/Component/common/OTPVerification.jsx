@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 
 const OTPVerification = ({ email, onVerifySuccess, onBack }) => {
   const [otpCode, setOtpCode] = useState('')
@@ -59,7 +60,10 @@ const OTPVerification = ({ email, onVerifySuccess, onBack }) => {
 
       setResendTimer(60)
       setCanResend(false)
-      alert('Mã OTP mới đã được gửi đến email của bạn!')
+      toast.success('Mã OTP mới đã được gửi đến email của bạn!', {
+        position: "top-right",
+        autoClose: 3000,
+      })
     } catch (err) {
       console.error('Resend OTP error:', err)
       setError(err.message || 'Không thể gửi lại mã OTP. Vui lòng thử lại.')

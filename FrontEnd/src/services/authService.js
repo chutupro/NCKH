@@ -29,7 +29,7 @@ const authService = {
    * Đăng nhập
    * @param {string} email - Email người dùng
    * @param {string} password - Mật khẩu
-   * @returns {Promise} Response với tokens
+   * @returns {Promise} Response với accessToken và user info
    */
   login: async (email, password) => {
     try {
@@ -38,16 +38,16 @@ const authService = {
         password,
       });
 
-      const { accessToken, refreshToken, user } = response.data;
+      const { accessToken, user } = response.data;
 
-      // Lưu tokens và userId vào localStorage
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('userId', user.UserID);
-      localStorage.setItem('userEmail', user.Email);
-      localStorage.setItem('userFullName', user.FullName || '');
+      // ✅ KHÔNG LƯU VÀO LOCALSTORAGE
+      // ✅ refresh_token đã được backend set vào HttpOnly cookie
+      // ✅ Chỉ trả về data để Context/State lưu vào memory
 
-      return response.data;
+      return {
+        accessToken,  // Sẽ lưu vào React state
+        user
+      };
     } catch (error) {
       throw error.response?.data || error.message;
     }
@@ -61,81 +61,30 @@ const authService = {
     try {
       await apiClient.post('/auth/logout');
       
-      // Xóa tokens khỏi localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userFullName');
+      // ✅ Backend đã clear HttpOnly cookie
+      // ✅ Context sẽ clear state
 
       return { message: 'Đăng xuất thành công' };
     } catch (error) {
-      // Vẫn xóa tokens dù API thất bại
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userFullName');
-      
       throw error.response?.data || error.message;
     }
   },
 
   /**
    * Refresh access token
-   * @returns {Promise} Response với tokens mới
+   * @returns {Promise} Response với accessToken mới
    */
   refreshToken: async () => {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      const userId = localStorage.getItem('userId');
+      // ✅ KHÔNG CẦN GỬI GÌ - Cookie tự động gửi
+      const response = await apiClient.post('/auth/refresh');
 
-      if (!refreshToken || !userId) {
-        throw new Error('Không tìm thấy refresh token');
-      }
+      const { accessToken } = response.data;
 
-      const response = await apiClient.post('/auth/refresh', {
-        userId: parseInt(userId),
-        refresh_token: refreshToken,
-      });
-
-      const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-      // Lưu tokens mới
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', newRefreshToken);
-
-      return response.data;
+      return { accessToken };
     } catch (error) {
       throw error.response?.data || error.message;
     }
-  },
-
-  /**
-   * Kiểm tra user đã đăng nhập chưa
-   * @returns {boolean}
-   */
-  isAuthenticated: () => {
-    const accessToken = localStorage.getItem('accessToken');
-    return !!accessToken;
-  },
-
-  /**
-   * Lấy thông tin user từ localStorage
-   * @returns {Object|null}
-   */
-  getCurrentUser: () => {
-    const userId = localStorage.getItem('userId');
-    const userEmail = localStorage.getItem('userEmail');
-    const userFullName = localStorage.getItem('userFullName');
-
-    if (!userId) return null;
-
-    return {
-      userId: parseInt(userId),
-      email: userEmail,
-      fullName: userFullName,
-    };
   },
 };
 

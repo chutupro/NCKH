@@ -6,9 +6,13 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // --- Enable Cookie Parser ---
+  app.use(cookieParser());
 
   // --- Global Exception Filter ---
   app.useGlobalFilters(new AllExceptionsFilter());

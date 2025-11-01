@@ -17,7 +17,7 @@ import { ModerationLogs } from './moderation-log.entity';
 import { Notifications } from './notification.entity';
 import { UserProfiles } from './user-profile.entity'; 
 import { VersionHistory } from './version-history.entity'; 
-import { Roles } from './role.entity'; 
+import { Roles } from './role.entity';
 
 @Entity('Users')
 export class Users {
@@ -80,6 +80,4 @@ export class Users {
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'RoleID' })
   role: Roles;
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  RefreshTokenHash: string | null;
 }

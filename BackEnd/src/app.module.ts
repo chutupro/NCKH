@@ -8,6 +8,7 @@ import { TimelineModule } from './modules/timelines/timeline.module';
 import { MapLocationsModule } from './modules/maplocations/map-locations.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AuthModule } from './modules/modules/auth/auth.module';
+import { ArticleModule } from './modules/articles_Post/article-post.module';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { AuthModule } from './modules/modules/auth/auth.module';
     DatabaseModule,
     TimelineModule,
     MapLocationsModule,
-    AuthModule
+    AuthModule,
+    ArticleModule,
   ],
 })
 export class AppModule {}
