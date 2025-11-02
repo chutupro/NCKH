@@ -9,40 +9,67 @@ const FacebookAuthSuccess = () => {
   const { setUser, setAccessToken, setIsAuthenticated } = useAppContext();
 
   useEffect(() => {
-    const userParam = searchParams.get('user');
-    
-    if (userParam) {
-      try {
-        const userData = JSON.parse(decodeURIComponent(userParam));
-        
-        // Lưu user vào Context
-        setUser(userData);
-        setIsAuthenticated(true);
-        
-        // Hiển thị thông báo
-        toast.success(`Chào mừng ${userData.fullName}! Đăng nhập Facebook thành công.`, {
-          position: "top-right",
-          autoClose: 3000,
-        });
-        
-        // Redirect về trang chủ sau 1 giây
-        setTimeout(() => {
-          navigate('/');
-        }, 1000);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        toast.error('Có lỗi xảy ra khi xử lý thông tin đăng nhập', {
+    const handleFacebookAuth = async () => {
+      const userParam = searchParams.get('user');
+      const tokenParam = searchParams.get('token');
+      
+      if (userParam && tokenParam) {
+        try {
+          const userData = JSON.parse(decodeURIComponent(userParam));
+          const token = decodeURIComponent(tokenParam);
+          
+          console.log('📱 [FacebookAuth] Token received, length:', token.length);
+          
+          // Lưu token vào context (giống như đăng nhập thường)
+          setAccessToken(token);
+          
+          // Fetch profile với token trong header (vì cookie có thể chưa được set kịp)
+          const response = await fetch('/users/profile/me', {
+            method: 'GET',
+            credentials: 'include', // Gửi cookie kèm theo (nếu có)
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`, // ✅ GỬI TOKEN QUA HEADER
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to verify authentication');
+          }
+
+          const profileData = await response.json();
+          
+          // Lưu user vào Context
+          setUser(profileData);
+          setIsAuthenticated(true);
+          
+          // Hiển thị thông báo
+          toast.success(`Chào mừng ${profileData.fullName || userData.fullName}! Đăng nhập Facebook thành công.`, {
+            position: "top-right",
+            autoClose: 3000,
+          });
+          
+          // Redirect về trang Profile (giống như đăng nhập thường)
+          setTimeout(() => {
+            navigate('/Personal');
+          }, 1000);
+        } catch (error) {
+          console.error('Error in Facebook auth:', error);
+          toast.error('Có lỗi xảy ra khi xử lý thông tin đăng nhập. Vui lòng thử lại.', {
+            position: "top-right",
+          });
+          navigate('/login');
+        }
+      } else {
+        toast.error('Không tìm thấy thông tin người dùng hoặc token', {
           position: "top-right",
         });
         navigate('/login');
       }
-    } else {
-      toast.error('Không tìm thấy thông tin người dùng', {
-        position: "top-right",
-      });
-      navigate('/login');
-    }
-  }, [searchParams, navigate, setUser, setIsAuthenticated]);
+    };
+
+    handleFacebookAuth();
+  }, [searchParams, navigate, setUser, setIsAuthenticated, setAccessToken]);
 
   return (
     <div style={{ 

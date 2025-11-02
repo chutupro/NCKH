@@ -16,8 +16,7 @@ const ForgotPassword = () => {
   // Bước 1: Gửi OTP
   const handleSendOTP = async (e) => {
     e.preventDefault();
-    setError('');
-
+    
     // Validation
     if (!email.trim()) {
       setError('Vui lòng nhập email.');
@@ -30,6 +29,8 @@ const ForgotPassword = () => {
       return;
     }
 
+    // ✅ CHỈ CLEAR ERROR KHI BẮT ĐẦU REQUEST
+    setError('');
     setLoading(true);
 
     try {
@@ -64,8 +65,7 @@ const ForgotPassword = () => {
   // Bước 2: Xác thực OTP và đặt lại mật khẩu
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    setError('');
-
+    
     // Validation
     if (!otp.trim()) {
       setError('Vui lòng nhập mã OTP.');
@@ -92,6 +92,8 @@ const ForgotPassword = () => {
       return;
     }
 
+    // ✅ CHỈ CLEAR ERROR KHI BẮT ĐẦU REQUEST
+    setError('');
     setLoading(true);
 
     try {
@@ -203,7 +205,11 @@ const ForgotPassword = () => {
                     type="email"
                     placeholder="your@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      // ✅ Clear error khi người dùng bắt đầu sửa
+                      if (error) setError('');
+                    }}
                     required
                   />
                 </div>
@@ -228,7 +234,11 @@ const ForgotPassword = () => {
                     type="text"
                     placeholder="Nhập 6 chữ số"
                     value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onChange={(e) => {
+                      setOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
+                      // ✅ Clear error khi người dùng bắt đầu sửa
+                      if (error) setError('');
+                    }}
                     maxLength={6}
                     required
                   />
@@ -244,7 +254,11 @@ const ForgotPassword = () => {
                     type="password"
                     placeholder="••••••"
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      // ✅ Clear error khi người dùng bắt đầu sửa
+                      if (error) setError('');
+                    }}
                     required
                   />
                 </div>
@@ -256,7 +270,11 @@ const ForgotPassword = () => {
                     type="password"
                     placeholder="••••••"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      // ✅ Clear error khi người dùng bắt đầu sửa
+                      if (error) setError('');
+                    }}
                     required
                   />
                 </div>

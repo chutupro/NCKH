@@ -6,38 +6,65 @@ import { toast } from 'react-toastify';
 const GoogleAuthSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setUser, setIsAuthenticated } = useContext(AppContext);
+  const { setUser, setIsAuthenticated, setAccessToken } = useContext(AppContext);
 
   useEffect(() => {
-    try {
-      // Lấy user data từ URL params
-      const userParam = searchParams.get('user');
-      
-      if (userParam) {
-        const user = JSON.parse(decodeURIComponent(userParam));
+    const handleGoogleAuth = async () => {
+      try {
+        // Lấy user data và token từ URL params
+        const userParam = searchParams.get('user');
+        const tokenParam = searchParams.get('token');
         
-        // Lưu vào Context
-        setUser(user);
-        setIsAuthenticated(true);
-        
-        toast.success(`Đăng nhập thành công! Chào mừng ${user.fullName}!`, {
+        if (userParam && tokenParam) {
+          const user = JSON.parse(decodeURIComponent(userParam));
+          const token = decodeURIComponent(tokenParam);
+          
+          console.log('📱 [GoogleAuth] Token received, length:', token.length);
+          
+          // Lưu token vào context (giống như đăng nhập thường)
+          setAccessToken(token);
+          
+          // Fetch profile với token trong header (vì cookie có thể chưa được set kịp)
+          const response = await fetch('/users/profile/me', {
+            method: 'GET',
+            credentials: 'include', // Gửi cookie kèm theo (nếu có)
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`, // ✅ GỬI TOKEN QUA HEADER
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to verify authentication');
+          }
+
+          const profileData = await response.json();
+          
+          // Lưu vào Context
+          setUser(profileData);
+          setIsAuthenticated(true);
+          
+          toast.success(`Đăng nhập thành công! Chào mừng ${profileData.fullName || user.fullName}!`, {
+            position: "top-right",
+            autoClose: 2000,
+          });
+          
+          // Redirect về trang Profile (giống như đăng nhập thường)
+          setTimeout(() => navigate('/Personal'), 500);
+        } else {
+          throw new Error('No user data or token received');
+        }
+      } catch (error) {
+        console.error('Google auth error:', error);
+        toast.error('Đăng nhập Google thất bại! Vui lòng thử lại.', {
           position: "top-right",
-          autoClose: 2000,
         });
-        
-        // Redirect về trang chủ
-        setTimeout(() => navigate('/'), 500);
-      } else {
-        throw new Error('No user data received');
+        navigate('/login');
       }
-    } catch (error) {
-      console.error('Google auth error:', error);
-      toast.error('Đăng nhập Google thất bại!', {
-        position: "top-right",
-      });
-      navigate('/login');
-    }
-  }, [searchParams, setUser, setIsAuthenticated, navigate]);
+    };
+
+    handleGoogleAuth();
+  }, [searchParams, setUser, setIsAuthenticated, setAccessToken, navigate]);
 
   return (
     <div style={{

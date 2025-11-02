@@ -362,17 +362,27 @@ export class AuthService {
   async googleLogin(googleUser: any) {
     const { email, fullName, avatar, googleId } = googleUser;
 
+    console.log('🔵 [AuthService] Google login for:', email);
+
     // Tìm user theo email
     let user = await this.userService.findByEmail(email);
 
     if (!user) {
       // Tạo user mới nếu chưa tồn tại
+      console.log('📝 [AuthService] Creating new user for Google login');
       const randomPassword = crypto.randomBytes(32).toString('hex');
       user = await this.userService.createUser(email, randomPassword, fullName, '2'); // Role 2 = User
 
       // Tự động xác thực email
       user.IsEmailVerified = true;
       await this.userRepo.save(user);
+      console.log('✅ [AuthService] User created and email verified');
+
+      // 🔥 TẠO USERPROFILE (quan trọng!)
+      await this.userService.createUserProfile(user.UserID);
+      console.log('✅ [AuthService] UserProfile created for Google user');
+    } else {
+      console.log('✅ [AuthService] Existing user found');
     }
 
     // Generate tokens
@@ -398,18 +408,28 @@ export class AuthService {
   async facebookLogin(facebookUser: any) {
     const { email, fullName, avatar, facebookId } = facebookUser;
 
+    console.log('🔵 [AuthService] Facebook login for:', email);
+
     // ✅ Email luôn có (đã tạo từ Facebook ID trong strategy nếu không có email thật)
     // Tìm user theo email
     let user = await this.userService.findByEmail(email);
 
     if (!user) {
       // Tạo user mới nếu chưa tồn tại
+      console.log('📝 [AuthService] Creating new user for Facebook login');
       const randomPassword = crypto.randomBytes(32).toString('hex');
       user = await this.userService.createUser(email, randomPassword, fullName || 'Facebook User', '2'); // Role 2 = User
 
       // Tự động xác thực email
       user.IsEmailVerified = true;
       await this.userRepo.save(user);
+      console.log('✅ [AuthService] User created and email verified');
+
+      // 🔥 TẠO USERPROFILE (quan trọng!)
+      await this.userService.createUserProfile(user.UserID);
+      console.log('✅ [AuthService] UserProfile created for Facebook user');
+    } else {
+      console.log('✅ [AuthService] Existing user found');
     }
 
     // Generate tokens

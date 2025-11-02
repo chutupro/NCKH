@@ -82,26 +82,36 @@ export class AuthController {
     const { email, password } = body;
     const result = await this.authService.login(email, password, userAgent);
 
-    // 🔥 SET CẢ ACCESS_TOKEN VÀ REFRESH_TOKEN VÀO HTTPONLY COOKIE
-    res.cookie('access_token', result.accessToken, {
+    // Cookie options với domain localhost cho dev
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
-      // Allow cross-site during development (OAuth flows). In production use 'none' with HTTPS.
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost', // Share cookie across localhost ports
+    } as const;
+
+    // 🔥 SET CẢ ACCESS_TOKEN VÀ REFRESH_TOKEN VÀO HTTPONLY COOKIE
+    res.cookie('access_token', result.accessToken, {
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Updated to dynamic setting
+      ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    console.log('✅ [AuthController] Cookies set for login:', {
+      email,
+      domain: cookieOptions.domain,
+      sameSite: cookieOptions.sameSite,
+    });
+
     // 🔥 KHÔNG TRẢ TOKENS VỀ BODY - CHỈ TRẢ USER INFO
+    // Also return access token in body to support header-based clients (dev-friendly)
     return {
+      accessToken: result.accessToken,
       user: result.user,
     };
   }
@@ -141,7 +151,9 @@ export class AuthController {
     });
 
     // 🔥 KHÔNG TRẢ GÌ VỀ BODY
+    // Return access token in body as well to help clients update in-memory token
     return {
+      accessToken: result.accessToken,
       message: 'Token refreshed successfully',
     };
   }
@@ -183,26 +195,36 @@ export class AuthController {
   ) {
     const result = await this.authService.googleLogin(req.user);
 
-    // Set cookies
-    res.cookie('access_token', result.accessToken, {
+    // Set cookies với domain localhost để share giữa các port
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost', // Share cookie across localhost ports
+    } as const;
+
+    res.cookie('access_token', result.accessToken, {
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-  // Redirect về frontend với token (use /oauth/... to avoid dev proxy collision)
+    console.log('✅ [AuthController] Cookies set for Google login:', {
+      accessTokenLength: result.accessToken.length,
+      domain: cookieOptions.domain,
+      sameSite: cookieOptions.sameSite,
+    });
+
+  // Redirect về frontend với token và user data (use /oauth/... to avoid dev proxy collision)
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-  res.redirect(`${frontendUrl}/oauth/google/success?user=${encodeURIComponent(JSON.stringify(result.user))}`);
+  const userData = encodeURIComponent(JSON.stringify(result.user));
+  const token = encodeURIComponent(result.accessToken);
+  res.redirect(`${frontendUrl}/oauth/google/success?user=${userData}&token=${token}`);
   }
 
   // ✅ FACEBOOK OAUTH - REDIRECT TO FACEBOOK
@@ -221,26 +243,37 @@ export class AuthController {
   ) {
     const result = await this.authService.facebookLogin(req.user);
 
-    // Set cookies
-    res.cookie('access_token', result.accessToken, {
+    // Cookie options với domain localhost cho dev
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost', // Share cookie across localhost ports
+    } as const;
+
+    // Set cookies (consistent with Google OAuth)
+    res.cookie('access_token', result.accessToken, {
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      sameSite: 'strict',
+      ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    console.log('✅ [AuthController] Cookies set for Facebook login:', {
+      accessTokenLength: result.accessToken.length,
+      domain: cookieOptions.domain,
+      sameSite: cookieOptions.sameSite,
     });
 
   // Redirect về frontend with token (use /oauth/... to avoid dev proxy collision)
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-  res.redirect(`${frontendUrl}/oauth/facebook/success?user=${encodeURIComponent(JSON.stringify(result.user))}`);
+  const userData = encodeURIComponent(JSON.stringify(result.user));
+  const token = encodeURIComponent(result.accessToken);
+  res.redirect(`${frontendUrl}/oauth/facebook/success?user=${userData}&token=${token}`);
   }
 
   // ✅ QUÊN MẬT KHẨU - Gửi OTP

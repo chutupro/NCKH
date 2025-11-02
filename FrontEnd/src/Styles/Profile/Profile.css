@@ -1,24 +1,27 @@
 /* Profile Container */
 .profile-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgb(35, 36, 31); /* Đồng bộ với body chính của web */
   padding: 40px 20px;
 }
 
 .profile-wrapper {
   max-width: 900px;
   margin: 0 auto;
-  background: white;
+  background: linear-gradient(135deg, rgba(40, 42, 37, 0.95) 0%, rgba(50, 52, 47, 0.95) 100%); /* Dark theme với slight gradient */
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  border: 1px solid rgba(78, 205, 196, 0.2); /* Subtle teal border */
 }
 
 /* Banner */
 .profile-banner {
-  height: 200px;
-  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  height: 240px; /* Tăng height để không che tên */
+  background: linear-gradient(135deg, #8b6f47 0%, #6b5638 100%); /* Đồng bộ với màu timeline/web chính */
   position: relative;
+  border-radius: 20px 20px 0 0; /* Bo góc trên cho mềm mại */
+  padding-top: 20px; /* Thêm padding-top để cân bằng */
 }
 
 .banner-overlay {
@@ -28,15 +31,18 @@
   right: 0;
   bottom: 0;
   background: url('/img/pattern.png') repeat;
-  opacity: 0.1;
+  opacity: 0.05; /* Giảm opacity từ 0.1 → 0.05 cho mềm hơn */
+  border-radius: 20px 20px 0 0;
 }
 
 /* Avatar Section */
 .profile-avatar-section {
   display: flex;
   justify-content: center;
-  margin-top: -80px;
-  margin-bottom: 20px;
+  margin-top: -90px; /* Tăng overlap từ -80px để cân bằng với banner cao hơn */
+  margin-bottom: 25px;
+  position: relative;
+  z-index: 10; /* Đảm bảo avatar luôn ở trên banner */
 }
 
 .avatar-wrapper {
@@ -47,16 +53,16 @@
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  border: 6px solid white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 6px solid rgba(35, 36, 31, 0.9); /* Dark border matching container */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(78, 205, 196, 0.3); /* Dual shadow với teal glow */
   object-fit: cover;
-  background: #f0f0f0;
+  background: linear-gradient(135deg, #3a3c37 0%, #2a2c27 100%); /* Dark gradient cho avatar mặc định */
 }
 
 .avatar-edit-hint {
   text-align: center;
   margin-top: 10px;
-  color: #666;
+  color: rgba(232, 233, 230, 0.7); /* Light text cho dark theme */
   font-size: 0.85rem;
 }
 
@@ -73,19 +79,20 @@
 .profile-name {
   font-size: 2rem;
   font-weight: bold;
-  color: #333;
+  color: #e8e9e6; /* Light text cho dark background */
   margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .profile-email {
   font-size: 1rem;
-  color: #666;
+  color: rgba(78, 205, 196, 0.9); /* Teal accent color */
   margin-bottom: 15px;
 }
 
 .profile-bio {
   font-size: 1.1rem;
-  color: #555;
+  color: rgba(232, 233, 230, 0.8); /* Light gray text */
   line-height: 1.6;
   max-width: 600px;
   margin: 0 auto 20px;
@@ -94,7 +101,7 @@
 
 /* Edit Button */
 .btn-edit-profile {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8b6f47 0%, #6b5638 100%); /* Đồng bộ với timeline buttons */
   color: white;
   border: none;
   padding: 12px 30px;
@@ -104,11 +111,13 @@
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
   margin-top: 10px;
+  box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
 }
 
 .btn-edit-profile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 25px rgba(139, 111, 71, 0.5);
+  background: linear-gradient(135deg, #a0845a 0%, #7d6342 100%); /* Lighter on hover */
 }
 
 /* Edit Form */
@@ -125,7 +134,7 @@
 .profile-edit-form label {
   display: block;
   font-weight: 600;
-  color: #333;
+  color: #e8e9e6; /* Light text */
   margin-bottom: 8px;
   font-size: 0.95rem;
 }
@@ -134,16 +143,20 @@
 .profile-edit-form textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid rgba(78, 205, 196, 0.3); /* Teal border */
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, background-color 0.3s;
+  background-color: rgba(40, 42, 37, 0.6); /* Semi-transparent dark bg */
+  color: #e8e9e6; /* Light text */
 }
 
 .profile-edit-form input:focus,
 .profile-edit-form textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #4ecdc4; /* Bright teal on focus */
+  background-color: rgba(40, 42, 37, 0.8);
+  box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
 }
 
 .form-actions {
@@ -165,22 +178,26 @@
 }
 
 .btn-save {
-  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  background: linear-gradient(135deg, #8b6f47 0%, #6b5638 100%); /* Match theme */
   color: white;
+  box-shadow: 0 4px 15px rgba(139, 111, 71, 0.3);
 }
 
 .btn-save:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+  box-shadow: 0 8px 20px rgba(139, 111, 71, 0.5);
+  background: linear-gradient(135deg, #a0845a 0%, #7d6342 100%);
 }
 
 .btn-cancel {
-  background: #e0e0e0;
-  color: #666;
+  background: rgba(60, 62, 57, 0.8); /* Dark gray */
+  color: #e8e9e6;
+  border: 1px solid rgba(78, 205, 196, 0.3);
 }
 
 .btn-cancel:hover {
-  background: #d0d0d0;
+  background: rgba(70, 72, 67, 0.9);
+  border-color: rgba(78, 205, 196, 0.5);
 }
 
 /* Stats Section */
@@ -192,35 +209,38 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, rgba(60, 62, 57, 0.6) 0%, rgba(50, 52, 47, 0.6) 100%); /* Dark gradient */
   padding: 25px;
   border-radius: 15px;
   text-align: center;
   transition: transform 0.3s, box-shadow 0.3s;
-  border: 2px solid transparent;
+  border: 2px solid rgba(78, 205, 196, 0.2); /* Teal border */
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-  border-color: #667eea;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  border-color: rgba(78, 205, 196, 0.5);
+  background: linear-gradient(135deg, rgba(70, 72, 67, 0.7) 0%, rgba(60, 62, 57, 0.7) 100%);
 }
 
 .stat-icon {
   font-size: 2.5rem;
   margin-bottom: 10px;
+  filter: drop-shadow(0 2px 4px rgba(78, 205, 196, 0.3)); /* Teal glow */
 }
 
 .stat-value {
   font-size: 2.5rem;
   font-weight: bold;
-  color: #333;
+  color: #4ecdc4; /* Teal accent */
   margin-bottom: 5px;
+  text-shadow: 0 2px 8px rgba(78, 205, 196, 0.4);
 }
 
 .stat-label {
   font-size: 0.95rem;
-  color: #666;
+  color: rgba(232, 233, 230, 0.7); /* Light gray */
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -228,10 +248,11 @@
 
 /* Additional Info */
 .profile-additional-info {
-  background: #f9f9f9;
+  background: rgba(50, 52, 47, 0.5); /* Dark semi-transparent */
   padding: 25px;
   border-radius: 15px;
-  border-left: 4px solid #4ecdc4;
+  border-left: 4px solid #8b6f47; /* Brown/gold accent */
+  border: 1px solid rgba(78, 205, 196, 0.2);
 }
 
 .info-item {
@@ -239,7 +260,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid rgba(78, 205, 196, 0.15);
 }
 
 .info-item:last-child {
@@ -248,22 +269,23 @@
 
 .info-label {
   font-weight: 600;
-  color: #555;
+  color: rgba(232, 233, 230, 0.8); /* Light gray */
   font-size: 1rem;
 }
 
 .info-value {
   font-size: 1rem;
-  color: #333;
+  color: #e8e9e6; /* Light text */
 }
 
 .info-value.verified {
-  color: #4ecdc4;
+  color: #4ecdc4; /* Teal for verified */
   font-weight: 600;
+  text-shadow: 0 0 8px rgba(78, 205, 196, 0.4);
 }
 
 .info-value.not-verified {
-  color: #ff6b6b;
+  color: #ff6b6b; /* Red for not verified */
   font-weight: 600;
 }
 

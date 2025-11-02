@@ -17,8 +17,9 @@ const Login = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-
+    
+    // ✅ KHÔNG CLEAR ERROR NGAY - chỉ clear khi validation pass
+    
     // Validation
     if (!email.trim() || !password.trim()) {
       setError('Không được để trống.')
@@ -38,6 +39,8 @@ const Login = () => {
       return
     }
 
+    // ✅ CHỈ CLEAR ERROR KHI BẮT ĐẦU REQUEST
+    setError('')
     setLoading(true)
 
     try {
@@ -115,7 +118,11 @@ const Login = () => {
               type="email"
               placeholder="your@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                // ✅ Clear error khi người dùng bắt đầu sửa
+                if (error) setError('');
+              }}
               required
             />
           </div>
@@ -127,7 +134,11 @@ const Login = () => {
               type="password"
               placeholder="••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                // ✅ Clear error khi người dùng bắt đầu sửa
+                if (error) setError('');
+              }}
               required
             />
           </div>
