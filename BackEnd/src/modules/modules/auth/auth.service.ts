@@ -293,10 +293,10 @@ export class AuthService {
       accessToken: tokens.access_token,   // → HttpOnly cookie
       refreshToken: tokens.refresh_token, // → HttpOnly cookie
       user: {
-        UserID: user.UserID,
-        Email: user.Email,
-        FullName: user.FullName,
-        RoleID: user.RoleID,
+        userId: user.UserID,
+        email: user.Email,
+        fullName: user.FullName ?? '',
+        roleId: user.RoleID,
       },
     };
   }

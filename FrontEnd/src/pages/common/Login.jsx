@@ -48,8 +48,15 @@ const Login = () => {
       console.log('Login successful:', response)
       
       // ✅ LƯU VÀO CONTEXT STATE (MEMORY)
+      const normalizedUser = {
+        userId: response?.user?.userId ?? response?.user?.UserID ?? null,
+        email: response?.user?.email ?? response?.user?.Email ?? email,
+        fullName: response?.user?.fullName ?? response?.user?.FullName ?? '',
+        roleId: response?.user?.roleId ?? response?.user?.RoleID ?? null,
+      };
+
       setAccessToken(response.accessToken);
-      setUser(response.user);
+      setUser(normalizedUser);
       setIsAuthenticated(true);
       
       // Dispatch custom event để notify Header component
