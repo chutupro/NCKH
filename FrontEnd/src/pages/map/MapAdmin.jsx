@@ -38,6 +38,9 @@ const MapAdmin = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [showArticleList, setShowArticleList] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef(new Map());
@@ -63,7 +66,6 @@ const MapAdmin = () => {
       attribution: "&copy; Google Maps",
     }).addTo(map);
 
-    // Click để đặt marker
     map.on("click", async (e) => {
       const { lat, lng } = e.latlng;
       const address = await reverseGeocodeHere(lat, lng);
@@ -260,7 +262,7 @@ const MapAdmin = () => {
     fileInputRef.current.click();
   };
 
-  // === SUBMIT – ĐÃ SỬA HOÀN CHỈNH ===
+  // === SUBMIT ===
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.address || !form.position[0] || !form.position[1]) {
@@ -281,15 +283,24 @@ const MapAdmin = () => {
       formData.append("image", form.image);
     }
     if (form.oldImage instanceof File) {
-      formData.append("oldImage", form.oldImage); // TÊN ĐÚNG
+      formData.append("oldImage", form.oldImage);
     }
 
     try {
-      await axios.post(`${BASE_URL}/map-locations`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      if (form.id) {
+        // CẬP NHẬT
+        await axios.put(`${BASE_URL}/map-locations/${form.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Cập nhật thành công!");
+      } else {
+        // THÊM MỚI
+        await axios.post(`${BASE_URL}/map-locations`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        alert("Thêm địa điểm thành công!");
+      }
 
-      alert("Thêm địa điểm thành công!");
       setForm({
         id: null,
         title: "",
@@ -307,8 +318,23 @@ const MapAdmin = () => {
       if (currentMarkerRef.current) mapInstance.current.removeLayer(currentMarkerRef.current);
       dispatch(fetchMapLocations());
     } catch (err) {
-      console.error("Lỗi thêm:", err);
+      console.error("Lỗi:", err);
       alert("Lỗi: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  // === XÓA BÀI VIẾT ===
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa bài viết này?")) return;
+
+    try {
+      await axios.delete(`${BASE_URL}/map-locations/${id}`);
+      alert("Xóa thành công!");
+      dispatch(fetchMapLocations());
+      setShowArticleList(false);
+      setSelectedArticle(null);
+    } catch (err) {
+      alert("Lỗi xóa: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -318,10 +344,103 @@ const MapAdmin = () => {
         Quản lý Địa điểm Lịch sử Đà Nẵng
       </h2>
 
+      {/* NÚT DANH SÁCH BÀI VIẾT */}
+      <div style={{ marginBottom: "20px", textAlign: "center" }}>
+        <button
+          onClick={() => setShowArticleList(!showArticleList)}
+          style={{
+            padding: "12px 24px",
+            background: showArticleList ? "#d32f2f" : "#1a73e8",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            fontWeight: "600",
+            fontSize: "1rem",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            transition: "0.2s"
+          }}
+        >
+          {showArticleList ? "Ẩn danh sách bài viết" : "Danh sách bài viết"}
+        </button>
+      </div>
+
+      {/* DANH SÁCH BÀI VIẾT */}
+      {showArticleList && (
+        <div style={{ marginBottom: "30px", background: "white", borderRadius: "12px", padding: "20px", boxShadow: "0 2px 12px rgba(0,0,0,0.1)" }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: "1.3rem", fontWeight: "600" }}>
+            Tất cả bài viết ({places.length})
+          </h3>
+          <div style={{ maxHeight: "500px", overflowY: "auto", border: "1px solid #eee", borderRadius: "8px" }}>
+            {places.length === 0 ? (
+              <p style={{ textAlign: "center", color: "#999", padding: "20px" }}>Chưa có bài viết nào.</p>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f8f9fa", textAlign: "left" }}>
+                    <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Ảnh</th>
+                    <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Tiêu đề</th>
+                    <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Địa chỉ</th>
+                    <th style={{ padding: "12px", borderBottom: "1px solid #ddd" }}>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {places.map((place) => (
+                    <tr
+                      key={place.id}
+                      style={{
+                        borderBottom: "1px solid #eee",
+                        background: selectedArticle?.id === place.id ? "#e3f2fd" : "white"
+                      }}
+                      onClick={() => setSelectedArticle(place)}
+                    >
+                      <td style={{ padding: "12px", verticalAlign: "top" }}>
+                        <img
+                          src={place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/60"}
+                          alt=""
+                          style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "8px" }}
+                        />
+                      </td>
+                      <td style={{ padding: "12px", fontWeight: "600", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {place.title}
+                      </td>
+                      <td style={{ padding: "12px", color: "#555", maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {place.address || "Chưa có"}
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(place.id);
+                          }}
+                          style={{
+                            padding: "6px 12px",
+                            background: "#dc3545",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                            cursor: "pointer"
+                          }}
+                        >
+                          Xóa
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* FORM + BẢN ĐỒ */}
       <div style={{ display: "flex", gap: "30px" }}>
         {/* FORM */}
         <div style={{ flex: 1, background: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
           <form onSubmit={handleSubmit}>
+            {/* ... (giữ nguyên toàn bộ form như cũ) */}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Tên địa điểm</label>
               <input type="text" value={form.title} onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))} placeholder="VD: Cầu Rồng" style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "8px", fontSize: "1rem" }} required />
@@ -374,7 +493,7 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            {/* ẢNH HIỆN ĐẠI */}
+            {/* Ảnh hiện đại & xưa */}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh hiện đại</label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -396,7 +515,6 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            {/* ẢNH XƯA */}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh xưa</label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -431,7 +549,7 @@ const MapAdmin = () => {
             </div>
 
             <button type="submit" style={{ width: "100%", padding: "14px", background: "#1a73e8", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", fontSize: "1rem", cursor: "pointer" }}>
-              Thêm địa điểm
+              {form.id ? "Cập nhật địa điểm" : "Thêm địa điểm"}
             </button>
           </form>
         </div>

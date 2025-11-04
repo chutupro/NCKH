@@ -9,32 +9,26 @@ import ReactDOM from "react-dom";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:3000";
+const HERE_API_KEY = import.meta.env.VITE_HERE_API_KEY;
 
-/* ---------- FIX MARKER ICON (CHUẨN 100%) ---------- */
+/* ---------- FIX MARKER ICON ---------- */
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
 
-const DA_NANG_BOUNDS = [
-  [15.85, 107.85],
-  [16.25, 108.4],
-];
+const DA_NANG_BOUNDS = [[15.85, 107.85], [16.25, 108.4]];
 
 /* ---------- COMPONENT ---------- */
 const MapPage = () => {
   const dispatch = useDispatch();
   const { places, status, error } = useSelector((state) => state.mapLocations);
-
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const userMarker = useRef(null);
@@ -63,11 +57,23 @@ const MapPage = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [comparePlace, setComparePlace] = useState(null);
+  const [userContributions, setUserContributions] = useState([]);
+
+  /* ---------- LOAD USER CONTRIBUTIONS ---------- */
+  useEffect(() => {
+    const saved = localStorage.getItem("userContributions");
+    if (saved) {
+      try {
+        setUserContributions(JSON.parse(saved));
+      } catch (e) {
+        console.error("Lỗi parse userContributions", e);
+      }
+    }
+  }, []);
 
   /* ---------- KHỞI TẠO MAP ---------- */
   useEffect(() => {
     if (!mapRef.current) return;
-
     const map = L.map(mapRef.current, {
       center: [16.0544, 108.2022],
       zoom: 12,
@@ -78,19 +84,47 @@ const MapPage = () => {
     });
     mapInstance.current = map;
     map.fitBounds(DA_NANG_BOUNDS);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const latlng = [lat, lng];
 
+          map.setView(latlng, 16, { animate: true });
+
+          if (!userMarker.current) {
+            const icon = L.divIcon({
+              html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+              className: "user-location-marker",
+              iconSize: [22, 22],
+              iconAnchor: [11, 11],
+            });
+            userMarker.current = L.marker(latlng, { icon }).addTo(map);
+            userMarker.current.bindPopup('<b style="color:#4285f4">Vị trí của bạn</b>').openPopup();
+          } else {
+            userMarker.current.setLatLng(latlng);
+          }
+
+          setTimeout(() => {
+            if (userMarker.current) userMarker.current.closePopup();
+          }, 3000);
+        },
+        (err) => {
+          console.warn("Không thể lấy vị trí:", err);
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    }
     L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
       attribution: "&copy; Google Maps",
       maxZoom: 20,
     }).addTo(map);
-
     dispatch(fetchMapLocations());
-
     axios
       .get(`${BASE_URL}/categories`)
       .then((res) => setCategories(res.data || []))
       .catch(console.error);
-
     return () => {
       if (mapInstance.current) mapInstance.current.remove();
     };
@@ -104,12 +138,21 @@ const MapPage = () => {
     }
   }, []);
 
-  /* ---------- VẼ TẤT CẢ MARKER MỘT LẦN DUY NHẤT (KHÔNG BAO GIỜ XÓA) ---------- */
+  /* ---------- VẼ MARKER (PLACES + USER CONTRIBUTIONS) ---------- */
   useEffect(() => {
-    if (!mapInstance.current || !places.length || allMarkersRef.current.size > 0) return;
+    if (!mapInstance.current) return;
 
+    allMarkersRef.current.forEach((marker) => {
+      mapInstance.current.removeLayer(marker);
+    });
+    allMarkersRef.current.clear();
+
+    // === PLACES ===
     places.forEach((place) => {
       if (!place.position || place.position.length !== 2) return;
+      const hasImage = place.image && place.image.trim() !== "";
+      const isCategoryMatch = selectedCategory === null || place.categoryId === selectedCategory;
+      if (!hasImage || !isCategoryMatch) return;
 
       const marker = L.marker(place.position, {
         icon: new L.Icon.Default(),
@@ -118,7 +161,6 @@ const MapPage = () => {
 
       marker.placeId = place.id;
       marker.isUserMarker = false;
-
       marker.on("mouseover", () => showHoverPopup(place, place.position));
       marker.on("mouseout", () => {
         hoverTimeoutRef.current = setTimeout(() => hideHoverPopup(), 300);
@@ -129,36 +171,54 @@ const MapPage = () => {
         clearCurrentRoute();
         showPlaceDetail(place, mapInstance.current);
       });
-
       allMarkersRef.current.set(place.id, marker);
     });
-  }, [places]);
 
-  /* ---------- LỌC DANH MỤC → LÀM MỜ MARKER (KHÔNG XÓA) ---------- */
-  useEffect(() => {
-    if (!mapInstance.current || !places.length) return;
+    // === USER CONTRIBUTIONS ===
+    userContributions.forEach((contrib) => {
+      if (!contrib.position || contrib.position.length !== 2) return;
 
-    allMarkersRef.current.forEach((marker, placeId) => {
-      const place = places.find((p) => p.id === placeId);
-      if (!place) return;
+      const userIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 28px; height: 28px; background: #d50000; border: 3px solid white;
+            border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; color: white; font-weight: bold;
+          ">!</div>
+        `,
+        className: "user-contrib-marker",
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
+      });
 
-      const isVisible = selectedCategory === null || place.categoryId === selectedCategory;
+      const marker = L.marker(contrib.position, {
+        icon: userIcon,
+        opacity: 0.9,
+        zIndexOffset: -100,
+      }).addTo(mapInstance.current);
 
-      if (isVisible) {
-        marker.setOpacity(1);
-        if (marker.getElement()) {
-          marker.getElement().style.filter = "";
-        }
-      } else {
-        marker.setOpacity(0.3);
-        if (marker.getElement()) {
-          marker.getElement().style.filter = "grayscale(100%)";
-        }
-      }
+      marker.placeId = `user-${contrib.id}`;
+      marker.isUserMarker = true;
+
+      const popupContent = `
+        <div style="font-family:system-ui; max-width: 260px;">
+          <b style="color:#d50000; font-size:1rem;">${contrib.title || "Địa điểm người dùng"}</b><br>
+          <small style="color:#555;">${contrib.address || "Không rõ địa chỉ"}</small><br>
+          <img src="${contrib.image}" style="width:100%; max-height:120px; object-fit:cover; margin:8px 0; border-radius:8px;" />
+          <p style="margin:4px 0 0; font-size:0.9rem; line-height:1.4;">${contrib.desc || ""}</p>
+          <small style="color:#d50000; font-weight:600;">Đang chờ duyệt</small>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+      marker.on("mouseover", () => marker.openPopup());
+      marker.on("mouseout", () => marker.closePopup());
+      allMarkersRef.current.set(`user-${contrib.id}`, marker);
     });
-  }, [selectedCategory, places]);
+  }, [places, selectedCategory, userContributions]);
 
-  /* ---------- HIGHLIGHT MARKER (DÙNG setIcon → KHÔNG LỖI LAYOUT) ---------- */
+  /* ---------- HIGHLIGHT MARKER ---------- */
   const highlightMarker = (placeId) => {
     allMarkersRef.current.forEach((marker, id) => {
       if (id === placeId) {
@@ -172,7 +232,6 @@ const MapPage = () => {
         });
         marker.setIcon(highlightIcon);
         marker.setZIndexOffset(1000);
-
         setTimeout(() => {
           marker.setIcon(new L.Icon.Default());
           marker.setZIndexOffset(0);
@@ -184,11 +243,9 @@ const MapPage = () => {
     });
   };
 
-  /* ---------- UI ELEMENTS (LEFT PANEL, TOP BAR, ...) ---------- */
+  /* ---------- UI ELEMENTS ---------- */
   useEffect(() => {
     if (!mapInstance.current) return;
-
-    // === LEFT PANEL ===
     const leftPanel = L.DomUtil.create("div", "leaflet-left-panel");
     leftPanel.style.cssText = `
       position:fixed;top:0;left:0;width:100px;height:100vh;
@@ -201,21 +258,25 @@ const MapPage = () => {
     </div>`;
     backBtn.onclick = () => (window.location.href = "/");
     const savedBtn = L.DomUtil.create("div");
-    savedBtn.innerHTML = `<div style="width:48px;height:48px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+    savedBtn.innerHTML = `<div style="width:48px;height:48px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:24px;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
     </div>`;
     savedBtn.onclick = () => showFavoritesSidebar();
-    leftPanel.append(backBtn, savedBtn);
+    const contributeBtn = L.DomUtil.create("div");
+    contributeBtn.innerHTML = `<div style="width:48px;height:48px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </div>`;
+    contributeBtn.onclick = showContributeModal;
+    leftPanel.append(backBtn, savedBtn, contributeBtn);
     document.body.appendChild(leftPanel);
 
-    // === TOP BAR ===
     const topBar = L.DomUtil.create("div", "leaflet-top-bar");
     topBar.style.cssText = `
       position:absolute;top:16px;left:116px;z-index:10001;
       display:flex;gap:12px;max-width:calc(100% - 132px);transition:left 0.3s ease, max-width 0.3s ease;
     `;
-
-    // === SEARCH + NÚT TÌM KIẾM ===
     const searchContainer = L.DomUtil.create("div");
     searchContainer.style.cssText = `position:relative;width:320px;display:flex;z-index:10003;`;
     const searchInput = L.DomUtil.create("input");
@@ -225,14 +286,11 @@ const MapPage = () => {
     searchInput.style.cssText = `
       flex:1;padding:12px 16px 12px 40px;border:none;border-radius:12px 0 0 12px;
       background:white;box-shadow:0 2px 8px rgba(0,0,0,0.15);font-size:1rem;outline:none;
-      position:relative;z-index:10003;pointer-events:auto;
-      color:#333 !important;
+      position:relative;z-index:10003;pointer-events:auto;color:#333 !important;
     `;
-
     const searchIcon = L.DomUtil.create("div");
     searchIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
     searchIcon.style.cssText = `position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:10004;`;
-
     const searchBtn = L.DomUtil.create("button");
     searchBtn.className = "search-btn";
     searchBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
@@ -243,7 +301,6 @@ const MapPage = () => {
     `;
     searchBtn.onmouseover = () => searchBtn.style.background = "#0d47a1";
     searchBtn.onmouseout = () => searchBtn.style.background = "#1a73e8";
-
     const suggestionList = L.DomUtil.create("ul");
     suggestionList.className = "suggestion-list";
     suggestionList.style.cssText = `
@@ -251,11 +308,9 @@ const MapPage = () => {
       margin-top:4px;max-height:300px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.15);
       display:none;z-index:10005;list-style:none;padding:0;margin:0;
     `;
-
     searchContainer.append(searchInput, searchIcon, searchBtn, suggestionList);
     topBar.appendChild(searchContainer);
 
-    // === CATEGORIES ===
     const categoryContainer = L.DomUtil.create("div");
     categoryContainer.style.cssText = `
       display:flex;gap:8px;overflow-x:auto;padding:4px 0;flex:1;
@@ -277,7 +332,6 @@ const MapPage = () => {
       `;
       allBtn.onclick = () => setSelectedCategory(null);
       categoryContainer.appendChild(allBtn);
-
       categories.forEach((cat) => {
         const btn = L.DomUtil.create("button");
         btn.innerText = cat.Name;
@@ -296,10 +350,8 @@ const MapPage = () => {
       });
     };
     renderCategories();
-
     document.body.appendChild(topBar);
 
-    // === SIDEBAR ===
     const sidebar = L.DomUtil.create("div", "custom-sidebar");
     sidebar.style.cssText = `
       position:fixed;top:0;left:100px;width:380px;height:100vh;
@@ -309,7 +361,6 @@ const MapPage = () => {
     document.body.appendChild(sidebar);
     sidebarRef.current = sidebar;
 
-    // === FAVORITES SIDEBAR ===
     const favoritesSidebar = L.DomUtil.create("div", "favorites-sidebar");
     favoritesSidebar.style.cssText = `
       position:fixed;top:0;left:0;width:380px;height:100vh;
@@ -319,7 +370,6 @@ const MapPage = () => {
     document.body.appendChild(favoritesSidebar);
     favoritesSidebarRef.current = favoritesSidebar;
 
-    // === ZOOM + LOCATION CONTROLS ===
     const controlPanel = L.DomUtil.create("div", "custom-zoom-control");
     controlPanel.style.cssText = `
       position:fixed;bottom:16px;right:16px;background:white;
@@ -327,7 +377,6 @@ const MapPage = () => {
       overflow:hidden;z-index:10001;display:flex;flex-direction:column;
       font-family:system-ui;
     `;
-
     const zoomInBtn = L.DomUtil.create("button");
     zoomInBtn.innerHTML = `<span style="font-size:1.4rem;font-weight:bold;">+</span>`;
     zoomInBtn.style.cssText = `
@@ -337,7 +386,6 @@ const MapPage = () => {
       border-bottom:1px solid #eee;
     `;
     zoomInBtn.onclick = () => mapInstance.current.zoomIn();
-
     const zoomOutBtn = L.DomUtil.create("button");
     zoomOutBtn.innerHTML = `<span style="font-size:1.4rem;font-weight:bold;">−</span>`;
     zoomOutBtn.style.cssText = `
@@ -347,7 +395,6 @@ const MapPage = () => {
       border-bottom:1px solid #eee;
     `;
     zoomOutBtn.onclick = () => mapInstance.current.zoomOut();
-
     const locateBtn = L.DomUtil.create("button");
     locateBtn.innerHTML = `
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2.5">
@@ -392,19 +439,15 @@ const MapPage = () => {
         userMarker.current.openPopup();
       }
     };
-
     controlPanel.append(zoomInBtn, zoomOutBtn, locateBtn);
     document.body.appendChild(controlPanel);
 
-    // === UPDATE TOP BAR POSITION ===
     window.updateTopBarPosition = () => {
       const isDetailOpen = sidebarRef.current.style.display === "block";
       const isFavOpen = favoritesSidebarRef.current.style.display === "block";
-
       let baseLeft = 116;
       if (isDetailOpen) baseLeft += 380;
       if (isFavOpen) baseLeft += 380;
-
       topBar.style.left = `${baseLeft}px`;
       topBar.style.maxWidth = `calc(100% - ${baseLeft + 16}px)`;
     };
@@ -419,7 +462,7 @@ const MapPage = () => {
     };
   }, [mapInstance.current, categories, selectedCategory]);
 
-  /* ---------- TÌM KIẾM LOCAL + NÚT TÌM KIẾM ---------- */
+  /* ---------- TÌM KIẾM LOCAL ---------- */
   const searchLocal = useCallback((query) => {
     if (!query.trim()) {
       setLocalSuggestions([]);
@@ -428,16 +471,12 @@ const MapPage = () => {
       setIsSearching(false);
       return;
     }
-
     setIsSearching(true);
-
     if (!places || places.length === 0) {
       setTimeout(() => searchLocal(query), 100);
       return;
     }
-
     const q = query.toLowerCase().trim();
-
     const matches = places
       .filter((p) => {
         const title = (p.title || "").toLowerCase();
@@ -445,7 +484,6 @@ const MapPage = () => {
         const desc = (p.desc || "").toLowerCase();
         const image = (p.image || "").split("/").pop().toLowerCase();
         const oldImage = (p.oldImage || "").split("/").pop().toLowerCase();
-
         return (
           title.includes(q) ||
           address.includes(q) ||
@@ -463,31 +501,27 @@ const MapPage = () => {
         lng: p.position[1],
         image: p.image,
         oldImage: p.oldImage,
-        match: 
+        match:
           (p.image || "").toLowerCase().includes(q) ? "ảnh hiện tại" :
           (p.oldImage || "").toLowerCase().includes(q) ? "ảnh xưa" :
           "tên / địa chỉ",
       }));
-
     setLocalSuggestions(matches);
     setIsSearching(false);
-
     const list = document.querySelector(".suggestion-list");
     if (!list) return;
-
     if (matches.length === 0) {
       list.innerHTML = `<li style="padding:12px;color:#999;font-style:italic;">Không tìm thấy</li>`;
       list.style.display = "block";
       return;
     }
-
     list.innerHTML = matches
       .map(
         (s) => `
         <li style="padding:12px;cursor:pointer;border-bottom:1px solid #eee;font-size:0.95rem;display:flex;align-items:center;gap:8px;"
             onmouseenter="this.style.background='#f0f8ff'" onmouseleave="this.style.background='white'">
-          <img src="${s.image ? `${BASE_URL}${s.image}` : "https://via.placeholder.com/40"}" 
-               style="width:40px;height:40px;object-fit:cover;border-radius:6px;" />
+          <img src="${s.image ? `${BASE_URL}${s.image}` : "https://via.placeholder.com/40"}"
+              style="width:40px;height:40px;object-fit:cover;border-radius:6px;" />
           <div style="flex:1;">
             <strong>${s.title}</strong>
             <div style="font-size:0.8rem;color:#666;">${s.address}</div>
@@ -499,9 +533,7 @@ const MapPage = () => {
       `
       )
       .join("");
-
     list.style.display = "block";
-
     list.querySelectorAll("li").forEach((li, i) => {
       li.onclick = () => {
         const place = places.find((p) => p.id === matches[i].id);
@@ -513,8 +545,6 @@ const MapPage = () => {
           setSearchQuery(place.title);
           list.style.display = "none";
           showPlaceDetail(place, mapInstance.current);
-
-          // ÉP VẼ LẠI SAU KHI ZOOM
           setTimeout(() => mapInstance.current.invalidateSize(), 600);
         }
       };
@@ -525,7 +555,6 @@ const MapPage = () => {
     const input = document.querySelector(".search-input");
     const searchBtn = document.querySelector(".search-btn");
     if (!input || !searchBtn) return;
-
     let timeout;
     input.oninput = (e) => {
       const q = e.target.value;
@@ -533,11 +562,9 @@ const MapPage = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => searchLocal(q), 300);
     };
-
     searchBtn.onclick = () => {
       const q = input.value.trim();
       if (!q || localSuggestions.length === 0) return;
-
       const first = localSuggestions[0];
       const place = places.find((p) => p.id === first.id);
       if (place) {
@@ -547,18 +574,14 @@ const MapPage = () => {
         setSearchQuery(place.title);
         document.querySelector(".suggestion-list").style.display = "none";
         showPlaceDetail(place, mapInstance.current);
-
-        // ÉP VẼ LẠI SAU KHI ZOOM
         setTimeout(() => mapInstance.current.invalidateSize(), 600);
       }
     };
-
     input.onkeydown = (e) => {
       if (e.key === "Enter") {
         searchBtn.click();
       }
     };
-
     const updateBtn = () => {
       searchBtn.innerHTML = isSearching
         ? `<div style="width:16px;height:16px;border:2px solid #fff;border-top-color:#1a73e8;border-radius:50%;animation:spin 1s linear infinite;"></div>`
@@ -567,11 +590,10 @@ const MapPage = () => {
     updateBtn();
     const observer = new MutationObserver(updateBtn);
     observer.observe(searchBtn, { childList: true });
-
     return () => observer.disconnect();
   }, [searchLocal, localSuggestions, places, isSearching]);
 
-  /* ---------- CSS TOÀN CỤC CHO SEARCH INPUT ---------- */
+  /* ---------- CSS TOÀN CỤC ---------- */
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
@@ -584,6 +606,10 @@ const MapPage = () => {
       .search-input::placeholder {
         color: #999 !important;
         opacity: 1;
+      }
+      #routes-list button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       }
     `;
     document.head.appendChild(style);
@@ -600,7 +626,6 @@ const MapPage = () => {
       clearTimeout(hoverTimeoutRef.current);
       document.body.removeChild(hoverPopupRef.current);
     }
-
     const popup = L.DomUtil.create("div", "hover-popup");
     popup.style.cssText = `
       position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
@@ -608,9 +633,7 @@ const MapPage = () => {
       overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-family:system-ui;
       z-index:10003;pointer-events:auto;user-select:none;
     `;
-
     const isSaved = favorites.some((f) => f.id === place.id);
-
     popup.innerHTML = `
       <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/260x120?text=Chưa+có+hình"}" style="width:100%;height:120px;object-fit:cover;" />
       <div style="padding:12px;">
@@ -628,14 +651,11 @@ const MapPage = () => {
         </div>
       </div>
     `;
-
     document.body.appendChild(popup);
     hoverPopupRef.current = popup;
-
     const point = mapInstance.current.latLngToContainerPoint(latlng);
     popup.style.left = `${point.x}px`;
     popup.style.bottom = `${window.innerHeight - point.y + 30}px`;
-
     const saveBtn = document.getElementById("hover-save-btn");
     saveBtn.onclick = (e) => {
       e.stopPropagation();
@@ -650,13 +670,11 @@ const MapPage = () => {
         alert("Đã có trong mục yêu thích!");
       }
     };
-
     popup.onmouseenter = () => clearTimeout(hoverTimeoutRef.current);
     popup.onmouseleave = () => {
       hoverTimeoutRef.current = setTimeout(hideHoverPopup, 300);
     };
   };
-
   const hideHoverPopup = () => {
     if (hoverPopupRef.current) {
       document.body.removeChild(hoverPopupRef.current);
@@ -664,6 +682,7 @@ const MapPage = () => {
     }
   };
 
+  /* ---------- XÓA TUYẾN ĐƯỜNG ---------- */
   const clearCurrentRoute = () => {
     if (currentRouteLayer.current) {
       mapInstance.current.removeLayer(currentRouteLayer.current);
@@ -671,25 +690,114 @@ const MapPage = () => {
     }
   };
 
+  /* ---------- TÍNH TUYẾN ĐƯỜNG ---------- */
+  const calculateRoute = async (from, to, map) => {
+    const baseUrl = "https://routing.openstreetmap.de/routed-car/route/v1/driving";
+    const routeTypes = [
+      { name: "Nhanh nhất", color: "#4285f4", dash: null },
+      { name: "Ngắn nhất", color: "#34a853", dash: "10, 10" },
+      { name: "Cân bằng", color: "#fbbc05", dash: "8, 6" },
+    ];
+    clearCurrentRoute();
+    const routeDetails = document.getElementById("route-details");
+    routeDetails.style.display = "block";
+    routeDetails.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 8px;">
+        <h4 style="margin:0;font-size:1rem;color:#333;font-weight:600">Các tuyến đường</h4>
+        <button id="close-route-btn" style="background:none;border:none;color:#d50000;cursor:pointer;font-size:0.9rem;font-weight:600;">
+          Đóng
+        </button>
+      </div>
+      <div id="routes-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+    `;
+    const routesList = document.getElementById("routes-list");
+    const layerGroup = L.layerGroup().addTo(map);
+    currentRouteLayer.current = layerGroup;
+    let first = true;
+    for (let i = 0; i < routeTypes.length; i++) {
+      const type = routeTypes[i];
+      let url = `${baseUrl}/${from.lng},${from.lat};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+      if (i === 1) {
+        const midLat = (from.lat + to[0]) / 2 + 0.005;
+        const midLng = (from.lng + to[1]) / 2 + 0.005;
+        url = `${baseUrl}/${from.lng},${from.lat};${midLng},${midLat};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+      } else if (i === 2) {
+        const midLat = (from.lat + to[0]) / 2 - 0.004;
+        const midLng = (from.lng + to[1]) / 2 - 0.006;
+        url = `${baseUrl}/${from.lng},${from.lat};${midLng},${midLat};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+      }
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.routes && data.routes[0]) {
+          const route = data.routes[0];
+          const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+          const distance = (route.distance / 1000).toFixed(1);
+          const duration = Math.round(route.duration / 60);
+          const polyline = L.polyline(coords, {
+            color: type.color,
+            weight: 6,
+            opacity: 0.8,
+            dashArray: type.dash,
+          });
+          layerGroup.addLayer(polyline);
+          const routeBtn = L.DomUtil.create("button");
+          routeBtn.style.cssText = `
+            padding:12px;border:2px solid ${type.color};border-radius:8px;
+            background:${first ? type.color + "20" : "white"};
+            color:${first ? type.color : "#333"};
+            font-weight:600;font-size:0.9rem;cursor:pointer;
+            transition:0.2s;display:flex;align-items:center;gap:8px;
+          `;
+          routeBtn.innerHTML = `
+            <div style="width:16px;height:16px;background:${type.color};border-radius:50%;"></div>
+            <div style="flex:1;text-align:left;">
+              <div>${type.name}</div>
+              <div style="font-size:0.8rem;font-weight:normal;color:#666;">
+                ${duration} phút • ${distance} km
+              </div>
+            </div>
+          `;
+          routeBtn.onclick = () => {
+            map.fitBounds(polyline.getBounds());
+            routesList.querySelectorAll("button").forEach(b => {
+              b.style.background = "white";
+              b.style.color = "#333";
+            });
+            routeBtn.style.background = type.color + "20";
+            routeBtn.style.color = type.color;
+          };
+          routesList.appendChild(routeBtn);
+          if (first) {
+            map.fitBounds(polyline.getBounds());
+            first = false;
+          }
+        }
+      } catch (err) {
+        console.warn("Lỗi tuyến đường:", err);
+      }
+    }
+    document.getElementById("close-route-btn").onclick = () => {
+      clearCurrentRoute();
+      routeDetails.style.display = "none";
+    };
+  };
+
   /* ---------- SHOW PLACE DETAIL ---------- */
   const showPlaceDetail = (place, map) => {
     const isFavOpen = favoritesSidebarRef.current.style.display === "block";
     sidebarRef.current.style.left = isFavOpen ? "380px" : "100px";
     sidebarRef.current.style.display = "block";
-
     window.updateTopBarPosition();
     setTimeout(() => window.updateTopBarPosition(), 50);
-
     const categoryName = place.categoryName || "Chưa phân loại";
-
     sidebarRef.current.innerHTML = `
       <div style="padding:20px;position:relative">
         <div onclick="window.closeSidebar()" style="position:absolute;top:16px;left:16px;width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:10">
           <span style="font-size:1.4rem;color:#5f6368;font-weight:bold">×</span>
         </div>
-
         <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/360x180?text=Chưa+có+hình"}" style="width:100%;height:180px;object-fit:cover;border-radius:12px;margin-bottom:16px" />
-
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
           <h3 style="margin:0;font-size:1.2rem;color:#1a0dab;font-weight:600;flex:1;line-height:1.4;">
             ${place.title}
@@ -698,20 +806,16 @@ const MapPage = () => {
             ${categoryName}
           </div>
         </div>
-
         <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px">
           <span style="color:#d50000;font-weight:bold;">${place.rating || 0}</span>
           ${"★".repeat(Math.floor(place.rating || 0))}${"☆".repeat(5 - Math.floor(place.rating || 0))}
           <span style="color:#666;font-size:0.9rem">(${place.reviews || 0} đánh giá)</span>
         </div>
-
         <p style="margin:12px 0;font-size:0.95rem;color:#333;line-height:1.5">${place.desc || "Mô tả chưa có"}</p>
-
         <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid #dadce0">
           <button id="overview-tab" style="flex:1;padding:10px;border:none;background:${activeTab === "overview" ? "#e8f0fe" : "#f8f9fa"};color:${activeTab === "overview" ? "#1a73e8" : "#333"};cursor:pointer;font-weight:${activeTab === "overview" ? "600" : "normal"};font-size:0.9rem">Tổng quan</button>
           <button id="reviews-tab" style="flex:1;padding:10px;border:none;background:${activeTab === "reviews" ? "#e8f0fe" : "#f8f9fa"};color:${activeTab === "reviews" ? "#1a73e8" : "#333"};cursor:pointer;font-weight:${activeTab === "reviews" ? "600" : "normal"};font-size:0.9rem">Đánh giá</button>
         </div>
-
         <div id="content-area">
           ${activeTab === "overview" ? `
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
@@ -732,7 +836,6 @@ const MapPage = () => {
                   <span style="color:#ffca28;">${"★".repeat(Math.floor(reviews.reduce((sum, r) => sum + r.rating, 0) / Math.max(reviews.length, 1) || 0))}${"☆".repeat(5 - Math.floor(reviews.reduce((sum, r) => sum + r.rating, 0) / Math.max(reviews.length, 1) || 0))}</span>
                 </div>
               </div>
-
               <div style="width:100%;margin-bottom:16px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                   <span>Đánh giá của bạn: </span>
@@ -745,7 +848,6 @@ const MapPage = () => {
                 <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
                 <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi</button>
               </div>
-
               <div id="reviews-list" style="width:100%;max-height:300px;overflow-y:auto;">
                 ${reviews.map(r => `
                   <div style="padding:10px;border-bottom:1px solid #eee;">
@@ -760,7 +862,6 @@ const MapPage = () => {
             </div>
           `}
         </div>
-
         ${activeTab === "overview" ? `
           <button id="view-detail-btn" style="width:100%;padding:14px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem">
             Xem chi tiết
@@ -771,15 +872,12 @@ const MapPage = () => {
         ` : ""}
       </div>
     `;
-
     document.getElementById("overview-tab")?.addEventListener("click", () => setActiveTab("overview"));
     document.getElementById("reviews-tab")?.addEventListener("click", () => setActiveTab("reviews"));
-
     document.getElementById("get-directions-btn")?.addEventListener("click", () => {
       if (!userMarker.current) return alert("Vui lòng bật định vị!");
       calculateRoute(userMarker.current.getLatLng(), place.position, map);
     });
-
     document.getElementById("save-btn")?.addEventListener("click", () => {
       const fullPlace = places.find(p => p.id === place.id) || place;
       if (!favorites.some(f => f.id === fullPlace.id)) {
@@ -791,7 +889,6 @@ const MapPage = () => {
         alert("Đã có trong yêu thích!");
       }
     });
-
     document.getElementById("compare-btn")?.addEventListener("click", () => setComparePlace(place));
     document.getElementById("view-detail-btn")?.addEventListener("click", () => showDetailModal(place));
   };
@@ -802,15 +899,12 @@ const MapPage = () => {
       document.body.removeChild(modalRef.current);
       document.body.removeChild(overlayRef.current);
     }
-
     const overlay = L.DomUtil.create("div", "modal-overlay");
     overlay.style.cssText = `position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:10001;cursor:pointer;`;
     document.body.appendChild(overlay);
     overlayRef.current = overlay;
-
     const modal = L.DomUtil.create("div", "detail-modal");
     modal.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;max-height:80vh;background:white;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:10002;font-family:system-ui;display:flex;flex-direction:column;`;
-
     modal.innerHTML = `
       <div style="position:relative;">
         <div onclick="window.closeDetailModal()" style="position:absolute;top:12px;right:12px;width:36px;height:36px;background:rgba(0,0,0,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">
@@ -831,51 +925,15 @@ const MapPage = () => {
         </div>
       </div>
     `;
-
     document.body.appendChild(modal);
     modalRef.current = modal;
     overlay.onclick = () => window.closeDetailModal();
   };
-
   window.closeDetailModal = () => {
     if (modalRef.current) document.body.removeChild(modalRef.current);
     if (overlayRef.current) document.body.removeChild(overlayRef.current);
     modalRef.current = null;
     overlayRef.current = null;
-  };
-
-  /* ---------- TÍNH ĐƯỜNG ĐI ---------- */
-  const calculateRoute = async (from, to, map) => {
-    const url = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${from.lng},${from.lat};${to[1]},${to[0]}?overview=full&geometries=geojson`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Không thể kết nối với máy chủ định tuyến");
-      const data = await res.json();
-      if (data.routes && data.routes[0]) {
-        const route = data.routes[0];
-        const coords = route.geometry.coordinates.map((c) => [c[1], c[0]]);
-        const polyline = L.polyline(coords, { color: "#4285f4", weight: 6, opacity: 0.9 }).addTo(map);
-        currentRouteLayer.current = polyline;
-        map.fitBounds(polyline.getBounds());
-
-        const km = (route.distance / 1000).toFixed(1);
-        const mins = Math.round(route.duration / 60);
-
-        const routeDetails = document.getElementById("route-details");
-        routeDetails.innerHTML = `
-          <h4 style="margin:16px 0 8px;font-size:1rem;color:#333;font-weight:600">Lộ trình</h4>
-          <div style="padding:16px;background:#f8f9fa;border-radius:8px">
-            <div style="font-weight:600;color:#333;margin-bottom:8px">
-              Thời gian: <span style="color:#1a73e8">${mins} phút</span> · Khoảng cách: <span style="color:#1a73e8">${km} km</span>
-            </div>
-          </div>
-        `;
-        routeDetails.style.display = "block";
-      }
-    } catch (err) {
-      document.getElementById("route-details").innerHTML = `<div style="color:#d50000;padding:10px">Không thể tìm đường: ${err.message}</div>`;
-      document.getElementById("route-details").style.display = "block";
-    }
   };
 
   /* ---------- YÊU THÍCH ---------- */
@@ -892,7 +950,6 @@ const MapPage = () => {
       </div>
       <div id="favorites-list" style="color:white;"></div>
     `;
-
     const list = document.getElementById("favorites-list");
     if (favorites.length === 0) {
       list.innerHTML = `<div style="color:#aaa;text-align:center;padding:20px;">Chưa có địa điểm nào được lưu.</div>`;
@@ -919,35 +976,27 @@ const MapPage = () => {
         })
         .join("");
     }
-
     favoritesSidebarRef.current.style.display = "block";
-
     if (sidebarRef.current.style.display === "block") {
       sidebarRef.current.style.left = "380px";
     }
-
     window.updateTopBarPosition();
     setTimeout(() => window.updateTopBarPosition(), 50);
   };
-
   window.closeFavoritesSidebar = () => {
     favoritesSidebarRef.current.style.display = "none";
-
     if (sidebarRef.current.style.display === "block") {
       sidebarRef.current.style.left = "100px";
     }
-
     window.updateTopBarPosition();
     setTimeout(() => window.updateTopBarPosition(), 50);
   };
-
   window.removeFromFavorites = (id) => {
     const updated = favorites.filter((f) => f.id !== id);
     setFavorites(updated);
     localStorage.setItem("favorites", JSON.stringify(updated));
     showFavoritesSidebar();
   };
-
   window.showPlaceFromFav = (id) => {
     const place = places.find((p) => p.id === id) || favorites.find((f) => f.id === id);
     if (place) {
@@ -960,16 +1009,12 @@ const MapPage = () => {
       sidebarRef.current.style.display = "block";
     }
   };
-
-  /* ---------- ĐÓNG SIDEBAR CHI TIẾT ---------- */
   window.closeSidebar = () => {
     sidebarRef.current.style.display = "none";
     clearCurrentRoute();
-
     window.updateTopBarPosition();
     setTimeout(() => window.updateTopBarPosition(), 50);
   };
-
   window.setStarRating = (rating) => {
     setNewRating(rating);
     const stars = document.querySelectorAll('[id^="star-"]');
@@ -979,36 +1024,295 @@ const MapPage = () => {
     });
   };
 
-  /* ---------- ĐỊNH VỊ NGƯỜI DÙNG ---------- */
-  useEffect(() => {
-    if (!mapInstance.current || !navigator.geolocation) return;
+  /* ---------- MODAL ĐÓNG GÓP (HOÀN CHỈNH - GIỮ NGUYÊN CỦA BẠN) ---------- */
+  const showContributeModal = () => {
+    if (document.getElementById("contribute-modal-overlay")) return;
+    const overlay = L.DomUtil.create("div");
+    overlay.id = "contribute-modal-overlay";
+    overlay.style.cssText = `
+      position:fixed;top:0;left:0;width:100vw;height:100vh;
+      background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);
+      z-index:10010;display:flex;align-items:center;justify-content:center;
+      cursor:pointer;padding:16px;
+    `;
+    overlay.onclick = (e) => {
+      if (e.target === overlay) closeContributeModal();
+    };
+    const modal = L.DomUtil.create("div");
+    modal.id = "contribute-modal";
+    modal.style.cssText = `
+      width:100%;max-width:800px;background:white;border-radius:20px;
+      padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);
+      max-height:90vh;overflow-y:auto;font-family:system-ui;
+      display:flex;flex-direction:column;gap:20px;
+    `;
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;font-size:1.5rem;font-weight:600;color:#1a0dab;">Đóng góp địa điểm</h3>
+        <div onclick="window.closeContributeModal()" style="cursor:pointer;width:40px;height:40px;background:#f0f0f0;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:1.8rem;color:#666;">×</span>
+        </div>
+      </div>
+      <!-- 1. TÊN CHỦ ĐỀ -->
+      <div>
+        <label style="display:block;font-weight:500;margin-bottom:8px;color:#333;">Tên chủ đề <span style="color:red;">*</span></label>
+        <input id="contrib-title" type="text" placeholder="VD: Cầu Rồng năm 1995"
+              style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:12px;font-size:1rem;outline:none;" />
+      </div>
+      <!-- 2. ĐỊA ĐIỂM + HERE MAPS + REVERSE GEOCODE -->
+      <div>
+        <label style="display:block;font-weight:500;margin-bottom:8px;color:#333;">Địa điểm <span style="color:red;">*</span></label>
+        <div style="position:relative;margin-bottom:12px;">
+          <input
+            id="contrib-search"
+            type="text"
+            placeholder="Tìm đường, địa danh tại Đà Nẵng..."
+            style="width:100%;padding:12px 16px 12px 40px;border:1px solid #ddd;border-radius:12px;font-size:1rem;outline:none;"
+          />
+          <div style="position:absolute;left:12px;top:12px;pointer-events:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
+          <ul id="contrib-suggestions" style="position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #ddd;border-radius:12px;margin-top:4px;max-height:200px;overflow-y:auto;display:none;z-index:10011;box-shadow:0 4px 12px rgba(0,0,0,0.1);list-style:none;padding:0;margin:0;">
+          </ul>
+        </div>
+        <div style="height:300px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:relative;">
+          <div id="contrib-map" style="height:100%;z-index:10010;"></div>
+          <div id="contrib-position-info" style="position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,0.7);color:white;padding:8px 12px;border-radius:8px;font-size:0.9rem;z-index:10012;pointer-events:none;">
+            Nhấp vào bản đồ để chọn vị trí
+          </div>
+        </div>
+      </div>
+      <!-- 3. HÌNH ẢNH -->
+      <div>
+        <label style="display:block;font-weight:500;margin-bottom:8px;color:#333;">Hình ảnh <span style="color:red;">*</span></label>
+        <input type="file" id="contribute-image" accept="image/*"
+              style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;" />
+        <div id="image-preview" style="margin-top:8px;display:none;">
+          <img id="preview-img" style="width:100%;max-height:200px;object-fit:contain;border-radius:8px;" />
+        </div>
+      </div>
+      <!-- 4. MÔ TẢ -->
+      <div>
+        <label style="display:block;font-weight:500;margin-bottom:8px;color:#333;">Mô tả</label>
+        <textarea id="contribute-desc" placeholder="Mô tả chi tiết về địa điểm, thời điểm chụp..."
+                  style="width:100%;height:100px;padding:12px;border:1px solid #ddd;border-radius:12px;resize:vertical;font-size:0.95rem;"></textarea>
+      </div>
+      <!-- NÚT GỬI -->
+      <div style="display:flex;gap:12px;">
+        <button id="submit-contribution" style="flex:1;padding:14px;background:#1a73e8;color:white;border:none;border-radius:12px;font-weight:600;cursor:pointer;font-size:1rem;">
+          Gửi đóng góp
+        </button>
+        <button onclick="window.closeContributeModal()" style="flex:1;padding:14px;background:#f0f0f0;color:#333;border:1px solid #ddd;border-radius:12px;font-weight:600;cursor:pointer;font-size:1rem;">
+          Hủy
+        </button>
+      </div>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
+    // === KHỞI TẠO BẢN ĐỒ TRONG MODAL (GIỚI HẠN ĐÀ NẴNG) ===
+    const contribMap = L.map("contrib-map", {
+      center: [16.0544, 108.2022],
+      zoom: 14,
+      zoomControl: false,
+      maxBounds: DA_NANG_BOUNDS,
+      maxBoundsViscosity: 1.0,
+    });
+    L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+      attribution: "&copy; Google Maps",
+      maxZoom: 20,
+    }).addTo(contribMap);
 
-        if (userMarker.current) {
-          mapInstance.current.removeLayer(userMarker.current);
-        }
+    let selectedLatLng = null;
+    let marker = null;
+    const searchInput = document.getElementById("contrib-search");
+    const positionInfo = document.getElementById("contrib-position-info");
+    const suggestionList = document.getElementById("contrib-suggestions");
 
-        const icon = L.divIcon({
-          html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-          className: "user-location-marker",
+    // === REVERSE GEOCODE DÙNG HERE (CHÍNH XÁC NHƯ ADMIN) ===
+    const reverseGeocode = async (lat, lng) => {
+      try {
+        const res = await axios.get("https://revgeocode.search.hereapi.com/v1/revgeocode", {
+          params: {
+            at: `${lat},${lng}`,
+            lang: "vi",
+            apikey: HERE_API_KEY,
+          },
+        });
+        const item = res.data.items[0];
+        if (!item?.address) throw new Error("No address");
+
+        const a = item.address;
+        const parts = [];
+        if (a.houseNumber) parts.push(a.houseNumber);
+        if (a.street) parts.push(a.street);
+        if (a.district) parts.push(a.district);
+        if (a.city) parts.push(a.city);
+
+        const fullAddress = parts.length > 0 ? parts.join(", ") : a.label || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        searchInput.value = fullAddress;
+        positionInfo.innerHTML = `<strong>Đã chọn:</strong> ${fullAddress}`;
+        positionInfo.style.background = "#1a73e8";
+      } catch (err) {
+        console.warn("Reverse geocoding failed:", err);
+        searchInput.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        positionInfo.innerHTML = `<strong>Đã chọn:</strong> ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        positionInfo.style.background = "#d50000";
+      }
+    };
+
+    // === CLICK BẢN ĐỒ → CHỌN VỊ TRÍ + REVERSE GEOCODE ===
+    contribMap.on("click", (e) => {
+      const latlng = e.latlng;
+      selectedLatLng = latlng;
+      if (marker) contribMap.removeLayer(marker);
+      marker = L.marker(latlng, {
+        icon: L.divIcon({
+          html: `<div style="width:16px;height:16px;background:#d50000;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
           iconSize: [22, 22],
           iconAnchor: [11, 11],
+        }),
+      }).addTo(contribMap);
+      reverseGeocode(latlng.lat, latlng.lng);
+    });
+
+    // === TÌM KIẾM GỢI Ý HERE (GIỐNG ADMIN) ===
+    let searchTimeout;
+    const searchHere = async (query) => {
+      if (!query.trim()) {
+        suggestionList.style.display = "none";
+        return;
+      }
+      try {
+        const response = await axios.get("https://autosuggest.search.hereapi.com/v1/autosuggest", {
+          params: {
+            q: query,
+            at: "16.0544,108.2022",
+            limit: 8,
+            apikey: HERE_API_KEY,
+            in: "countryCode:VNM",
+            lang: "vi",
+          },
         });
+        const items = (response.data.items || [])
+          .filter((item) => item.position && item.address?.label?.includes("Đà Nẵng"))
+          .map((item) => {
+            const a = item.address || {};
+            const house = a.houseNumber ? `${a.houseNumber} ` : "";
+            return {
+              title: item.title || a.label,
+              address: `${house}${a.street || ""}${a.district ? `, ${a.district}` : ""}${a.city ? `, ${a.city}` : ""}`.trim(),
+              fullAddress: a.label || "",
+              lat: item.position.lat,
+              lng: item.position.lng,
+            };
+          });
 
-        userMarker.current = L.marker([lat, lng], { icon }).addTo(mapInstance.current);
-        userMarker.current.bindPopup('<b style="color:#4285f4">Vị trí của bạn</b>').openPopup();
-        mapInstance.current.setView([lat, lng], 14);
-      },
-      () => console.warn("Không thể lấy vị trí người dùng"),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
-  }, [mapInstance.current]);
+        if (items.length === 0) {
+          suggestionList.innerHTML = `<li style="padding:12px;color:#999;font-style:italic;">Không tìm thấy</li>`;
+          suggestionList.style.display = "block";
+          return;
+        }
 
-  /* ---------- RETURN JSX ---------- */
+        suggestionList.innerHTML = items.map(item => `
+          <li style="padding:12px;cursor:pointer;border-bottom:1px solid #eee;display:flex;align-items:center;gap:8px;"
+              onmouseenter="this.style.background='#f0f8ff'" onmouseleave="this.style.background='white'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#1a73e8"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <div style="flex:1;">
+              <div style="font-weight:500;font-size:0.95rem;">${item.title}</div>
+              <div style="font-size:0.8rem;color:#666;">${item.address}</div>
+            </div>
+          </li>
+        `).join("");
+
+        suggestionList.style.display = "block";
+
+        suggestionList.querySelectorAll("li").forEach((li, i) => {
+          li.onclick = () => {
+            const item = items[i];
+            const latlng = L.latLng(item.lat, item.lng);
+            contribMap.setView(latlng, 18);
+            if (marker) contribMap.removeLayer(marker);
+            marker = L.marker(latlng).addTo(contribMap);
+            selectedLatLng = latlng;
+            searchInput.value = item.address || item.title;
+            suggestionList.style.display = "none";
+            reverseGeocode(latlng.lat, latlng.lng);
+          };
+        });
+      } catch (err) {
+        console.error("HERE search error:", err);
+        suggestionList.innerHTML = `<li style="padding:12px;color:#c00;">Lỗi tìm kiếm</li>`;
+        suggestionList.style.display = "block";
+      }
+    };
+
+    searchInput.oninput = (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => searchHere(e.target.value), 400);
+    };
+
+    // === PREVIEW HÌNH ẢNH ===
+    const fileInput = document.getElementById("contribute-image");
+    const previewContainer = document.getElementById("image-preview");
+    const previewImg = document.getElementById("preview-img");
+    fileInput.onchange = () => {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          previewContainer.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        previewContainer.style.display = "none";
+      }
+    };
+
+    // === GỬI ĐÓNG GÓP (LƯU VỚI TITLE ĐÚNG) ===
+    document.getElementById("submit-contribution").onclick = () => {
+      const title = document.getElementById("contrib-title").value.trim();
+      const address = searchInput.value.trim();
+      const file = fileInput.files?.[0];
+      const desc = document.getElementById("contribute-desc").value.trim();
+
+      if (!title) return alert("Vui lòng nhập tên chủ đề!");
+      if (!selectedLatLng) return alert("Vui lòng chọn vị trí trên bản đồ!");
+      if (!file) return alert("Vui lòng chọn hình ảnh!");
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const contribution = {
+          id: Date.now(),
+          title: title,
+          address: address || "Không rõ địa chỉ",
+          position: [selectedLatLng.lat, selectedLatLng.lng],
+          image: e.target.result,
+          desc: desc || "Không có mô tả",
+          timestamp: new Date().toISOString(),
+          status: "pending",
+        };
+
+        const existing = JSON.parse(localStorage.getItem("userContributions") || "[]");
+        existing.push(contribution);
+        localStorage.setItem("userContributions", JSON.stringify(existing));
+        setUserContributions(existing);
+
+        alert("Cảm ơn bạn! Đóng góp đã được gửi và đang chờ duyệt.");
+        closeContributeModal();
+      };
+      reader.readAsDataURL(file);
+    };
+  };
+
+  window.closeContributeModal = () => {
+    const overlay = document.getElementById("contribute-modal-overlay");
+    if (overlay) document.body.removeChild(overlay);
+  };
+
   if (status === "failed") {
     return <div style={{ color: "red", padding: "20px" }}>Lỗi: {error}</div>;
   }
@@ -1026,8 +1330,6 @@ const MapPage = () => {
           zIndex: 9999,
         }}
       />
-
-      {/* SO SÁNH ẢNH MODAL */}
       {comparePlace &&
         ReactDOM.createPortal(
           <CompareModal place={comparePlace} onClose={() => setComparePlace(null)} />,
