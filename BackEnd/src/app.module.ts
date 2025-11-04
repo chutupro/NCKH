@@ -13,6 +13,7 @@ import { ArticleModule } from './modules/articles_Post/article-post.module';
 import { CommentModule } from './modules/comments/comment.module';
 import { GalleryModule } from './gallerys/gallery.module';
 import { UploadModule } from './modules/upload/upload.module'; 
+import { CrawlerModule } from './modules/crawler/crawler.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { UploadModule } from './modules/upload/upload.module';
     ArticleModule,
     CommentModule,
     GalleryModule,
-    UploadModule, // 👈 Import module upload
+    UploadModule, 
+    CrawlerModule
   ],
 })
 export class AppModule {}

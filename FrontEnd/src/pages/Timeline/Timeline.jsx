@@ -1,14 +1,23 @@
-import "../../Styles/Timeline/Timeline.css";
-import { TIMELINE_ITEMS } from "../../util/constant";
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+// src/pages/Timeline/Timeline.jsx
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 import { Link } from "react-router-dom";
-import { CODE_TO_VN, KNOWN_CODES, labelFor } from '../../util/categoryMap';
+import "../../Styles/Timeline/Timeline.css";
 
 const Timeline = () => {
-  // i18n removed: using Vietnamese literals directly
   const [fromYear, setFromYear] = useState("");
   const [toYear, setToYear] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [timelineData, setTimelineData] = useState([]);
+  const [categories, setCategories] = useState(["all"]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const containerRef = useRef(null);
   const listRef = useRef(null);
   const dragRef = useRef({
@@ -19,106 +28,86 @@ const Timeline = () => {
   });
   const [lineWidth, setLineWidth] = useState(0);
 
-  const categoryCodes = ["all", ...KNOWN_CODES];
+  useEffect(() => {
+    fetch("http://localhost:3000/categories")
+      .then((r) => r.json())
+      .then((data) => setCategories(["all", ...data.map((c) => c.Name)]))
+      .catch(() => setCategories(["all"]));
+  }, []);
 
-  const parsed = (v) => {
-    const n = parseInt(String(v), 10);
-    return Number.isFinite(n) ? n : null;
-  };
+  useEffect(() => {
+    const fetchTimeline = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const params = new URLSearchParams();
+        if (fromYear) params.append("fromYear", fromYear);
+        if (toYear) params.append("toYear", toYear);
+        if (selectedCategory !== "all")
+          params.append("categories", selectedCategory);
 
-  const filtered = useMemo(() => {
-    const f = parsed(fromYear);
-    const t = parsed(toYear);
-    return TIMELINE_ITEMS.filter((it) => {
-      // Lọc theo năm
-      const y = parsed(it.date);
-      if (y !== null) {
-        if (f !== null && y < f) return false;
-        if (t !== null && y > t) return false;
+        const res = await fetch(
+          `http://localhost:3000/timeline/items?${params}`
+        );
+        if (!res.ok) throw new Error("Không tải dữ liệu");
+        const data = await res.json();
+        setTimelineData(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      
-      // Lọc theo danh mục (selectedCategory là mã)
-      if (selectedCategory !== 'all') {
-        const vn = CODE_TO_VN[selectedCategory];
-        if (vn) {
-          if (it.category !== vn) return false;
-        } else {
-          // 'other' hoặc không rõ: loại bỏ các category đã biết
-          if (KNOWN_CODES.includes(it.category)) return false;
-        }
-      }
-      
-      return true;
-    }).sort((a, b) => parseInt(a.date, 10) - parseInt(b.date, 10));
+    };
+    fetchTimeline();
   }, [fromYear, toYear, selectedCategory]);
+
+  const filtered = useMemo(() => timelineData, [timelineData]);
 
   const clearFilters = () => {
     setFromYear("");
     setToYear("");
-  setSelectedCategory("all");
+    setSelectedCategory("all");
   };
 
-  const fromVal = fromYear;
-  const toVal = toYear;
+  const isInvalidRange = () =>
+    parseInt(fromYear) > parseInt(toYear) && fromYear && toYear;
 
-  const isInvalidRange = () => {
-    const f = parsed(fromYear);
-    const t = parsed(toYear);
-    return f !== null && t !== null && f > t;
-  };
-
-  // Measure timeline content width so the center line matches the content
   useLayoutEffect(() => {
     const measure = () => {
-      const listEl = listRef.current;
-      const containerEl = containerRef.current;
-      if (!listEl || !containerEl) return;
-      const w = Math.max(listEl.scrollWidth || 0, containerEl.clientWidth || 0);
-      setLineWidth(w);
+      const list = listRef.current;
+      const container = containerRef.current;
+      if (list && container)
+        setLineWidth(Math.max(list.scrollWidth, container.clientWidth));
     };
-    // Use rAF to ensure layout has settled
     const raf = requestAnimationFrame(measure);
     window.addEventListener("resize", measure);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", measure);
     };
-    // đo lại khi số lượng mục lọc thay đổi
   }, [filtered.length]);
 
-  // Các handler kéo bằng pointer để cuộn
   const onPointerDown = (e) => {
     const el = containerRef.current;
-    if (!el) return;
-    // Nếu pointerdown bắt nguồn từ phần tử tương tác (a, button, input, ...),
-    // không bắt đầu drag timeline. Điều này cho phép các <Link> vẫn được click bình thường.
+    if (!el || e.target.closest("a,button,input")) return;
+    dragRef.current = {
+      isDown: true,
+      startX: e.clientX,
+      scrollLeft: el.scrollLeft,
+      pointerId: e.pointerId,
+    };
     try {
-      const target = e.target;
-      if (target && typeof target.closest === 'function') {
-        const interactive = target.closest('a, button, input, textarea, select, label');
-        if (interactive) return;
-      }
-    } catch (err) { void err; }
-
-    dragRef.current.isDown = true;
-    dragRef.current.startX = e.clientX;
-    dragRef.current.scrollLeft = el.scrollLeft;
-    dragRef.current.pointerId = e.pointerId;
-    try {
-      el.setPointerCapture && el.setPointerCapture(e.pointerId);
-    } catch {
-      /* noop: pointer capture có thể không được hỗ trợ */
-    }
+      el.setPointerCapture(e.pointerId);
+    } catch {}
     el.classList.add("is-dragging");
   };
 
   const onPointerMove = (e) => {
     const el = containerRef.current;
     if (!el || !dragRef.current.isDown) return;
-    const dx = e.clientX - dragRef.current.startX;
-    el.scrollLeft = dragRef.current.scrollLeft - dx;
-    // Ngăn kéo text/ảnh trong khi đang pan
-    if (typeof e.preventDefault === "function") e.preventDefault();
+    el.scrollLeft =
+      dragRef.current.scrollLeft - (e.clientX - dragRef.current.startX);
+    e.preventDefault();
   };
 
   const endDrag = () => {
@@ -126,99 +115,108 @@ const Timeline = () => {
     dragRef.current.isDown = false;
     if (el && dragRef.current.pointerId != null) {
       try {
-        el.releasePointerCapture && el.releasePointerCapture(dragRef.current.pointerId);
-      } catch {
-        /* noop: an toàn để bỏ qua */
-      }
+        el.releasePointerCapture(dragRef.current.pointerId);
+      } catch {}
       el.classList.remove("is-dragging");
     }
-    dragRef.current.pointerId = null;
   };
 
+  if (loading) return <div className="timeline-loading">Đang tải...</div>;
+  if (error) return <div className="timeline-error">Lỗi: {error}</div>;
+
   return (
-    <div>
-
-      <main className="timeline-wrapper">
-        <header className="timeline-header">
-          <h1 className="timeline-main-title">{'Dòng thời gian lịch sử'}</h1>
-          <div className="timeline-search">
-            <div className="search-field">
-              <label> {'Từ năm'} </label>
-              <input
-                type="number"
-                placeholder="1890"
-                value={fromVal}
-                onChange={(e) => setFromYear(e.target.value)}
-              />
-            </div>
-            <div className="search-field">
-              <label> {'Đến năm'} </label>
-              <input
-                type="number"
-                placeholder="2025"
-                value={toVal}
-                onChange={(e) => setToYear(e.target.value)}
-              />
-            </div>
-            <div className="search-actions">
-              <button className="btn" onClick={clearFilters} type="button">{'Reset'}</button>
-            </div>
+    <main className="timeline-wrapper">
+      <header className="timeline-header">
+        <h1 className="timeline-main-title">Dòng thời gian lịch sử Đà Nẵng</h1>
+        <div className="timeline-search">
+          <div className="search-field">
+            <label>Từ năm</label>
+            <input
+              type="number"
+              placeholder="1890"
+              value={fromYear}
+              onChange={(e) => setFromYear(e.target.value)}
+            />
           </div>
-          {isInvalidRange() && <div className="timeline-error">{'Khoảng năm không hợp lệ (từ > đến)'}</div>}
-        </header>
+          <div className="search-field">
+            <label>Đến năm</label>
+            <input
+              type="number"
+              placeholder="2025"
+              value={toYear}
+              onChange={(e) => setToYear(e.target.value)}
+            />
+          </div>
+          <button className="btn" onClick={clearFilters}>
+            Reset
+          </button>
+        </div>
+        {isInvalidRange() && (
+          <div className="timeline-error">Năm không hợp lệ</div>
+        )}
+      </header>
 
-        <div className="timeline-content-wrapper">
-          <aside className="timeline-sidebar">
-            <h3 className="sidebar-title">{'Danh mục'}</h3>
-            <ul className="category-list">
-              {categoryCodes.map((code) => (
-                <li 
-                  key={code}
-                  className={`category-item ${selectedCategory === code ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(code)}
-                >
-                  {labelFor(code)}
-                </li>
-              ))}
-            </ul>
-          </aside>
-
-          <section
-            className="timeline-container"
-            ref={containerRef}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={endDrag}
-            onPointerLeave={endDrag}
-          >
-          <ul className="timeline-list" ref={listRef}>
-            {filtered.map((item, idx) => (
-              <li className="timeline-item" key={item.id || idx}>
-                {/* Link to article detail */}
-                <Link to={`/timeline/${item.id}`} className="timeline-card-link" style={{textDecoration: 'none'}}>
-                  <div className="timeline-card">
-                    <div className="timeline-card-image" style={{backgroundImage: `url(${item.image})`}}>
-                      {/* category badge inside image */}
-                      {item.category && (
-                        <span className="timeline-badge">{item.category}</span>
-                      )}
-                    </div>
-                    <div className="timeline-card-body">
-                      <time className="timeline-date">{item.date}</time>
-                      <h3 className="timeline-title">{item.title}</h3>
-                      <p className="timeline-desc">{item.desc}</p>
-                    </div>
-                  </div>
-                </Link>
+      <div className="timeline-content-wrapper">
+        <aside className="timeline-sidebar">
+          <h3 className="sidebar-title">Danh mục</h3>
+          <ul className="category-list">
+            {categories.map((cat) => (
+              <li
+                key={cat}
+                className={`category-item ${
+                  selectedCategory === cat ? "active" : ""
+                }`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat === "all" ? "Tất cả" : cat}
               </li>
             ))}
           </ul>
-          <div className="timeline-line" style={lineWidth ? { width: `${lineWidth}px` } : undefined} />
+        </aside>
+
+        <section
+          className="timeline-container"
+          ref={containerRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endDrag}
+          onPointerLeave={endDrag}
+        >
+          <ul className="timeline-list" ref={listRef}>
+            {filtered.length === 0 ? (
+              <li className="timeline-empty">Không có sự kiện phù hợp.</li>
+            ) : (
+              filtered.map((item) => (
+                <li className="timeline-item" key={item.id}>
+                  <Link
+                    to={`/timeline/${item.id}`}
+                    className="timeline-card-link"
+                  >
+                    <div className="timeline-card">
+                      <div
+                        className="timeline-card-image"
+                        style={{ backgroundImage: `url(${item.image})` }}
+                      >
+                        <span className="timeline-badge">{item.category}</span>
+                      </div>
+                      <div className="timeline-card-body">
+                        <time className="timeline-date">
+                          {item.date.slice(0, 4)}
+                        </time>
+                        <h3 className="timeline-title">{item.title}</h3>
+                        <p className="timeline-desc">{item.desc}</p>
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              ))
+            )}
+          </ul>
+          <div className="timeline-line" style={{ width: `${lineWidth}px` }} />
         </section>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
-}
+};
 
 export default Timeline;
