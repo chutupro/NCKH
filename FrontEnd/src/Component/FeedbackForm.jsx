@@ -2,7 +2,10 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const FeedbackForm = ({ locationId, onSuccess }) => {
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
+
+const FeedbackForm = ({ locationId, onClose }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,8 +24,9 @@ const FeedbackForm = ({ locationId, onSuccess }) => {
       onSuccess?.();
       setComment("");
       setRating(0);
+      toast.success("Gửi đánh giá thành công!", { position: "top-right", autoClose: 2000 });
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
+      toast.error("Lỗi: " + (err.response?.data?.message || err.message), { position: "top-right" });
     } finally {
       setLoading(false);
     }

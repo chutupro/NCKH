@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 
 import Lauput from "../layout/Lauput";
 import Personal from "../pages/common/Personal";
+import UserProfile from "../pages/common/UserProfile"; // ✅ USER PROFILE
 import Timeline from "../pages/Timeline/Timeline";
 import TimelineDetail from "../pages/Timeline/TimelineDetail"; // khác → giữ thêm
 import Home from "../pages/common/Home";
@@ -15,6 +16,10 @@ import ImageLibraryInformation from "../pages/gallery/ImageLibraryInformation";
 import About from "../pages/about/About"; // khác → giữ thêm
 import Login from "../pages/common/Login";
 import Register from "../pages/common/Register";
+import VerifyEmail from "../pages/common/VerifyEmail"; // 🔥 NEW
+import GoogleAuthSuccess from "../pages/common/GoogleAuthSuccess"; // ✅ GOOGLE AUTH
+import FacebookAuthSuccess from "../pages/common/FacebookAuthSuccess"; // ✅ FACEBOOK AUTH
+import ForgotPassword from "../pages/common/ForgotPassword"; // ✅ FORGOT PASSWORD
 import Community from "../pages/community/Community";
 import CompareGallery from "../pages/Compare/CompareGallery";
 import CompareDetail from "../pages/Compare/CompareDetail";
@@ -36,6 +41,7 @@ const Routee = () => {
       <Route element={<Lauput />}>
         <Route index element={<Home />} />
         <Route path="/Personal" element={<Personal />} />
+        <Route path="/user/:userId" element={<UserProfile />} /> {/* ✅ XEM PROFILE NGƯỜI KHÁC */}
 
         {/* Timeline */}
         <Route path="/timeline" element={<Timeline />} />
@@ -66,7 +72,10 @@ const Routee = () => {
       {/* TRANG KHÔNG LAYOUT */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-
+      <Route path="/forgot-password" element={<ForgotPassword />} /> {/* ✅ FORGOT PASSWORD */}
+      <Route path="/verify-email" element={<VerifyEmail />} /> {/* 🔥 NEW */}
+  <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {/* ✅ GOOGLE CALLBACK */}
+  <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
       <Route path="/map/admin" element={<MapAdmin />} /> {/* giữ lại */}

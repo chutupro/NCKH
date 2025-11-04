@@ -27,6 +27,7 @@ export const AppProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [accessToken, setAccessToken] = useState(null); // ✅ LƯU ACCESS_TOKEN TRONG MEMORY
   const [locIndex, setLocIndex] = useState(0);
   const [showMap, setShowMap] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -121,6 +122,8 @@ export const AppProvider = ({ children }) => {
     setUser,
     isAuthenticated,
     setIsAuthenticated,
+    accessToken,        // ✅ THÊM
+    setAccessToken,     // ✅ THÊM
     locations,
     locIndex,
     setLocIndex,

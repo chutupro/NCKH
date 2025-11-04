@@ -8,7 +8,6 @@ import { TimelineModule } from './modules/timelines/timeline.module';
 import { MapLocationsModule } from './modules/maplocations/map-locations.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AuthModule } from './modules/modules/auth/auth.module';
-import { CompareModule } from './modules/Compare/Compare.module';
 import { ArticleModule } from './modules/articles_Post/article-post.module';
 import { CommentModule } from './modules/comments/comment.module';
 import { GalleryModule } from './gallerys/gallery.module';
@@ -26,8 +25,6 @@ import { CrawlerModule } from './modules/crawler/crawler.module';
     DatabaseModule,
     TimelineModule,
     MapLocationsModule,
-    CategoriesModule,
-    CompareModule,
     AuthModule,
     ArticleModule,
     CommentModule,

@@ -26,7 +26,7 @@ createRoot(document.getElementById('root')).render(
       <AppProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <GoogleTranslate />
+          {/* <GoogleTranslate /> */}
           <App />
         </BrowserRouter>
       </AppProvider>

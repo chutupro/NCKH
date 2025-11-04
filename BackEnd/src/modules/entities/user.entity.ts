@@ -17,7 +17,7 @@ import { ModerationLogs } from './moderation-log.entity';
 import { Notifications } from './notification.entity';
 import { UserProfiles } from './user-profile.entity'; 
 import { VersionHistory } from './version-history.entity'; 
-import { Roles } from './role.entity'; 
+import { Roles } from './role.entity';
 
 @Entity('Users')
 export class Users {
@@ -38,6 +38,16 @@ export class Users {
 
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
+
+  // Email Verification Fields
+  @Column({ type: 'boolean', default: false })
+  IsEmailVerified: boolean;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  EmailVerificationToken: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  EmailVerificationExpiry: Date | null;
 
   // --- RELATIONS ---
   @OneToOne(() => UserProfiles, (profile) => profile.user)
@@ -70,6 +80,4 @@ export class Users {
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'RoleID' })
   role: Roles;
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  RefreshTokenHash: string | null;
 }

@@ -68,8 +68,8 @@ const ContributeInformation = () => {
         const user = await getUserById(1)
         if (!mounted) return
         if (user) {
-          setName(user.FullName || '')
-          setEmail(user.Email || '')
+          setName(user.fullName || user.FullName || '')
+          setEmail(user.email || user.Email || '')
         }
       } catch (err) {
         console.debug('Could not load user 1:', err)
