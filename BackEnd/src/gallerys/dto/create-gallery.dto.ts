@@ -1,4 +1,9 @@
-import { IsOptional, IsString, MaxLength, IsInt, IsNumberString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  MaxLength,
+  IsNumberString,
+} from 'class-validator';
 
 export class CreateGalleryDto {
   @IsOptional()
@@ -13,13 +18,17 @@ export class CreateGalleryDto {
 
   @IsOptional()
   @IsNumberString()
-  categoryId?: string; // accept numeric string (will be parsed in service)
+  categoryId?: string;
 
   @IsOptional()
   @IsString()
-  tags?: string; // comma separated
+  tags?: string;
 
   @IsOptional()
   @IsNumberString()
   userId?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  articleId?: string;
 }

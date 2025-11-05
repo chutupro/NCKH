@@ -1,21 +1,13 @@
-import { IsOptional, IsString, MaxLength, IsNumberString } from 'class-validator';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateGalleryDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  title?: string;
+  AltText?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(1000)
-  description?: string;
-
-  @IsOptional()
-  @IsNumberString()
-  categoryId?: string;
-
-  @IsOptional()
-  @IsString()
-  tags?: string;
+  @MaxLength(50)
+  Type?: string;
 }
