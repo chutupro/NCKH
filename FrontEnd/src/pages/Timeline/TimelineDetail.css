@@ -1,0 +1,150 @@
+/* src/pages/Timeline/TimelineDetail.css */
+.article-page {
+  min-height: 100vh;
+  background: #f9f9fb;
+  padding: 2rem 1rem;
+}
+
+.article-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn {
+  margin: 1rem;
+  padding: 0.5rem 1rem;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.back-btn:hover {
+  background: #555;
+}
+
+.article-hero {
+  height: 400px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+}
+
+.article-badge {
+  position: relative;
+  z-index: 1;
+  background: #e63946;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.article-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: #f1f1f1;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.category-tag {
+  background: #457b9d;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.article-title {
+  padding: 1.5rem 2rem 1rem;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1d3557;
+  margin: 0;
+}
+
+.article-body {
+  padding: 0 2rem 2rem;
+  line-height: 1.8;
+  color: #2d2d2d;
+  font-size: 1.1rem;
+}
+
+.paragraph {
+  margin: 1.2em 0;
+  text-align: justify;
+}
+
+.no-desc {
+  color: #999;
+  font-style: italic;
+}
+
+.source-link {
+  padding: 0 2rem 1rem;
+  font-size: 0.95rem;
+}
+
+.source-link a {
+  color: #1d3557;
+  text-decoration: underline;
+}
+
+.share-buttons {
+  padding: 0 2rem 2rem;
+  text-align: center;
+}
+
+.share-btn {
+  background: #1d3557;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.loading-container,
+.error {
+  text-align: center;
+  padding: 4rem 1rem;
+  font-size: 1.2rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1d3557;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-msg {
+  color: #e63946;
+  font-weight: bold;
+}

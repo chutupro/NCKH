@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'react-toastify'
 import '../../Styles/community/Community.css'
 import ImageModal from '../common/ImageModal'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -50,7 +51,7 @@ const PostCard = ({ post, onDelete }) => {
         break
       case 'copy':
         navigator.clipboard.writeText(shareUrl)
-          alert(t('postCard.linkCopied'))
+        toast.success(t('postCard.linkCopied'), { position: "top-right", autoClose: 2000 })
         break
       default:
         break

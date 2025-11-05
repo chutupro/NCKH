@@ -16,9 +16,7 @@ export class MapLocationsService {
   ) {}
 
   async findAll() {
-    return await this.mapLocationsRepository.find({
-      relations: ['category'],
-    });
+    return await this.mapLocationsRepository.find();
   }
 
   async create(createLocationDto: any) {
@@ -41,8 +39,7 @@ export class MapLocationsService {
       FullDesc: createLocationDto.fullDesc || null,
       ArticleID: createLocationDto.articleId ?? null,
       TimelineID: createLocationDto.timelineId ?? null,
-      CategoryID: createLocationDto.CategoryID ? parseInt(createLocationDto.CategoryID, 10) : null, // SỬA
-    } as MapLocations); // ÉP KIỂU ĐÚNG
+    });
 
     try {
       const savedLocation = await this.mapLocationsRepository.save(newLocation);
@@ -69,7 +66,6 @@ export class MapLocationsService {
       FullDesc: updateLocationDto.fullDesc || location.FullDesc,
       ArticleID: updateLocationDto.articleId ?? location.ArticleID,
       TimelineID: updateLocationDto.timelineId ?? location.TimelineID,
-      CategoryID: updateLocationDto.CategoryID ? parseInt(updateLocationDto.CategoryID, 10) : location.CategoryID,
     });
 
     return await this.mapLocationsRepository.save(location);

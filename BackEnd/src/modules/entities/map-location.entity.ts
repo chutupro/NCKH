@@ -1,11 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  OneToMany,
-} from 'typeorm';
+// src/entities/map-location.entity.ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Articles } from './article.entity';
 import { Timelines } from './timeline.entity';
 import { Feedback } from './feedback.entity';
@@ -47,7 +41,7 @@ export class MapLocations {
   TimelineID: number;
 
   @Column({ type: 'int', nullable: true })
-  CategoryID: number;  // ← THÊM
+  CategoryID: number;
 
   @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
   Rating: number;
@@ -55,17 +49,17 @@ export class MapLocations {
   @Column({ type: 'int', nullable: true })
   Reviews: number;
 
-  @ManyToOne(() => Articles, (article) => article.mapLocations)
+  @ManyToOne(() => Articles, (article) => article.mapLocations, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
 
-  @ManyToOne(() => Timelines, (timeline) => timeline.mapLocations)
+  @ManyToOne(() => Timelines, (timeline) => timeline.mapLocations, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'TimelineID' })
   timeline: Timelines;
 
-  @ManyToOne(() => Categories, (category) => category.mapLocations)
+  @ManyToOne(() => Categories, (category) => category.mapLocations, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'CategoryID' })
-  category: Categories;  // ← THÊM
+  category: Categories;
 
   @OneToMany(() => Feedback, (feedback) => feedback.location)
   feedbacks: Feedback[];

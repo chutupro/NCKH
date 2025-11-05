@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from 'src/modules/entities/user.entity';
+import { UserProfiles } from 'src/modules/entities/user-profile.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -9,21 +10,34 @@ export class UserService {
   constructor(
     @InjectRepository(Users)
     private readonly userRepo: Repository<Users>,
+    @InjectRepository(UserProfiles)
+    private readonly profileRepo: Repository<UserProfiles>,
   ) {}
 
   async createUser(email: string, password: string, fullName?: string, role?: string) {
     const existing = await this.userRepo.findOne({ where: { Email: email } });
-    if (existing) throw new Error('Email đã tồn tại');
+    if (existing) throw new Error('Email đã được sử dụng.');
 
     const hash = await bcrypt.hash(password, 10);
     const user = this.userRepo.create({
       Email: email,
       PasswordHash: hash,
       FullName: fullName ?? '',
-      RoleID: role ? Number(role) : undefined,
+      RoleID: role ? Number(role) : 2,
     });
 
     const savedUser = await this.userRepo.save(user);
+
+    const profile = this.profileRepo.create({
+      UserID: savedUser.UserID,
+      Avatar: '/img/default-avatar.png',
+      Bio: '',
+      TotalContributions: 0,
+      TotalEdits: 0,
+      TotalLikes: 0,
+    });
+
+    await this.profileRepo.save(profile);
     return savedUser;
   }
 
@@ -34,14 +48,86 @@ export class UserService {
   async findById(id: number) {
     return this.userRepo.findOne({ where: { UserID: id } });
   }
-  
-  async setRefreshTokenHash(userId: number, refreshTokenHash: string | null) {
-    await this.userRepo.update({ UserID: userId }, { RefreshTokenHash: refreshTokenHash });
+
+  // ✅ Lấy thông tin User Profile đầy đủ
+  async getUserProfile(userId: number) {
+    const user = await this.userRepo.findOne({
+      where: { UserID: userId },
+      relations: ['profile'], // Load cả UserProfile
+    });
+
+    if (!user) {
+      throw new Error('User không tồn tại');
+    }
+
+    return {
+      userId: user.UserID,
+      email: user.Email,
+      fullName: user.FullName,
+      isEmailVerified: user.IsEmailVerified,
+      createdAt: user.CreatedAt,
+      profile: {
+        avatar: user.profile?.Avatar || '/img/default-avatar.png',
+        bio: user.profile?.Bio || '',
+        totalContributions: user.profile?.TotalContributions || 0,
+        totalEdits: user.profile?.TotalEdits || 0,
+        totalLikes: user.profile?.TotalLikes || 0,
+      },
+    };
   }
 
-  async getRefreshTokenHash(userId: number) {
-    const user = await this.findById(userId);
-    return user?.RefreshTokenHash ?? null;
+  // ✅ Cập nhật User Profile
+  async updateUserProfile(
+    userId: number,
+    data: {
+      avatar?: string;
+      bio?: string;
+      fullName?: string;
+    }
+  ) {
+    // Update User info (fullName)
+    if (data.fullName) {
+      await this.userRepo.update({ UserID: userId }, { FullName: data.fullName });
+    }
+
+    // Update Profile info (avatar, bio)
+    const profile = await this.profileRepo.findOne({ where: { UserID: userId } });
+    
+    if (!profile) {
+      throw new Error('Profile không tồn tại');
+    }
+
+    if (data.avatar !== undefined) {
+      profile.Avatar = data.avatar;
+    }
+    
+    if (data.bio !== undefined) {
+      profile.Bio = data.bio;
+    }
+
+    await this.profileRepo.save(profile);
+
+    return this.getUserProfile(userId);
   }
-  
+
+  async createUserProfile(userId: number) {
+    const existingProfile = await this.profileRepo.findOne({ where: { UserID: userId } });
+    if (existingProfile) {
+      console.log(' Profile already exists');
+      return existingProfile;
+    }
+
+    const profile = this.profileRepo.create({
+      UserID: userId,
+      Avatar: '/img/default-avatar.png',
+      Bio: '',
+      TotalContributions: 0,
+      TotalEdits: 0,
+      TotalLikes: 0,
+    });
+
+    const savedProfile = await this.profileRepo.save(profile);
+    console.log(' Profile created');
+    return savedProfile;
+  }
 }
