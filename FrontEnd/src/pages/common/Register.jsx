@@ -174,11 +174,13 @@ const Register = () => {
   }
 
   const onGoogle = () => {
-    console.log('google sign up')
+    // ✅ REDIRECT TO GOOGLE OAUTH
+    window.location.href = 'http://localhost:3000/auth/google';
   }
 
   const onFacebook = () => {
-    console.log('facebook sign up')
+    // ✅ REDIRECT TO FACEBOOK OAUTH
+    window.location.href = 'http://localhost:3000/auth/facebook';
   }
 
   return (

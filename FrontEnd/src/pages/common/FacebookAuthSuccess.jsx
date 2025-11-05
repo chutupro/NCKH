@@ -23,6 +23,9 @@ const FacebookAuthSuccess = () => {
           // Lưu token vào context (giống như đăng nhập thường)
           setAccessToken(token);
           
+          // ✅ DELAY 100ms để cookie kịp được browser set
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           // Fetch profile với token trong header (vì cookie có thể chưa được set kịp)
           const response = await fetch('/users/profile/me', {
             method: 'GET',
@@ -49,9 +52,9 @@ const FacebookAuthSuccess = () => {
             autoClose: 3000,
           });
           
-          // Redirect về trang Profile (giống như đăng nhập thường)
+          // Redirect về trang chủ
           setTimeout(() => {
-            navigate('/Personal');
+            navigate('/');
           }, 1000);
         } catch (error) {
           console.error('Error in Facebook auth:', error);
