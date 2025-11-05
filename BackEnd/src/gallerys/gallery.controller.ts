@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Query,
   Param,
   Post,
   Put,
@@ -16,9 +15,9 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { GalleryService } from './gallery.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import { GalleryService } from './gallery.service';
 import { CreateGalleryDto } from './dto/create-gallery.dto';
 import { UpdateGalleryDto } from './dto/update-gallery.dto';
 
@@ -32,19 +31,10 @@ function ensureUploadsDir() {
 export class GalleryController {
   constructor(private readonly galleryService: GalleryService) {}
 
+  // 👉 Trả về tất cả hình ảnh, không cần query params
   @Get()
-  async list(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-    @Query('q') q?: string,
-    @Query('categoryId') categoryId?: string,
-  ) {
-    return this.galleryService.findAll({
-      skip: Number(skip) || 0,
-      take: Number(take) || 20,
-      q,
-      categoryId: categoryId ? Number(categoryId) : undefined,
-    });
+  async list() {
+    return this.galleryService.findAll();
   }
 
   @Get(':id')
@@ -76,7 +66,10 @@ export class GalleryController {
 
   @Put(':id')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async update(@Param('id', ParseIntPipe) id: number, @Body() body: UpdateGalleryDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateGalleryDto,
+  ) {
     return this.galleryService.update(id, body);
   }
 

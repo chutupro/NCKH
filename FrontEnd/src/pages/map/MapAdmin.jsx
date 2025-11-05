@@ -66,6 +66,7 @@ const MapAdmin = () => {
       attribution: "&copy; Google Maps",
     }).addTo(map);
 
+    // Click để đặt marker
     map.on("click", async (e) => {
       const { lat, lng } = e.latlng;
       const address = await reverseGeocodeHere(lat, lng);
@@ -262,7 +263,7 @@ const MapAdmin = () => {
     fileInputRef.current.click();
   };
 
-  // === SUBMIT ===
+  // === SUBMIT – ĐÃ SỬA HOÀN CHỈNH ===
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.address || !form.position[0] || !form.position[1]) {
@@ -318,7 +319,7 @@ const MapAdmin = () => {
       if (currentMarkerRef.current) mapInstance.current.removeLayer(currentMarkerRef.current);
       dispatch(fetchMapLocations());
     } catch (err) {
-      console.error("Lỗi:", err);
+      console.error("Lỗi thêm:", err);
       alert("Lỗi: " + (err.response?.data?.message || err.message));
     }
   };
@@ -493,7 +494,7 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            {/* Ảnh hiện đại & xưa */}
+            {/* ẢNH HIỆN ĐẠI */}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh hiện đại</label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -515,6 +516,7 @@ const MapAdmin = () => {
               </div>
             </div>
 
+            {/* ẢNH XƯA */}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh xưa</label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -550,6 +552,7 @@ const MapAdmin = () => {
 
             <button type="submit" style={{ width: "100%", padding: "14px", background: "#1a73e8", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", fontSize: "1rem", cursor: "pointer" }}>
               {form.id ? "Cập nhật địa điểm" : "Thêm địa điểm"}
+              Thêm địa điểm
             </button>
           </form>
         </div>
