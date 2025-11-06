@@ -1,3 +1,4 @@
+// src/modules/maplocations/map-locations.service.ts
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,14 +16,42 @@ export class MapLocationsService {
     private feedbackRepository: Repository<Feedback>,
   ) {}
 
-  async findAll() {
-    return await this.mapLocationsRepository.find();
-  }
+ async findAll() {
+  const locations = await this.mapLocationsRepository
+    .createQueryBuilder('loc')
+    .leftJoinAndSelect('loc.category', 'category') // ← PHẢI DÙNG AndSelect
+    .select([
+      'loc.LocationID AS "LocationID"',
+      'loc.Name AS "Name"',
+      'loc.Latitude AS "Latitude"',
+      'loc.Longitude AS "Longitude"',
+      'loc.Address AS "Address"',
+      'loc.Image AS "Image"',
+      'loc.OldImage AS "OldImage"',
+      'loc.description AS "description"',
+      'loc.fullDescription AS "fullDescription"',
+      'loc.CategoryID AS "CategoryID"',
+      'category.Name AS "categoryName"', // ← BẮT BUỘC
+      'loc.Rating AS "Rating"',
+      'loc.Reviews AS "Reviews"',
+    ])
+    .getRawMany();
+
+  return locations.map(loc => ({
+    ...loc,
+    categoryName: loc.categoryName || 'Chưa phân loại',
+  }));
+}
 
   async create(createLocationDto: any) {
     this.logger.log('Creating location with DTO:', createLocationDto);
 
-    if (!createLocationDto.latitude || !createLocationDto.longitude || !createLocationDto.title || !createLocationDto.address) {
+    if (
+      !createLocationDto.latitude ||
+      !createLocationDto.longitude ||
+      !createLocationDto.title ||
+      !createLocationDto.address
+    ) {
       throw new BadRequestException('Title, address, latitude, and longitude are required');
     }
 
@@ -35,10 +64,11 @@ export class MapLocationsService {
       Address: createLocationDto.address,
       Image: createLocationDto.image || null,
       OldImage: createLocationDto.oldImage || null,
-      Desc: createLocationDto.desc || null,
-      FullDesc: createLocationDto.fullDesc || null,
+      description: createLocationDto.desc || null,           // ĐÃ ĐỔI
+      fullDescription: createLocationDto.fullDesc || null,   // ĐÃ ĐỔI
       ArticleID: createLocationDto.articleId ?? null,
       TimelineID: createLocationDto.timelineId ?? null,
+      CategoryID: createLocationDto.categoryId ?? null,
     });
 
     try {
@@ -62,10 +92,13 @@ export class MapLocationsService {
       Address: updateLocationDto.address || location.Address,
       Image: updateLocationDto.image || location.Image,
       OldImage: updateLocationDto.oldImage || location.OldImage,
-      Desc: updateLocationDto.desc || location.Desc,
-      FullDesc: updateLocationDto.fullDesc || location.FullDesc,
+      description: updateLocationDto.desc || location.description,           // ĐÃ ĐỔI
+      fullDescription: updateLocationDto.fullDesc || location.fullDescription, // ĐÃ ĐỔI
       ArticleID: updateLocationDto.articleId ?? location.ArticleID,
       TimelineID: updateLocationDto.timelineId ?? location.TimelineID,
+      CategoryID: updateLocationDto.categoryId ?? location.CategoryID,
+      Rating: updateLocationDto.rating ?? location.Rating,
+      Reviews: updateLocationDto.reviews ?? location.Reviews,
     });
 
     return await this.mapLocationsRepository.save(location);
