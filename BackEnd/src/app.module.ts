@@ -25,12 +25,13 @@ import { CrawlerModule } from './modules/crawler/crawler.module';
     DatabaseModule,
     TimelineModule,
     MapLocationsModule,
-    AuthModule,
+    // AuthModule,
     ArticleModule,
     CommentModule,
     GalleryModule,
     UploadModule, 
-    CrawlerModule
+    CrawlerModule,
+    CategoriesModule
   ],
 })
 export class AppModule {}

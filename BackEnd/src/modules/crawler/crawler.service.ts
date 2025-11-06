@@ -1,4 +1,3 @@
-// src/crawler/crawler.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -18,26 +17,56 @@ interface CrawledEvent {
 
 @Injectable()
 export class CrawlerService {
+  private readonly defaultCategories = [
+    'Lịch sử',
+    'Kiến trúc',
+    'Chiến tranh',
+    'Văn hóa',
+    'Du lịch',
+    'Thiên nhiên',
+  ];
+
+  // Từ khóa thủ công cho phân loại
+  private readonly CATEGORY_KEYWORDS: { [category: string]: string[] } = {
+    'Lịch sử': ['chiến tranh', 'vua', 'triều đại', 'cách mạng', 'war', 'king', 'dynasty', 'revolution'],
+    'Kiến trúc': ['công trình', 'cầu', 'chùa', 'sân bay', 'tòa nhà', 'building', 'architecture', 'bridge'],
+    'Chiến tranh': ['trận đánh', 'binh lính', 'chiến dịch', 'xung đột', 'battle', 'soldier', 'conflict'],
+    'Văn hóa': ['văn hóa', 'nghệ thuật', 'tín ngưỡng', 'lễ hội', 'culture', 'art', 'festival', 'religion'],
+    'Du lịch': ['danh lam', 'khách sạn', 'resort', 'trải nghiệm', 'destination', 'tourism', 'hotel', 'travel'],
+    'Thiên nhiên': ['núi', 'sông', 'rừng', 'biển', 'động vật', 'thực vật', 'mountain', 'river', 'forest', 'nature'],
+  };
+
   constructor(
     @InjectRepository(Timelines) private timelineRepo: Repository<Timelines>,
     @InjectRepository(Categories) private catRepo: Repository<Categories>,
     private dataSource: DataSource,
   ) {}
 
-  private categoryKeywords: Record<string, string[]> = {
-    'Lịch sử': ['lịch sử', 'thành lập', 'giải phóng', 'vua', 'triều', 'nguyễn'],
-    'Kiến trúc': ['cầu', 'sân bay', 'cảng', 'khánh thành', 'xây dựng', 'đường', 'nhà thờ'],
-    'Chiến tranh': ['chiến tranh', 'pháp', 'mỹ', 'đánh', 'giải phóng', 'quân'],
-    'Văn hóa': ['lễ hội', 'chăm', 'di sản', 'bảo tàng', 'văn hóa'],
-    'Du lịch': ['bãi biển', 'bà nà', 'cầu vàng', 'du lịch', 'khách sạn'],
-    'Thiên nhiên': ['sơn trà', 'ngũ hành sơn', 'rừng', 'sông hàn'],
-  };
-
+  // ================== CATEGORY ==================
   private async ensureCategories() {
-    for (const [name] of Object.entries(this.categoryKeywords)) {
+    for (const name of this.defaultCategories) {
       const exists = await this.catRepo.findOne({ where: { Name: name } });
       if (!exists) await this.catRepo.save({ Name: name });
     }
+  }
+
+  private detectCategory(text: string): string {
+    const lowerText = text.toLowerCase();
+    let bestCategory = 'Lịch sử';
+    let maxMatches = 0;
+
+    for (const [category, keywords] of Object.entries(this.CATEGORY_KEYWORDS)) {
+      let count = 0;
+      for (const kw of keywords) {
+        if (lowerText.includes(kw.toLowerCase())) count++;
+      }
+      if (count > maxMatches) {
+        maxMatches = count;
+        bestCategory = category;
+      }
+    }
+
+    return bestCategory;
   }
 
   private extractYear(text: string): string {
@@ -45,112 +74,154 @@ export class CrawlerService {
     return m ? `${m[0]}-01-01` : '1000-01-01';
   }
 
-  private detectCategory(text: string): string {
-    const lower = text.toLowerCase();
-    for (const [cat, keywords] of Object.entries(this.categoryKeywords)) {
-      if (keywords.some(k => lower.includes(k))) return cat;
-    }
-    return 'Lịch sử';
-  }
-
-  // NGUỒN ỔN ĐỊNH: Wikipedia + Dữ liệu mẫu
-  // src/crawler/crawler.service.ts
-private async crawlWikipedia(): Promise<CrawledEvent[]> {
-  const url = 'https://vi.wikipedia.org/wiki/L%E1%BB%8Bch_s%E1%BB%AD_%C4%90%C3%A0_N%E1%BA%B5ng';
-  try {
-    const { data } = await axios.get(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-      timeout: 15000,
-    });
-    const $ = cheerio.load(data);
+  // ================== CRAWL FUNCTIONS ==================
+  private async crawlWikipedia(): Promise<CrawledEvent[]> {
+    const url = 'https://vi.wikipedia.org/wiki/L%E1%BB%8Bch_s%E1%BB%AD_%C4%90%C3%A0_N%E1%BA%B5ng';
     const events: CrawledEvent[] = [];
+    try {
+      const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const $ = cheerio.load(data);
 
-    // SỬA: DÙNG .mw-headline HOẶC h2, h3
-    $('.mw-headline, h2, h3').each((_, el) => {
-      const title = $(el).text().trim();
-      if (!title || /tham khảo|chú thích|nguồn|liên kết/i.test(title)) return;
+      const headings = $('.mw-headline, h2, h3');
+      for (let i = 0; i < headings.length; i++) {
+        const el = headings[i];
+        const title = $(el).text().trim();
+        if (!title || /tham khảo|chú thích|nguồn|liên kết/i.test(title)) continue;
 
-      let fullDesc = '';
-      let next = $(el).parent().next();
-      while (next.length && !next.find('.mw-headline, h2, h3').length) {
-        if (next.is('p')) fullDesc += next.text().trim() + '\n';
-        next = next.next();
+        let fullDesc = '';
+        let next = $(el).parent().next();
+        while (next.length && !next.find('.mw-headline, h2, h3').length) {
+          if (next.is('p')) fullDesc += next.text().trim() + '\n';
+          next = next.next();
+        }
+
+        if (fullDesc.length > 50) {
+          const category = this.detectCategory(title + ' ' + fullDesc);
+          events.push({
+            title,
+            fullDesc: fullDesc.slice(0, 2000),
+            date: this.extractYear(title + fullDesc),
+            category,
+            image: `https://picsum.photos/seed/${encodeURIComponent(title)}/800/400`,
+            sourceUrl: url,
+          });
+        }
       }
 
-      if (fullDesc.length > 50) {
+      return events.length > 0 ? events : this.getSampleData();
+    } catch (err) {
+      console.warn('⚠️ Không lấy được Wikipedia:', (err as Error).message);
+      return this.getSampleData();
+    }
+  }
+
+  private async crawlFantasticityHistory(): Promise<CrawledEvent[]> {
+    const api = 'https://danangfantasticity.com/wp-json/wp/v2/posts?search=history&per_page=40';
+    const events: CrawledEvent[] = [];
+
+    try {
+      const { data } = await axios.get(api, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      if (!Array.isArray(data)) return [];
+
+      for (const post of data) {
+        const title = post.title?.rendered?.replace(/<[^>]+>/g, '') ?? 'Sự kiện';
+        const fullDescRaw = post.content?.rendered?.replace(/<[^>]+>/g, '').trim() ?? '';
+        if (fullDescRaw.length < 60) continue;
+
+        const category = this.detectCategory(title + ' ' + fullDescRaw);
+
         events.push({
           title,
-          fullDesc: fullDesc.slice(0, 2000),
-          date: this.extractYear(title + fullDesc),
-          category: this.detectCategory(title + fullDesc),
-          image: `https://picsum.photos/seed/${encodeURIComponent(title)}/800/400`,
+          fullDesc: fullDescRaw.slice(0, 2000),
+          date: this.extractYear(fullDescRaw),
+          category,
+          image: post.jetpack_featured_media_url || `https://picsum.photos/seed/history${post.id}/800/400`,
+          sourceUrl: post.link,
+        });
+      }
+
+      return events;
+    } catch (err) {
+      console.warn('⚠️ Không lấy được Fantasticity History (API):', (err as Error).message);
+      return [];
+    }
+  }
+
+  private async crawlFantasticitySites(): Promise<CrawledEvent[]> {
+    const url = 'https://danangfantasticity.com/he-thong-di-tich-lich-su-quoc-gia-da-nang';
+    const events: CrawledEvent[] = [];
+    try {
+      const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const $ = cheerio.load(data);
+
+      const headings = $('.et_pb_text_inner h2, .et_pb_text_inner h3');
+      for (let i = 0; i < headings.length; i++) {
+        const el = headings[i];
+        const title = $(el).text().trim();
+        const descRaw = $(el).nextAll('p').first().text().trim();
+        if (!title || descRaw.length < 40) continue;
+
+        const category = this.detectCategory(title + ' ' + descRaw);
+
+        events.push({
+          title,
+          fullDesc: descRaw,
+          date: this.extractYear(descRaw),
+          category,
+          image: `https://picsum.photos/seed/sites${i}/800/400`,
           sourceUrl: url,
         });
       }
-    });
 
-    console.log(`Wikipedia: ${events.length} sự kiện`);
-    return events.length > 0 ? events : this.getSampleData();
-  } catch (err) {
-    console.error('Lỗi Wikipedia:', err.message);
-    return this.getSampleData(); // DỮ LIỆU MẪU
+      return events;
+    } catch (err) {
+      console.warn('⚠️ Không lấy được Fantasticity Sites:', (err as Error).message);
+      return [];
+    }
   }
-}
 
-// DỮ LIỆU MẪU ĐẦY ĐỦ
-private getSampleData(): CrawledEvent[] {
-  return [
-    {
-      title: '1890 - Thành lập tỉnh Quảng Nam',
-      fullDesc: 'Năm 1890, thực dân Pháp thành lập tỉnh Quảng Nam, bao gồm Đà Nẵng. Đây là bước ngoặt quan trọng trong lịch sử hành chính Đà Nẵng.',
-      date: '1890-01-01',
-      category: 'Lịch sử',
-      image: 'https://picsum.photos/seed/1890/800/400',
-      sourceUrl: 'https://vi.wikipedia.org/wiki/L%E1%BB%8Bch_s%E1%BB%AD_%C4%90%C3%A0_N%E1%BA%B5ng',
-    },
-    {
-      title: '1965 - Mỹ đổ bộ Đà Nẵng',
-      fullDesc: 'Ngày 8 tháng 3 năm 1965, lính thủy đánh bộ Mỹ đầu tiên đổ bộ lên bãi biển Đà Nẵng, mở đầu cho sự can thiệp quân sự trực tiếp của Mỹ vào Việt Nam.',
-      date: '1965-03-08',
-      category: 'Chiến tranh',
-      image: 'https://picsum.photos/seed/1965/800/400',
-      sourceUrl: 'https://vi.wikipedia.org/wiki/Chi%E1%BA%BFn_tranh_Vi%E1%BB%87t_Nam',
-    },
-    {
-      title: '1997 - Đà Nẵng thành thành phố trực thuộc trung ương',
-      fullDesc: 'Ngày 1 tháng 1 năm 1997, Đà Nẵng chính thức tách khỏi tỉnh Quảng Nam - Đà Nẵng để trở thành thành phố trực thuộc trung ương.',
-      date: '1997-01-01',
-      category: 'Lịch sử',
-      image: 'https://picsum.photos/seed/1997/800/400',
-      sourceUrl: 'https://danang.gov.vn',
-    },
-    {
-      title: '2013 - Khánh thành Cầu Rồng',
-      fullDesc: 'Cầu Rồng được khánh thành vào ngày 29/3/2013, là biểu tượng kiến trúc mới của Đà Nẵng. Cầu có khả năng phun lửa và nước vào cuối tuần.',
-      date: '2013-03-29',
-      category: 'Kiến trúc',
-      image: 'https://picsum.photos/seed/caurong/800/400',
-      sourceUrl: 'https://danang.gov.vn',
-    },
-    {
-      title: '2019 - Lễ hội pháo hoa quốc tế DIFF',
-      fullDesc: 'Lễ hội pháo hoa quốc tế Đà Nẵng (DIFF) 2019 thu hút hàng triệu du khách với các màn trình diễn đỉnh cao từ nhiều quốc gia.',
-      date: '2019-06-01',
-      category: 'Du lịch',
-      image: 'https://picsum.photos/seed/diff/800/400',
-      sourceUrl: 'https://baodanang.vn',
-    },
-    {
-      title: 'Ngũ Hành Sơn - Di sản thiên nhiên',
-      fullDesc: 'Ngũ Hành Sơn là quần thể 5 ngọn núi đá vôi với nhiều hang động, chùa chiền, là điểm đến tâm linh và du lịch nổi tiếng.',
-      date: '1000-01-01',
-      category: 'Thiên nhiên',
-      image: 'https://picsum.photos/seed/nguhanhson/800/400',
-      sourceUrl: 'https://danangtourism.vn',
-    },
-  ];
-}
+  private async crawlPullmanEvents(): Promise<CrawledEvent[]> {
+    const url = 'https://www.pullman-danang.com/blog/';
+    const events: CrawledEvent[] = [];
+    try {
+      const { data } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const $ = cheerio.load(data);
 
+      $('article p').each((i, el) => {
+        const textRaw = $(el).text().trim();
+        if (textRaw.length < 60) return;
+
+        events.push({
+          title: textRaw.slice(0, 80) + '...',
+          fullDesc: textRaw,
+          date: this.extractYear(textRaw),
+          category: 'Du lịch',
+          image: `https://picsum.photos/seed/pullman${i}/800/400`,
+          sourceUrl: url,
+        });
+      });
+
+      return events;
+    } catch (err) {
+      console.warn('⚠️ Không lấy được Pullman Events:', (err as Error).message);
+      return [];
+    }
+  }
+
+  private getSampleData(): CrawledEvent[] {
+    return [
+      {
+        title: '1997 - Đà Nẵng trở thành thành phố trực thuộc trung ương',
+        fullDesc: 'Ngày 1/1/1997, Đà Nẵng chính thức tách khỏi tỉnh Quảng Nam - Đà Nẵng.',
+        date: '1997-01-01',
+        category: 'Lịch sử',
+        image: 'https://picsum.photos/seed/1997/800/400',
+        sourceUrl: 'https://danang.gov.vn',
+      },
+    ];
+  }
+
+  // ================== RUN ==================
   async run() {
     await this.ensureCategories();
 
@@ -158,9 +229,14 @@ private getSampleData(): CrawledEvent[] {
     await this.dataSource.query('TRUNCATE TABLE Timelines');
     await this.dataSource.query('SET FOREIGN_KEY_CHECKS = 1');
 
-    const wiki = await this.crawlWikipedia();
-    const all = wiki.length > 0 ? wiki : this.getSampleData();
+    const [wiki, his, sites, events] = await Promise.all([
+      this.crawlWikipedia(),
+      this.crawlFantasticityHistory(),
+      this.crawlFantasticitySites(),
+      this.crawlPullmanEvents(),
+    ]);
 
+    const all = [...wiki, ...his, ...sites, ...events];
     const seen = new Set<string>();
     let saved = 0;
 
@@ -183,6 +259,6 @@ private getSampleData(): CrawledEvent[] {
       saved++;
     }
 
-    return { message: `Crawl thành công ${saved} sự kiện!` };
+    return { message: `Crawl thành công ${saved} sự kiện từ 4 nguồn!` };
   }
 }
