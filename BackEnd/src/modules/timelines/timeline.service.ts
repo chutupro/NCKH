@@ -1,4 +1,3 @@
-// src/modules/timeline/timeline.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +10,7 @@ export class TimelineService {
     private timelineRepo: Repository<Timelines>,
   ) {}
 
+  // Lấy danh sách timeline, hỗ trợ filter categories, fromYear, toYear
   async getTimelineItems(categories?: string[], fromYear?: string, toYear?: string) {
     const query = this.timelineRepo.createQueryBuilder('t');
 
@@ -31,7 +31,7 @@ export class TimelineService {
       id: t.timelineID,
       date: t.eventDate,
       title: t.title,
-      desc: t.description?.slice(0, 200) || '',
+      desc: t.description?.slice(0, 200) || 'Không có mô tả ngắn.',
       image: t.image || `https://picsum.photos/seed/${t.timelineID}/800/400`,
       category: t.category,
       fullDesc: t.description,
@@ -39,22 +39,24 @@ export class TimelineService {
     }));
   }
 
+  // Lấy chi tiết timeline theo ID
   async getTimelineItemById(id: number) {
-  const t = await this.timelineRepo.findOne({
-    where: { timelineID: id },
-    relations: ['categoryEntity'], // nếu cần
-  });
-  if (!t) return null;
+    const t = await this.timelineRepo.findOne({
+      where: { timelineID: id },
+      relations: ['categoryEntity'], // nếu có quan hệ
+    });
 
-  return {
-    id: t.timelineID,
-    date: t.eventDate,
-    title: t.title,
-    desc: t.description || 'Không có mô tả chi tiết.', // ĐẢM BẢO CÓ NỘI DUNG
-    image: t.image || `https://picsum.photos/seed/${t.timelineID}/1200/600`,
-    category: t.category,
-    fullDesc: t.description, // THÊM DÒNG NÀY
-    sourceUrl: t.sourceUrl,
-  };
-}
+    if (!t) return null;
+
+    return {
+      id: t.timelineID,
+      date: t.eventDate,
+      title: t.title,
+      desc: t.description || 'Không có mô tả chi tiết.',
+      image: t.image || `https://picsum.photos/seed/${t.timelineID}/1200/600`,
+      category: t.category,
+      fullDesc: t.description,
+      sourceUrl: t.sourceUrl,
+    };
+  }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/community/CommunitySidebar.css'
@@ -12,11 +12,14 @@ import {
   faArrowRight,
   faSearch
 } from '@fortawesome/free-solid-svg-icons'
-import posts from '../../util/posts'
+import { getArticlesPosts } from '../../API/articlesPost'
+import { getCodeFromName, CODE_TO_VN, KNOWN_CODES } from '../../util/categoryMap'
 
 const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('')
+
+  const [posts, setPosts] = useState([])
 
   const filters = [
     { id: 'all', label: t('sidebar.all'), icon: null },
@@ -26,29 +29,54 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
     { id: 'thiên nhiên', label: t('sidebar.nature'), icon: null }
   ]
 
-  const trendingTopics = [
-    { code: 'culture', count: 245 },
-    { code: 'architecture', count: 189 },
-    { code: 'tourism', count: 156 },
-    { code: 'nature', count: 123 }
-  ]
+  // Compute trending topics from fetched posts (count by category)
+  const trendingTopics = (() => {
+    const counts = {};
+    // initialize counts for known codes
+    KNOWN_CODES.forEach(c => (counts[c] = 0));
+    posts.forEach(p => {
+      const catName = p.category || p.categoryName || p.category_en || p.category_vi || '';
+      const code = getCodeFromName(catName);
+      if (KNOWN_CODES.includes(code)) counts[code] = (counts[code] || 0) + 1;
+    });
+    return Object.keys(counts)
+      .map(code => ({ code, count: counts[code] }))
+      .sort((a, b) => b.count - a.count);
+  })();
+
+  // Load articles from backend and keep in state
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      try {
+        const data = await getArticlesPosts()
+        if (!mounted) return
+        // API returns array of articles (service maps fields)
+        setPosts(Array.isArray(data) ? data : (data.items || []))
+      } catch (err) {
+        console.error('Failed to load articles for sidebar:', err)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
 
   // Lọc top posts theo category đang chọn
   const getTopPosts = () => {
-    let filteredPosts = activeFilter === 'all' 
-      ? posts 
-      : posts.filter(post => post.category.toLowerCase() === activeFilter.toLowerCase())
-    
-    // Sắp xếp theo likes và lấy top 3
+    let filteredPosts = activeFilter === 'all'
+      ? posts
+      : posts.filter(post => String(post.category || '').toLowerCase() === activeFilter.toLowerCase())
+
+    // Sắp xếp theo likeCount (fallback to 0) và lấy top 3
     return filteredPosts
-      .sort((a, b) => b.likes - a.likes)
+      .sort((a, b) => (b.likeCount || b.likeCount === 0 ? b.likeCount : b.likes || 0) - (a.likeCount || a.likeCount === 0 ? a.likeCount : a.likes || 0))
       .slice(0, 3)
       .map(post => ({
         id: post.id,
-        image: post.image,
-        title: post.text.substring(0, 30) + (post.text.length > 30 ? '...' : ''),
-        likes: post.likes,
-        category: post.category
+        image: post.image || post.imagePath || '/uploads/default.png',
+        title: (post.title || '').substring(0, 60) + ((post.title || '').length > 60 ? '...' : ''),
+        likes: post.likeCount ?? post.likes ?? 0,
+        category: post.category || ''
       }))
   }
 
@@ -60,11 +88,18 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
     onSearchChange(value)
   }
 
-  const topContributors = [
-    { name: 'Nguyễn Văn An', posts: 15, avatar: 'NVA' },
-    { name: 'Trần Thị Bình', posts: 12, avatar: 'TTB' },
-    { name: 'Lê Minh Cường', posts: 10, avatar: 'LMC' }
-  ]
+  // Derive top contributors from posts
+  const topContributors = (() => {
+    const counts = {}
+    posts.forEach(p => {
+      const author = p.author || {}
+      const id = author.id || p.authorId || p.userId || 'anon'
+      const name = author.fullName || author.FullName || 'Người dùng'
+      if (!counts[id]) counts[id] = { id, name, posts: 0 }
+      counts[id].posts += 1
+    })
+    return Object.values(counts).sort((a, b) => b.posts - a.posts).slice(0, 5)
+  })()
 
   return (
     <aside className="community-sidebar">

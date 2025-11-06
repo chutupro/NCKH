@@ -24,6 +24,9 @@ const GoogleAuthSuccess = () => {
           // Lưu token vào context (giống như đăng nhập thường)
           setAccessToken(token);
           
+          // ✅ DELAY 100ms để cookie kịp được browser set
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
           // Fetch profile với token trong header (vì cookie có thể chưa được set kịp)
           const response = await fetch('/users/profile/me', {
             method: 'GET',
@@ -49,8 +52,8 @@ const GoogleAuthSuccess = () => {
             autoClose: 2000,
           });
           
-          // Redirect về trang Profile (giống như đăng nhập thường)
-          setTimeout(() => navigate('/Personal'), 500);
+          // Redirect về trang chủ
+          setTimeout(() => navigate('/'), 500);
         } else {
           throw new Error('No user data or token received');
         }

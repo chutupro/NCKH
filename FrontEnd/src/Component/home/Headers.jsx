@@ -61,7 +61,6 @@ const Headers = () => {
         </div>
         <div className="nav-buttons">
           <LanguageSwitcher />
-          <Link to="/community" className="nav-buttonDongGop">{t('nav.join')}</Link>
           
           {user ? (
             <div className="user-menu" ref={dropdownRef}>

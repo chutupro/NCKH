@@ -28,6 +28,7 @@ export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accessToken, setAccessToken] = useState(null); // ✅ LƯU ACCESS_TOKEN TRONG MEMORY
+  const [isAuthLoading, setIsAuthLoading] = useState(true); // ✅ THÊM: Trạng thái loading auth
   const [locIndex, setLocIndex] = useState(0);
   const [showMap, setShowMap] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -124,6 +125,8 @@ export const AppProvider = ({ children }) => {
     setIsAuthenticated,
     accessToken,        // ✅ THÊM
     setAccessToken,     // ✅ THÊM
+    isAuthLoading,      // ✅ THÊM
+    setIsAuthLoading,   // ✅ THÊM
     locations,
     locIndex,
     setLocIndex,

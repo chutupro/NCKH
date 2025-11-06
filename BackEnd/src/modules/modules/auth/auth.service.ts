@@ -12,6 +12,8 @@ import { RedisService } from '../../../common/redis.service';
 
 @Injectable()
 export class AuthService {
+  private readonly REFRESH_TOKEN_HMAC_SECRET: string;
+
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
@@ -20,7 +22,21 @@ export class AuthService {
     @InjectRepository(Users)
     private readonly userRepo: Repository<Users>,
     private readonly redis: RedisService,
-  ) {}
+  ) {
+    // 🔐 HMAC secret từ env, fallback về refresh token secret
+    this.REFRESH_TOKEN_HMAC_SECRET = 
+      this.config.get<string>('REFRESH_TOKEN_HMAC_SECRET') ?? 
+      this.config.get<string>('REFRESH_TOKEN_SECRET') ?? 
+      'default_hmac_secret_change_in_production';
+  }
+
+  // 🔐 Helper: HMAC-SHA256 hash (deterministic + secure)
+  private hashRefreshToken(token: string): string {
+    return crypto
+      .createHmac('sha256', this.REFRESH_TOKEN_HMAC_SECRET)
+      .update(token)
+      .digest('hex');
+  }
 
   // Tạo mã OTP 6 số ngẫu nhiên
   private generateOTP(): string {
@@ -249,7 +265,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.userService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Email không tồn tại');
+    if (!user) throw new UnauthorizedException('Email hoặc Mật khẩu không đúng ');
 
     const match = await bcrypt.compare(password, user.PasswordHash);
     if (!match) throw new UnauthorizedException('Mật khẩu không đúng');
@@ -281,12 +297,18 @@ export class AuthService {
     const user = await this.validateUser(email, password);
     const tokens = await this.getTokens(user);
     
-    // 🔥 HASH REFRESH_TOKEN → LƯU REDIS (KHÔNG DB)
-    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    // � HMAC-SHA256 (deterministic + secure with secret)
+    const refreshTokenHash = this.hashRefreshToken(tokens.refresh_token);
     const redisKey = `rt:${refreshTokenHash}`;
     
     // 🔥 redis.set('rt:hash', userId, 'EX', 7 ngày = 604800 seconds)
     await this.redis.set(redisKey, user.UserID.toString(), 604800);
+    
+    // 🔥 LẤY ROLE NAME TỪ DATABASE
+    const userWithRole = await this.userRepo.findOne({
+      where: { UserID: user.UserID },
+      relations: ['role'],
+    });
     
     // 🔥 TRẢ CẢ 2 TOKENS - Controller sẽ set vào HttpOnly cookie
     return {
@@ -297,6 +319,7 @@ export class AuthService {
         email: user.Email,
         fullName: user.FullName ?? '',
         roleId: user.RoleID,
+        role: userWithRole?.role?.RoleName || 'User', // ✅ THÊM ROLE NAME
       },
     };
   }
@@ -319,8 +342,8 @@ export class AuthService {
     const user = await this.userService.findById(userId);
     if (!user) throw new UnauthorizedException('Không tìm thấy user');
 
-    // 🔥 HASH REFRESH_TOKEN → CHECK REDIS
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+    // � HMAC-SHA256 (deterministic + secure)
+    const refreshTokenHash = this.hashRefreshToken(refreshToken);
     const redisKey = `rt:${refreshTokenHash}`;
     
     const storedUserId = await this.redis.get(redisKey);
@@ -333,22 +356,36 @@ export class AuthService {
     await this.redis.del(redisKey);
 
     const newTokens = await this.getTokens(user);
-    const newHash = await bcrypt.hash(newTokens.refresh_token, 10);
+    const newHash = this.hashRefreshToken(newTokens.refresh_token);
     const newRedisKey = `rt:${newHash}`;
     
     // Lưu token mới vào Redis - 7 ngày
     await this.redis.set(newRedisKey, user.UserID.toString(), 604800);
 
+    // 🔥 LẤY ROLE NAME TỪ DATABASE
+    const userWithRole = await this.userRepo.findOne({
+      where: { UserID: user.UserID },
+      relations: ['role'],
+    });
+
+    // ✅ TRẢ VỀ CẢ USER INFO
     return { 
       accessToken: newTokens.access_token, 
-      refreshToken: newTokens.refresh_token 
+      refreshToken: newTokens.refresh_token,
+      user: {
+        userId: user.UserID,
+        email: user.Email,
+        fullName: user.FullName,
+        roleId: user.RoleID,
+        role: userWithRole?.role?.RoleName || 'User', // ✅ THÊM ROLE NAME
+      }
     };
   }
 
   async logout(userId: number, refreshToken?: string) {
     // 🔥 REDIS DEL - TỨC THÌ
     if (refreshToken) {
-      const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+      const refreshTokenHash = this.hashRefreshToken(refreshToken);
       const redisKey = `rt:${refreshTokenHash}`;
       await this.redis.del(redisKey);
     } else {
@@ -388,8 +425,8 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.getTokens(user);
 
-    // Lưu refresh token vào Redis
-    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    // Lưu refresh token vào Redis (HMAC-SHA256 - Google OAuth)
+    const refreshTokenHash = this.hashRefreshToken(tokens.refresh_token);
     await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
 
     return {
@@ -435,8 +472,8 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.getTokens(user);
 
-    // Lưu refresh token vào Redis
-    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    // Lưu refresh token vào Redis (HMAC-SHA256 - Facebook OAuth)
+    const refreshTokenHash = this.hashRefreshToken(tokens.refresh_token);
     await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
 
     return {

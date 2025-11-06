@@ -26,9 +26,25 @@ iframe.goog-te-menu-frame { display: none !important; }
 .goog-popup,
 .goog-te-gadget { display: none !important; }
 
+/* ẨN HOÀN TOÀN THANH GOOGLE TRANSLATE */
+.skiptranslate,
+iframe.skiptranslate,
+iframe[src*="translate.google"],
+iframe[src*="translate.goog"],
+.goog-te-ftab,
+#goog-gt-,
+body > .skiptranslate { 
+  display: none !important; 
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  position: absolute !important;
+  top: -9999px !important;
+}
+
 /* ensure no top margin inserted by Google Translate */
 html, body { transform: none !important; margin-top: 0 !important; }
 
 /* ensure untranslated content layout isn't affected */
 html, body { transform: none !important; }
-

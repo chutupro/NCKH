@@ -139,21 +139,21 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax', // ✅ LAX - Cho phép F5 và same-site navigation
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refresh_token', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax', // ✅ LAX - Cho phép F5 và same-site navigation
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    // 🔥 KHÔNG TRẢ GÌ VỀ BODY
-    // Return access token in body as well to help clients update in-memory token
+    // 🔥 TRẢ VỀ ACCESS_TOKEN VÀ USER INFO
     return {
       accessToken: result.accessToken,
+      user: result.user, // ✅ THÊM USER INFO
       message: 'Token refreshed successfully',
     };
   }

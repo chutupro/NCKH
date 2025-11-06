@@ -44,6 +44,16 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // ✅ KHÔNG retry nếu request là /auth/refresh (tránh infinite loop)
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      return Promise.reject(error);
+    }
+
+    // ✅ KHÔNG retry nếu request là /auth/login (tránh loop khi login sai)
+    if (originalRequest.url?.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+
     // Nếu token hết hạn (401) và chưa retry
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -65,11 +75,20 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Nếu refresh thất bại → logout
+        // Nếu refresh thất bại → clear state (KHÔNG redirect để tránh loop)
         if (setAccessToken) {
           setAccessToken(null);
         }
-        window.location.href = '/login';
+        
+        // Chỉ redirect nếu user đang ở trang protected
+        const currentPath = window.location.pathname;
+        const publicPaths = ['/', '/login', '/register', '/about', '/forgot-password'];
+        
+        if (!publicPaths.includes(currentPath)) {
+          console.log('[API] Refresh failed, redirecting to login...');
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(refreshError);
       }
     }
@@ -78,4 +97,6 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Export both default and named
+export { apiClient };
 export default apiClient;
