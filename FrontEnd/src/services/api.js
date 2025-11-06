@@ -97,4 +97,6 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Export both default and named
+export { apiClient };
 export default apiClient;

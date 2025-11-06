@@ -304,6 +304,12 @@ export class AuthService {
     // 🔥 redis.set('rt:hash', userId, 'EX', 7 ngày = 604800 seconds)
     await this.redis.set(redisKey, user.UserID.toString(), 604800);
     
+    // 🔥 LẤY ROLE NAME TỪ DATABASE
+    const userWithRole = await this.userRepo.findOne({
+      where: { UserID: user.UserID },
+      relations: ['role'],
+    });
+    
     // 🔥 TRẢ CẢ 2 TOKENS - Controller sẽ set vào HttpOnly cookie
     return {
       accessToken: tokens.access_token,   // → HttpOnly cookie
@@ -313,6 +319,7 @@ export class AuthService {
         email: user.Email,
         fullName: user.FullName ?? '',
         roleId: user.RoleID,
+        role: userWithRole?.role?.RoleName || 'User', // ✅ THÊM ROLE NAME
       },
     };
   }
@@ -355,6 +362,12 @@ export class AuthService {
     // Lưu token mới vào Redis - 7 ngày
     await this.redis.set(newRedisKey, user.UserID.toString(), 604800);
 
+    // 🔥 LẤY ROLE NAME TỪ DATABASE
+    const userWithRole = await this.userRepo.findOne({
+      where: { UserID: user.UserID },
+      relations: ['role'],
+    });
+
     // ✅ TRẢ VỀ CẢ USER INFO
     return { 
       accessToken: newTokens.access_token, 
@@ -364,6 +377,7 @@ export class AuthService {
         email: user.Email,
         fullName: user.FullName,
         roleId: user.RoleID,
+        role: userWithRole?.role?.RoleName || 'User', // ✅ THÊM ROLE NAME
       }
     };
   }

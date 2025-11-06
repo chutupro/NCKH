@@ -67,6 +67,7 @@ const Login = () => {
         email: response?.user?.email ?? response?.user?.Email ?? email,
         fullName: response?.user?.fullName ?? response?.user?.FullName ?? '',
         roleId: response?.user?.roleId ?? response?.user?.RoleID ?? null,
+        Role: response?.user?.role ?? 'User', // ✅ THÊM ROLE NAME
       };
 
       setAccessToken(response.accessToken);

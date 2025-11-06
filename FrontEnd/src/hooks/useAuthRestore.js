@@ -12,7 +12,7 @@ import authService from '../services/authService';
  * 4. Nếu thất bại → giữ trạng thái logout (KHÔNG retry)
  */
 export const useAuthRestore = () => {
-  const { setUser, setIsAuthenticated, setAccessToken } = useContext(AppContext);
+  const { setUser, setIsAuthenticated, setAccessToken, setIsAuthLoading } = useContext(AppContext);
   const hasAttemptedRestore = useRef(false); // Chỉ chạy 1 lần
 
   useEffect(() => {
@@ -33,6 +33,7 @@ export const useAuthRestore = () => {
 
         if (!response?.accessToken) {
           console.log('[Auth Restore] No access token in response');
+          setIsAuthLoading(false); // ✅ Xong loading
           return;
         }
 
@@ -44,6 +45,7 @@ export const useAuthRestore = () => {
           email: user?.email || user?.Email || '',
           fullName: user?.fullName || user?.FullName || '',
           roleId: user?.roleId || user?.RoleID || null,
+          Role: user?.role || 'User', // ✅ THÊM ROLE NAME
         };
 
         // Restore state
@@ -61,10 +63,12 @@ export const useAuthRestore = () => {
           console.log('[Auth Restore] Failed to restore session:', error.message);
         }
         // Không làm gì - user vẫn ở trạng thái logout
+      } finally {
+        setIsAuthLoading(false); // ✅ Luôn set loading = false khi xong
       }
     };
 
     restoreSession();
-  }, [setUser, setIsAuthenticated, setAccessToken]);
+  }, [setUser, setIsAuthenticated, setAccessToken, setIsAuthLoading]);
 };
 
