@@ -1,0 +1,138 @@
+{
+  "info": {
+    "name": "Media Service API",
+    "description": "Test collection for Media Service endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3001/health",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "2. Upload Avatar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxOTMwOTAwMDAwfQ.xxx",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "/path/to/image.jpg"
+            },
+            {
+              "key": "type",
+              "value": "avatar",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:3001/upload",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["upload"]
+        }
+      }
+    },
+    {
+      "name": "3. Upload Post - Van Hoa",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxOTMwOTAwMDAwfQ.xxx",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "/path/to/image.jpg"
+            },
+            {
+              "key": "type",
+              "value": "post",
+              "type": "text"
+            },
+            {
+              "key": "category",
+              "value": "van-hoa",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:3001/upload",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["upload"]
+        }
+      }
+    },
+    {
+      "name": "4. Upload Post - Du Lich",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsInJvbGUiOiJ1c2VyIiwiZXhwIjoxOTMwOTAwMDAwfQ.xxx",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": "/path/to/image.jpg"
+            },
+            {
+              "key": "type",
+              "value": "post",
+              "type": "text"
+            },
+            {
+              "key": "category",
+              "value": "du-lich",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:3001/upload",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3001",
+          "path": ["upload"]
+        }
+      }
+    }
+  ]
+}
