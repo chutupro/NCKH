@@ -6,8 +6,8 @@ import { getGoogleTranslateLanguage } from '../../Component/common/googleTransla
 import { KNOWN_CODES, CODE_TO_VN, labelFor, getCodeFromName } from '../../util/categoryMap'
 import CustomSelect from '../../Component/common/CustomSelect'
 import { createArticlePost } from '../../API/articlesPost'
-import { getUserById } from '../../API/users'
-import { useEffect } from 'react'
+import { useEffect, useContext } from 'react'
+import AppContext from '../../context/context'
 const BACKEND_BASE = 'http://localhost:3000'
 
 // helper: convert dataURL -> Blob
@@ -60,23 +60,16 @@ const ContributeInformation = () => {
   const [alt, setAlt] = useState('')
   const [content, setContent] = useState('')
 
-  // Prefill contributor info from userId=1 (temporary)
+  // Prefill contributor info from logged-in user (AppContext)
+  const appCtx = useContext(AppContext)
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        const user = await getUserById(1)
-        if (!mounted) return
-        if (user) {
-          setName(user.fullName || user.FullName || '')
-          setEmail(user.email || user.Email || '')
-        }
-      } catch (err) {
-        console.debug('Could not load user 1:', err)
-      }
-    })()
-    return () => { mounted = false }
-  }, [])
+    const ctxUser = appCtx?.user
+    if (ctxUser) {
+      // AuthService shapes user as { userId, email, fullName }
+      setName(ctxUser.fullName || ctxUser.FullName || '')
+      setEmail(ctxUser.email || ctxUser.Email || '')
+    }
+  }, [appCtx?.user])
 
   // Prefer uploading the original File when available. The previous flow
   // only had a dataURL preview; uploading that can produce a new image
@@ -159,8 +152,9 @@ const ContributeInformation = () => {
         title: getTitle(),
         content,
         categoryId: codeToId[code] || 1,
-        userId: 1,
-        email,
+        // Use logged-in user info when available
+        userId: appCtx?.user?.userId || appCtx?.user?.UserID || 1,
+        email: appCtx?.user?.email || appCtx?.user?.Email || email,
         imagePath: imgToSend,
         imageDescription: alt || ai.title_en || ai.title_vi || ''
       }

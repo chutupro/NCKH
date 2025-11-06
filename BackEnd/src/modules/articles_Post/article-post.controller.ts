@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Req } from '@nestjs/common';
 import { ArticleService } from './article-post.service'; 
 import { CreateArticleDto } from './dto/create-article.dto';
 import { Param, Delete } from '@nestjs/common';
@@ -17,7 +17,15 @@ export class ArticleController {
   }
   // --- CREATE NEW ARTICLE ---
   @Post()
-  async create(@Body() dto: CreateArticleDto) {
+  async create(@Req() req: any, @Body() dto: CreateArticleDto) {
+    // If request is authenticated, prefer server-side user info to prevent spoofing
+    const authUser = req?.user || {};
+    const authUserId = authUser.userId ?? authUser.sub ?? authUser.UserID ?? null;
+    const authEmail = authUser.email ?? authUser.Email ?? null;
+
+    if (authUserId) dto.userId = authUserId;
+    if (authEmail) dto.email = authEmail;
+
     const article = await this.articleService.createArticle(dto);
     return article;
   }
