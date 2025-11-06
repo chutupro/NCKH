@@ -249,7 +249,7 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.userService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Email không tồn tại');
+    if (!user) throw new UnauthorizedException('Email hoặc Mật khẩu không đúng ');
 
     const match = await bcrypt.compare(password, user.PasswordHash);
     if (!match) throw new UnauthorizedException('Mật khẩu không đúng');
@@ -281,8 +281,11 @@ export class AuthService {
     const user = await this.validateUser(email, password);
     const tokens = await this.getTokens(user);
     
-    // 🔥 HASH REFRESH_TOKEN → LƯU REDIS (KHÔNG DB)
-    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    // 🔥 SHA256 HASH (deterministic) - Cùng input → Cùng output
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(tokens.refresh_token)
+      .digest('hex');
     const redisKey = `rt:${refreshTokenHash}`;
     
     // 🔥 redis.set('rt:hash', userId, 'EX', 7 ngày = 604800 seconds)
@@ -319,8 +322,11 @@ export class AuthService {
     const user = await this.userService.findById(userId);
     if (!user) throw new UnauthorizedException('Không tìm thấy user');
 
-    // 🔥 HASH REFRESH_TOKEN → CHECK REDIS
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+    // 🔥 SHA256 HASH (deterministic) - Cùng token → Cùng hash
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(refreshToken)
+      .digest('hex');
     const redisKey = `rt:${refreshTokenHash}`;
     
     const storedUserId = await this.redis.get(redisKey);
@@ -333,22 +339,35 @@ export class AuthService {
     await this.redis.del(redisKey);
 
     const newTokens = await this.getTokens(user);
-    const newHash = await bcrypt.hash(newTokens.refresh_token, 10);
+    const newHash = crypto
+      .createHash('sha256')
+      .update(newTokens.refresh_token)
+      .digest('hex');
     const newRedisKey = `rt:${newHash}`;
     
     // Lưu token mới vào Redis - 7 ngày
     await this.redis.set(newRedisKey, user.UserID.toString(), 604800);
 
+    // ✅ TRẢ VỀ CẢ USER INFO
     return { 
       accessToken: newTokens.access_token, 
-      refreshToken: newTokens.refresh_token 
+      refreshToken: newTokens.refresh_token,
+      user: {
+        userId: user.UserID,
+        email: user.Email,
+        fullName: user.FullName,
+        roleId: user.RoleID,
+      }
     };
   }
 
   async logout(userId: number, refreshToken?: string) {
     // 🔥 REDIS DEL - TỨC THÌ
     if (refreshToken) {
-      const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+      const refreshTokenHash = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
       const redisKey = `rt:${refreshTokenHash}`;
       await this.redis.del(redisKey);
     } else {
@@ -388,8 +407,11 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.getTokens(user);
 
-    // Lưu refresh token vào Redis
-    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    // Lưu refresh token vào Redis (SHA256 - Google OAuth)
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(tokens.refresh_token)
+      .digest('hex');
     await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
 
     return {
@@ -435,8 +457,11 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.getTokens(user);
 
-    // Lưu refresh token vào Redis
-    const refreshTokenHash = await bcrypt.hash(tokens.refresh_token, 10);
+    // Lưu refresh token vào Redis (SHA256 - Facebook OAuth)
+    const refreshTokenHash = crypto
+      .createHash('sha256')
+      .update(tokens.refresh_token)
+      .digest('hex');
     await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
 
     return {
