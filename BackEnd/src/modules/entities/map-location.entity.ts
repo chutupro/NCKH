@@ -1,5 +1,12 @@
 // src/entities/map-location.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 import { Articles } from './article.entity';
 import { Timelines } from './timeline.entity';
 import { Feedback } from './feedback.entity';
@@ -28,11 +35,13 @@ export class MapLocations {
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   OldImage: string;
 
+  // ĐỔI TÊN: Desc → description
   @Column({ type: 'nvarchar', length: 500, nullable: true })
-  Desc: string;
+  description: string;
 
+  // ĐỔI TÊN: FullDesc → fullDescription
   @Column({ type: 'nvarchar', length: 2000, nullable: true })
-  FullDesc: string;
+  fullDescription: string;
 
   @Column({ type: 'int', nullable: true })
   ArticleID: number;
@@ -49,15 +58,21 @@ export class MapLocations {
   @Column({ type: 'int', nullable: true })
   Reviews: number;
 
-  @ManyToOne(() => Articles, (article) => article.mapLocations, { onDelete: 'SET NULL' })
+  @ManyToOne(() => Articles, (article) => article.mapLocations, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
 
-  @ManyToOne(() => Timelines, (timeline) => timeline.mapLocations, { onDelete: 'SET NULL' })
+  @ManyToOne(() => Timelines, (timeline) => timeline.mapLocations, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'TimelineID' })
   timeline: Timelines;
 
-  @ManyToOne(() => Categories, (category) => category.mapLocations, { onDelete: 'SET NULL' })
+  @ManyToOne(() => Categories, (category) => category.mapLocations, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'CategoryID' })
   category: Categories;
 

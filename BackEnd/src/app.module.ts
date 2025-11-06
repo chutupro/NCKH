@@ -25,6 +25,7 @@ import { CrawlerModule } from './modules/crawler/crawler.module';
     DatabaseModule,
     TimelineModule,
     MapLocationsModule,
+    // AuthModule,
     AuthModule, // ✅ UNCOMMENT - Auth routes
     ArticleModule,
     CommentModule,
