@@ -88,8 +88,24 @@ const Routee = () => {
   <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
-      <Route path="/map/admin" element={<MapAdmin />} /> {/* giữ lại */}
-      <Route path="/map/admin/contributions" element={<MapAdminContributions />} /> {/* THÊM DÒNG NÀY */}
+      
+      {/* MAP ADMIN: CHỈ ADMIN & EDITOR */}
+      <Route
+        path="/map/admin"
+        element={
+          <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
+            <MapAdmin />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/map/admin/contributions"
+        element={
+          <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
+            <MapAdminContributions />
+          </ProtectedRoute>
+        }
+      />
 
       {/* ADMIN DASHBOARD: CHỈ ADMIN */}
       <Route

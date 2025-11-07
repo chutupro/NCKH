@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import StatsCard from '../../Component/admin/StatsCard';
 import { apiClient } from '../../services/api';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalArticles: 0,
@@ -12,6 +14,7 @@ const AdminDashboard = () => {
   });
 
   const [recentActivities, setRecentActivities] = useState([]);
+  const [pendingContributions, setPendingContributions] = useState(0);
 
   useEffect(() => {
     // Fetch stats từ API
@@ -29,6 +32,12 @@ const AdminDashboard = () => {
       { id: 3, user: 'Lê Văn C', action: 'đã thích bài viết', time: '15 phút trước', type: 'like' },
       { id: 4, user: 'Admin', action: 'đã duyệt 3 bài viết', time: '1 giờ trước', type: 'approve' },
     ]);
+
+    // TODO: Lấy số đóng góp chờ duyệt từ API
+    // apiClient.get('/map/contributions/pending-count').then(res => {
+    //   setPendingContributions(res.data.count);
+    // });
+    setPendingContributions(3); // Mock data
   }, []);
 
   return (
@@ -71,6 +80,174 @@ const AdminDashboard = () => {
           footer="Tăng trưởng ổn định"
           color="danger"
         />
+      </div>
+
+      {/* Map Admin Cards - ĐẸP SHOPEE STYLE */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+        gap: '1.5rem', 
+        marginTop: '2rem' 
+      }}>
+        {/* 1. Quản lý Địa điểm */}
+        <div
+          onClick={() => navigate('/map/admin')}
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '16px',
+            padding: '2rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+          }}
+        >
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 'bold', 
+                  color: 'white', 
+                  marginBottom: '0.5rem' 
+                }}>
+                  🗺️ Quản lý Địa điểm
+                </h3>
+                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.95rem' }}>
+                  Thêm, sửa, xóa điểm lịch sử trên bản đồ
+                </p>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.2)',
+                padding: '1rem',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+              }}>
+                <span style={{ fontSize: '2rem' }}>📍</span>
+              </div>
+            </div>
+            <div style={{ 
+              marginTop: '1.5rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              color: 'rgba(255,255,255,0.9)',
+              fontSize: '0.9rem',
+            }}>
+              <span>→</span>
+              <span>Nhấn để vào trang quản trị</span>
+            </div>
+          </div>
+          {/* Background decoration */}
+          <div style={{
+            position: 'absolute',
+            top: '-50px',
+            right: '-50px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '50%',
+          }} />
+        </div>
+
+        {/* 2. Duyệt Đóng góp */}
+        <div
+          onClick={() => navigate('/map/admin/contributions')}
+          style={{
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            borderRadius: '16px',
+            padding: '2rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 15px rgba(240, 147, 251, 0.3)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 8px 25px rgba(240, 147, 251, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(240, 147, 251, 0.3)';
+          }}
+        >
+          {/* Badge số lượng chờ duyệt */}
+          {pendingContributions > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: '#ff4757',
+              color: 'white',
+              padding: '0.4rem 1rem',
+              borderRadius: '20px',
+              fontSize: '0.85rem',
+              fontWeight: 'bold',
+              boxShadow: '0 2px 10px rgba(255, 71, 87, 0.5)',
+              animation: 'pulse 2s infinite',
+              zIndex: 2,
+            }}>
+              {pendingContributions} mới
+            </div>
+          )}
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: 'bold', 
+                  color: 'white', 
+                  marginBottom: '0.5rem' 
+                }}>
+                  🖼️ Duyệt Đóng góp
+                </h3>
+                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.95rem' }}>
+                  Xem và phê duyệt ảnh người dùng gửi
+                </p>
+              </div>
+              <div style={{
+                background: 'rgba(255,255,255,0.2)',
+                padding: '1rem',
+                borderRadius: '12px',
+                backdropFilter: 'blur(10px)',
+              }}>
+                <span style={{ fontSize: '2rem' }}>✅</span>
+              </div>
+            </div>
+            <div style={{ 
+              marginTop: '1.5rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.5rem',
+              color: 'rgba(255,255,255,0.9)',
+              fontSize: '0.9rem',
+            }}>
+              <span>⚠️</span>
+              <span>Nhấn để duyệt ngay</span>
+            </div>
+          </div>
+          {/* Background decoration */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-50px',
+            left: '-50px',
+            width: '150px',
+            height: '150px',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '50%',
+          }} />
+        </div>
       </div>
 
       {/* Charts & Tables Grid */}

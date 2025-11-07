@@ -1,51 +1,108 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/useAppContext';
+import adminPermissionsService from '../../services/adminPermissionsService';
+import { toast } from 'react-toastify';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const RolePermissions = () => {
   const { user } = useAppContext();
 
+  const [roleStats, setRoleStats] = useState({ Admin: 0, Editor: 0, User: 0 });
+
   const roles = [
     {
       name: 'Admin',
       description: 'Toàn quyền quản trị hệ thống',
-      permissions: ['all'],
-      userCount: 2,
       color: '#ef4444',
     },
     {
       name: 'Editor',
       description: 'Tạo và chỉnh sửa nội dung',
-      permissions: ['content.read', 'content.create', 'content.edit', 'content.delete.own'],
-      userCount: 12,
       color: '#3b82f6',
     },
     {
       name: 'User',
       description: 'Người dùng thông thường',
-      permissions: ['content.read'],
-      userCount: 1229,
       color: '#6b7280',
     },
   ];
 
   const allPermissions = [
-    { id: 'content.read', name: 'Xem nội dung', category: 'Content' },
-    { id: 'content.create', name: 'Tạo nội dung', category: 'Content' },
-    { id: 'content.edit', name: 'Sửa nội dung', category: 'Content' },
-    { id: 'content.delete', name: 'Xóa nội dung', category: 'Content' },
-    { id: 'content.approve', name: 'Duyệt nội dung', category: 'Content' },
-    { id: 'users.read', name: 'Xem người dùng', category: 'Users' },
-    { id: 'users.create', name: 'Tạo người dùng', category: 'Users' },
-    { id: 'users.edit', name: 'Sửa người dùng', category: 'Users' },
-    { id: 'users.delete', name: 'Xóa người dùng', category: 'Users' },
+    { id: 'read', name: 'Xem nội dung', category: 'Content' },
+    { id: 'create', name: 'Tạo nội dung', category: 'Content' },
+    { id: 'edit', name: 'Sửa nội dung', category: 'Content' },
+    { id: 'delete', name: 'Xóa nội dung', category: 'Content' },
+    { id: 'approve', name: 'Duyệt nội dung', category: 'Content' },
+    { id: 'read', name: 'Xem người dùng', category: 'Users' },
+    { id: 'create', name: 'Tạo người dùng', category: 'Users' },
+    { id: 'edit', name: 'Sửa người dùng', category: 'Users' },
+    { id: 'delete', name: 'Xóa người dùng', category: 'Users' },
   ];
 
   const [selectedRole, setSelectedRole] = useState(roles[0]);
+  const [permissions, setPermissions] = useState({ content: [], users: [] });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const hasPermission = (permission) => {
-    if (selectedRole.permissions.includes('all')) return true;
-    return selectedRole.permissions.includes(permission);
+  // Load role stats khi mount
+  useEffect(() => {
+    loadRoleStats();
+  }, []);
+
+  // Load permissions khi đổi role
+  useEffect(() => {
+    loadPermissions();
+  }, [selectedRole.name]);
+
+  const loadRoleStats = async () => {
+    try {
+      const response = await adminPermissionsService.getRoleStats();
+      setRoleStats(response.data);
+    } catch (error) {
+      console.error('Error loading role stats:', error);
+    }
+  };
+
+  const loadPermissions = async () => {
+    setLoading(true);
+    try {
+      const response = await adminPermissionsService.getPermissions(selectedRole.name);
+      setPermissions(response.data);
+    } catch (error) {
+      console.error('Error loading permissions:', error);
+      toast.error('Không thể tải quyền');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasPermission = (permId, category) => {
+    const categoryKey = category.toLowerCase();
+    return permissions[categoryKey]?.includes(permId) || false;
+  };
+
+  const togglePermission = (permId, category) => {
+    const categoryKey = category.toLowerCase();
+    setPermissions(prev => {
+      const currentPerms = prev[categoryKey] || [];
+      const newPerms = currentPerms.includes(permId)
+        ? currentPerms.filter(p => p !== permId)
+        : [...currentPerms, permId];
+      return { ...prev, [categoryKey]: newPerms };
+    });
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await adminPermissionsService.updatePermissions(selectedRole.name, permissions);
+      toast.success('✅ Đã lưu quyền thành công!');
+    } catch (error) {
+      console.error('Error saving permissions:', error);
+      toast.error('Lỗi khi lưu quyền');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -129,7 +186,7 @@ const RolePermissions = () => {
                   fontSize: '0.75rem',
                   fontWeight: 600,
                 }}>
-                  {role.userCount} người
+                  {roleStats[role.name] || 0} người
                 </span>
               </div>
               <p style={{ 
@@ -139,12 +196,6 @@ const RolePermissions = () => {
               }}>
                 {role.description}
               </p>
-              <div style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#9ca3af' }}>
-                {role.permissions.includes('all') 
-                  ? 'Tất cả quyền' 
-                  : `${role.permissions.length} quyền`
-                }
-              </div>
             </div>
           ))}
         </div>
@@ -156,12 +207,21 @@ const RolePermissions = () => {
           <h2 className="table-title">
             Chi tiết quyền: {selectedRole.name}
           </h2>
-          <button className="btn btn-primary">
-            💾 Lưu thay đổi
+          <button 
+            className="btn btn-primary" 
+            onClick={handleSave}
+            disabled={saving || loading}
+          >
+            {saving ? '⏳ Đang lưu...' : '💾 Lưu thay đổi'}
           </button>
         </div>
 
-        <div style={{ padding: '1rem 0' }}>
+        {loading ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+            Đang tải quyền...
+          </div>
+        ) : (
+          <div style={{ padding: '1rem 0' }}>
           {['Content', 'Users'].map((category) => (
             <div key={category} style={{ marginBottom: '2rem' }}>
               <h3 style={{ 
@@ -187,8 +247,8 @@ const RolePermissions = () => {
                         alignItems: 'center',
                         gap: '0.5rem',
                         padding: '0.75rem',
-                        background: hasPermission(permission.id) ? '#f0fdf4' : '#f9fafb',
-                        border: `1px solid ${hasPermission(permission.id) ? '#86efac' : '#e5e7eb'}`,
+                        background: hasPermission(permission.id, category) ? '#f0fdf4' : '#f9fafb',
+                        border: `1px solid ${hasPermission(permission.id, category) ? '#86efac' : '#e5e7eb'}`,
                         borderRadius: '8px',
                         cursor: 'pointer',
                         fontSize: '0.875rem',
@@ -196,15 +256,14 @@ const RolePermissions = () => {
                     >
                       <input
                         type="checkbox"
-                        checked={hasPermission(permission.id)}
-                        onChange={() => {}}
-                        disabled={selectedRole.permissions.includes('all')}
+                        checked={hasPermission(permission.id, category)}
+                        onChange={() => togglePermission(permission.id, category)}
                         style={{ cursor: 'pointer' }}
                       />
                       <span style={{ color: '#1f2937' }}>
                         {permission.name}
                       </span>
-                      {hasPermission(permission.id) && (
+                      {hasPermission(permission.id, category) && (
                         <span style={{ marginLeft: 'auto', color: '#10b981' }}>✓</span>
                       )}
                     </label>
@@ -213,6 +272,7 @@ const RolePermissions = () => {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Access Control Rules */}

@@ -35,12 +35,10 @@ export class MapLocations {
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   OldImage: string;
 
-  // ĐỔI TÊN: Desc → description
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ name: 'Desc', type: 'nvarchar', length: 500 })
   description: string;
 
-  // ĐỔI TÊN: FullDesc → fullDescription
-  @Column({ type: 'nvarchar', length: 2000, nullable: true })
+  @Column({ name: 'FullDesc', type: 'nvarchar', length: 2000 })
   fullDescription: string;
 
   @Column({ type: 'int', nullable: true })

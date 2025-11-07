@@ -268,7 +268,7 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Email hoặc Mật khẩu không đúng ');
 
     const match = await bcrypt.compare(password, user.PasswordHash);
-    if (!match) throw new UnauthorizedException('Mật khẩu không đúng');
+    if (!match) throw new UnauthorizedException('Email hoặc Mật khẩu không đúng');
 
     // ✅ Query role relation để dùng trong getTokens()
     const userWithRole = await this.userRepo.findOne({
