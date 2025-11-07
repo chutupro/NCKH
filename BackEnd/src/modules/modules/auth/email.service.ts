@@ -22,8 +22,11 @@ export class EmailService {
   }
 
   // Send OTP email to user
-  async sendOTPEmail(email: string, otpCode: string): Promise<{ 
-    success: boolean; 
+  async sendOTPEmail(
+    email: string,
+    otpCode: string,
+  ): Promise<{
+    success: boolean;
     error?: string;
   }> {
     try {
@@ -93,7 +96,10 @@ export class EmailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ [EmailService] Email sent successfully! MessageID:', info.messageId);
+      console.log(
+        '✅ [EmailService] Email sent successfully! MessageID:',
+        info.messageId,
+      );
       return { success: true };
     } catch (error) {
       console.error('❌ [EmailService] Error sending email:');
@@ -102,50 +108,70 @@ export class EmailService {
         code: error.code,
         responseCode: error.responseCode,
         response: error.response,
-        command: error.command
+        command: error.command,
       });
-      
+
       let errorMessage = 'Không thể gửi email. Vui lòng thử lại.';
-      
+
       // Check for specific SMTP errors
       if (error.response || error.responseCode) {
         const response = error.response || '';
         const code = error.responseCode || 0;
-        
+
         console.error('SMTP Error Response:', response);
         console.error('SMTP Error Code:', code);
-        
+
         // Error 550 5.1.1: Recipient address rejected / User unknown / Mailbox not found
-        if (code === 550 || response.includes('550') || response.includes('5.1.1') || response.toLowerCase().includes('user unknown')) {
-          errorMessage = 'Email không tồn tại hoặc không thể nhận thư. Vui lòng kiểm tra lại địa chỉ email.';
+        if (
+          code === 550 ||
+          response.includes('550') ||
+          response.includes('5.1.1') ||
+          response.toLowerCase().includes('user unknown')
+        ) {
+          errorMessage =
+            'Email không tồn tại hoặc không thể nhận thư. Vui lòng kiểm tra lại địa chỉ email.';
         }
         // Error 553: Mailbox name not allowed / Invalid recipient
-        else if (code === 553 || response.includes('553') || response.includes('5.1.3')) {
-          errorMessage = 'Địa chỉ email không hợp lệ hoặc không được phép. Vui lòng kiểm tra lại.';
+        else if (
+          code === 553 ||
+          response.includes('553') ||
+          response.includes('5.1.3')
+        ) {
+          errorMessage =
+            'Địa chỉ email không hợp lệ hoặc không được phép. Vui lòng kiểm tra lại.';
         }
         // Error 554: Transaction failed / Relay access denied
-        else if (code === 554 || response.includes('554') || response.includes('5.7.1')) {
-          errorMessage = 'Email bị từ chối bởi máy chủ. Vui lòng thử email khác.';
+        else if (
+          code === 554 ||
+          response.includes('554') ||
+          response.includes('5.7.1')
+        ) {
+          errorMessage =
+            'Email bị từ chối bởi máy chủ. Vui lòng thử email khác.';
         }
         // Error 552: Mailbox full
-        else if (code === 552 || response.includes('552') || response.includes('5.2.2')) {
+        else if (
+          code === 552 ||
+          response.includes('552') ||
+          response.includes('5.2.2')
+        ) {
           errorMessage = 'Hộp thư đích đã đầy. Vui lòng thử email khác.';
         }
       }
-      
+
       console.error('📧 [EmailService] Email send failed:', errorMessage);
-      return { 
-        success: false, 
-        error: errorMessage
+      return {
+        success: false,
+        error: errorMessage,
       };
     }
   }
 
   // 🔥 NEW: Send Email Verification Link
   async sendVerificationEmail(
-    email: string, 
-    verificationLink: string, 
-    fullName: string
+    email: string,
+    verificationLink: string,
+    fullName: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔵 [EmailService] Sending verification email...');
@@ -221,7 +247,10 @@ export class EmailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ [EmailService] Verification email sent! MessageID:', info.messageId);
+      console.log(
+        '✅ [EmailService] Verification email sent! MessageID:',
+        info.messageId,
+      );
       return { success: true };
     } catch (error) {
       console.error('❌ [EmailService] Error sending verification email:');
@@ -239,25 +268,36 @@ export class EmailService {
         const response = error.response || '';
         const code = error.responseCode || 0;
 
-        if (code === 550 || response.includes('550') || response.includes('5.1.1')) {
-          errorMessage = 'Email không tồn tại hoặc không thể nhận thư. Vui lòng kiểm tra lại địa chỉ email.';
+        if (
+          code === 550 ||
+          response.includes('550') ||
+          response.includes('5.1.1')
+        ) {
+          errorMessage =
+            'Email không tồn tại hoặc không thể nhận thư. Vui lòng kiểm tra lại địa chỉ email.';
         } else if (code === 553 || response.includes('553')) {
           errorMessage = 'Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại.';
         } else if (code === 554 || response.includes('554')) {
-          errorMessage = 'Email bị từ chối bởi máy chủ. Vui lòng thử email khác.';
+          errorMessage =
+            'Email bị từ chối bởi máy chủ. Vui lòng thử email khác.';
         }
       }
 
-      console.error('📧 [EmailService] Verification email failed:', errorMessage);
+      console.error(
+        '📧 [EmailService] Verification email failed:',
+        errorMessage,
+      );
       return { success: false, error: errorMessage };
     }
   }
 
   // Kiểm tra email có tồn tại thật không (deep validation + external API)
-  async verifyEmailExists(email: string): Promise<{ valid: boolean; reason?: string }> {
+  async verifyEmailExists(
+    email: string,
+  ): Promise<{ valid: boolean; reason?: string }> {
     try {
       console.log('🔍 [EmailService] Deep validating email:', email);
-      
+
       // 1. Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
@@ -271,12 +311,22 @@ export class EmailService {
         console.error('❌ No domain found in email:', email);
         return { valid: false, reason: 'Email không hợp lệ.' };
       }
-      
+
       // 3. Blacklist common fake/test domains
-      const fakeDomains = ['test.com', 'example.com', 'fake.com', 'invalid.com', 'asdasd.com', 'xyz.com'];
+      const fakeDomains = [
+        'test.com',
+        'example.com',
+        'fake.com',
+        'invalid.com',
+        'asdasd.com',
+        'xyz.com',
+      ];
       if (fakeDomains.includes(domain.toLowerCase())) {
         console.error('❌ Blacklisted domain:', domain);
-        return { valid: false, reason: 'Email sử dụng domain không được phép.' };
+        return {
+          valid: false,
+          reason: 'Email sử dụng domain không được phép.',
+        };
       }
 
       // 4. 🔥 NEW: External email validation (Hunter.io Email Verifier - FREE)
@@ -285,19 +335,19 @@ export class EmailService {
         console.log('🌐 [EmailService] Checking email via Hunter.io...');
         const apiResponse = await axios.get(
           `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=free`,
-          { 
+          {
             timeout: 8000,
-            headers: { 'Accept': 'application/json' }
-          }
+            headers: { Accept: 'application/json' },
+          },
         );
 
         const { data } = apiResponse.data;
-        
+
         console.log('📊 Hunter.io result:', {
           email,
           result: data.result,
           score: data.score,
-          status: data.status
+          status: data.status,
         });
 
         // Hunter.io results: deliverable, undeliverable, risky, unknown
@@ -305,44 +355,58 @@ export class EmailService {
           console.error('❌ Email marked as UNDELIVERABLE by Hunter.io');
           return {
             valid: false,
-            reason: 'Email không tồn tại hoặc không thể nhận thư. Vui lòng kiểm tra lại địa chỉ email.'
+            reason:
+              'Email không tồn tại hoặc không thể nhận thư. Vui lòng kiểm tra lại địa chỉ email.',
           };
         }
 
         // Check score (0-100)
         if (data.score !== undefined && data.score < 30) {
-          console.error(`❌ Email has low deliverability score: ${data.score}/100`);
+          console.error(
+            `❌ Email has low deliverability score: ${data.score}/100`,
+          );
           return {
             valid: false,
-            reason: 'Email có vẻ không hợp lệ. Vui lòng kiểm tra lại địa chỉ email.'
+            reason:
+              'Email có vẻ không hợp lệ. Vui lòng kiểm tra lại địa chỉ email.',
           };
         }
 
         console.log('✅ Hunter.io validation passed');
       } catch (apiError) {
-        console.error('⚠️ Hunter.io failed, trying alternative service:', apiError.message);
-        
+        console.error(
+          '⚠️ Hunter.io failed, trying alternative service:',
+          apiError.message,
+        );
+
         // Fallback: EVA - Email Verification API (completely free, no key)
         try {
           console.log('🌐 [EmailService] Trying EVA (email-verify.my.id)...');
           const evaResponse = await axios.get(
             `https://email-verify.my.id/verify/${encodeURIComponent(email)}`,
-            { timeout: 5000 }
+            { timeout: 5000 },
           );
 
           console.log('📊 EVA result:', evaResponse.data);
 
-          if (evaResponse.data.status === false || evaResponse.data.valid === false) {
+          if (
+            evaResponse.data.status === false ||
+            evaResponse.data.valid === false
+          ) {
             console.error('❌ Email marked as INVALID by EVA');
             return {
               valid: false,
-              reason: 'Email không tồn tại hoặc không hợp lệ. Vui lòng kiểm tra lại.'
+              reason:
+                'Email không tồn tại hoặc không hợp lệ. Vui lòng kiểm tra lại.',
             };
           }
 
           console.log('✅ EVA validation passed');
         } catch (evaError) {
-          console.error('⚠️ All external APIs failed, using local validation only:', evaError.message);
+          console.error(
+            '⚠️ All external APIs failed, using local validation only:',
+            evaError.message,
+          );
           // Continue with local validation
         }
       }
@@ -361,12 +425,12 @@ export class EmailService {
         email,
         valid: validationResult.valid,
         reason: validationResult.reason,
-        validators: validationResult.validators
+        validators: validationResult.validators,
       });
 
       if (!validationResult.valid) {
         const failureReason = validationResult.reason || 'unknown';
-        
+
         // Hard failures - definitely reject (regex, MX, disposable)
         const reason = this.translateValidationReason(failureReason);
         console.error('❌ Email validation failed:', email, '-', reason);
@@ -376,33 +440,49 @@ export class EmailService {
       console.log('✅ Email validation passed:', email);
       return { valid: true };
     } catch (error) {
-      console.error('❌ Email verification error for', email, ':', error.code || error.message);
+      console.error(
+        '❌ Email verification error for',
+        email,
+        ':',
+        error.code || error.message,
+      );
       // On error, default to basic MX check fallback
       return await this.fallbackMxCheck(email);
     }
   }
 
   // Fallback to basic MX check if deep validation fails
-  private async fallbackMxCheck(email: string): Promise<{ valid: boolean; reason?: string }> {
+  private async fallbackMxCheck(
+    email: string,
+  ): Promise<{ valid: boolean; reason?: string }> {
     try {
       const domain = email.split('@')[1];
       const dns = require('dns').promises;
       const mxRecords = await dns.resolveMx(domain);
-      
+
       if (!mxRecords || mxRecords.length === 0) {
-        return { valid: false, reason: 'Email không thể nhận thư (không có MX records).' };
+        return {
+          valid: false,
+          reason: 'Email không thể nhận thư (không có MX records).',
+        };
       }
 
       console.log('⚠️ Fallback MX check passed for', email);
       return { valid: true };
     } catch (error) {
-      return { valid: false, reason: 'Email không hợp lệ hoặc không thể nhận thư.' };
+      return {
+        valid: false,
+        reason: 'Email không hợp lệ hoặc không thể nhận thư.',
+      };
     }
   }
 
   // ✅ NEW: Send Password Reset OTP Email
-  async sendPasswordResetOTP(email: string, otpCode: string): Promise<{ 
-    success: boolean; 
+  async sendPasswordResetOTP(
+    email: string,
+    otpCode: string,
+  ): Promise<{
+    success: boolean;
     error?: string;
   }> {
     try {
@@ -466,13 +546,19 @@ export class EmailService {
       };
 
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('✅ [EmailService] Password reset OTP sent! MessageID:', info.messageId);
+      console.log(
+        '✅ [EmailService] Password reset OTP sent! MessageID:',
+        info.messageId,
+      );
       return { success: true };
     } catch (error) {
-      console.error('❌ [EmailService] Error sending password reset OTP:', error);
-      return { 
-        success: false, 
-        error: 'Không thể gửi email. Vui lòng thử lại.'
+      console.error(
+        '❌ [EmailService] Error sending password reset OTP:',
+        error,
+      );
+      return {
+        success: false,
+        error: 'Không thể gửi email. Vui lòng thử lại.',
       };
     }
   }
@@ -480,11 +566,11 @@ export class EmailService {
   // Translate validation reasons to Vietnamese
   private translateValidationReason(reason: string): string {
     const translations = {
-      'regex': 'Email không đúng định dạng.',
-      'typo': 'Email có vẻ bị lỗi chính tả. Vui lòng kiểm tra lại.',
-      'disposable': 'Email tạm thời (disposable) không được chấp nhận.',
-      'mx': 'Domain email không có khả năng nhận thư (không có MX records).',
-      'smtp': 'Email không tồn tại hoặc hộp thư không thể nhận email.',
+      regex: 'Email không đúng định dạng.',
+      typo: 'Email có vẻ bị lỗi chính tả. Vui lòng kiểm tra lại.',
+      disposable: 'Email tạm thời (disposable) không được chấp nhận.',
+      mx: 'Domain email không có khả năng nhận thư (không có MX records).',
+      smtp: 'Email không tồn tại hoặc hộp thư không thể nhận email.',
     };
 
     return translations[reason] || 'Email không hợp lệ hoặc không tồn tại.';

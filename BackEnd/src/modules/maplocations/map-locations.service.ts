@@ -1,3 +1,4 @@
+// src/modules/maplocations/map-locations.service.ts
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,14 +16,55 @@ export class MapLocationsService {
     private feedbackRepository: Repository<Feedback>,
   ) {}
 
-  async findAll() {
-    return await this.mapLocationsRepository.find();
-  }
+ async findAll() {
+  const locations = await this.mapLocationsRepository
+    .createQueryBuilder('loc')
+    .leftJoin('loc.category', 'category')
+    .select([
+      'loc.LocationID',
+      'loc.Name',
+      'loc.Latitude',
+      'loc.Longitude',
+      'loc.Address',
+      'loc.Image',
+      'loc.OldImage',
+      'loc.ArticleID',
+      'loc.TimelineID',
+      'loc.CategoryID',
+      'loc.Rating',
+      'loc.Reviews',
+      'category.Name',
+    ])
+    .addSelect('loc.Desc', 'description')           // ← DB column Desc
+    .addSelect('loc.FullDesc', 'fullDescription')   // ← DB column FullDesc
+    .getRawMany();
+
+  return locations.map(loc => ({
+    LocationID: loc.loc_LocationID,
+    Name: loc.loc_Name,
+    Latitude: parseFloat(loc.loc_Latitude) || null,
+    Longitude: parseFloat(loc.loc_Longitude) || null,
+    Address: loc.loc_Address,
+    Image: loc.loc_Image,
+    OldImage: loc.loc_OldImage,
+    description: loc.description,              // ← Alias từ addSelect
+    fullDescription: loc.fullDescription,      // ← Alias từ addSelect
+    CategoryID: loc.loc_CategoryID,
+    categoryName: loc.category_Name || 'Chưa phân loại',
+    Rating: parseFloat(loc.loc_Rating) || null,
+    Reviews: loc.loc_Reviews,
+  }));
+}
 
   async create(createLocationDto: any) {
     this.logger.log('Creating location with DTO:', createLocationDto);
 
-    if (!createLocationDto.latitude || !createLocationDto.longitude || !createLocationDto.title || !createLocationDto.address) {
+    if (
+      !createLocationDto.latitude ||
+      !createLocationDto.longitude ||
+      !createLocationDto.title ||
+      !createLocationDto.address
+    ) {
       throw new BadRequestException('Title, address, latitude, and longitude are required');
     }
 
@@ -35,10 +77,11 @@ export class MapLocationsService {
       Address: createLocationDto.address,
       Image: createLocationDto.image || null,
       OldImage: createLocationDto.oldImage || null,
-      Desc: createLocationDto.desc || null,
-      FullDesc: createLocationDto.fullDesc || null,
+      description: createLocationDto.desc || null,           // ĐÃ ĐỔI
+      fullDescription: createLocationDto.fullDesc || null,   // ĐÃ ĐỔI
       ArticleID: createLocationDto.articleId ?? null,
       TimelineID: createLocationDto.timelineId ?? null,
+      CategoryID: createLocationDto.categoryId ?? null,
     });
 
     try {
@@ -62,10 +105,13 @@ export class MapLocationsService {
       Address: updateLocationDto.address || location.Address,
       Image: updateLocationDto.image || location.Image,
       OldImage: updateLocationDto.oldImage || location.OldImage,
-      Desc: updateLocationDto.desc || location.Desc,
-      FullDesc: updateLocationDto.fullDesc || location.FullDesc,
+      description: updateLocationDto.desc || location.description,           // ĐÃ ĐỔI
+      fullDescription: updateLocationDto.fullDesc || location.fullDescription, // ĐÃ ĐỔI
       ArticleID: updateLocationDto.articleId ?? location.ArticleID,
       TimelineID: updateLocationDto.timelineId ?? location.TimelineID,
+      CategoryID: updateLocationDto.categoryId ?? location.CategoryID,
+      Rating: updateLocationDto.rating ?? location.Rating,
+      Reviews: updateLocationDto.reviews ?? location.Reviews,
     });
 
     return await this.mapLocationsRepository.save(location);

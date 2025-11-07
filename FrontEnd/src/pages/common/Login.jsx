@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'react-toastify'
 import authService from '../../services/authService'
 import AppContext from '../../context/context'
 import '../../Styles/login-register/login.css'
@@ -18,11 +19,16 @@ const Login = () => {
   const onSubmit = async (e) => {
     e.preventDefault()
     
-    // ✅ KHÔNG CLEAR ERROR NGAY - chỉ clear khi validation pass
-    
     // Validation
     if (!email.trim() || !password.trim()) {
       setError('Không được để trống.')
+      toast.error('Không được để trống.', {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+      })
       return
     }
 
@@ -30,16 +36,24 @@ const Login = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       setError('Email không hợp lệ.')
+      toast.error('Email không hợp lệ.', {
+        position: 'top-right',
+        autoClose: 5000,
+      })
       return
     }
 
     // Password length validation
     if (password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự.')
+      toast.error('Mật khẩu phải có ít nhất 6 ký tự.', {
+        position: 'top-right',
+        autoClose: 5000,
+      })
       return
     }
 
-    // ✅ CHỈ CLEAR ERROR KHI BẮT ĐẦU REQUEST
+    // Clear error và bắt đầu request
     setError('')
     setLoading(true)
 
@@ -47,27 +61,47 @@ const Login = () => {
       const response = await authService.login(email, password)
       console.log('Login successful:', response)
       
-      // ✅ LƯU VÀO CONTEXT STATE (MEMORY)
+      // Normalize user data
       const normalizedUser = {
         userId: response?.user?.userId ?? response?.user?.UserID ?? null,
         email: response?.user?.email ?? response?.user?.Email ?? email,
         fullName: response?.user?.fullName ?? response?.user?.FullName ?? '',
         roleId: response?.user?.roleId ?? response?.user?.RoleID ?? null,
+        Role: response?.user?.role ?? 'User', // ✅ THÊM ROLE NAME
       };
 
       setAccessToken(response.accessToken);
       setUser(normalizedUser);
       setIsAuthenticated(true);
       
-      // Dispatch custom event để notify Header component
+      // Hiển thị thông báo thành công
+      toast.success(`Chào mừng trở lại, ${normalizedUser.fullName || normalizedUser.email}!`, {
+        position: 'top-right',
+        autoClose: 3000,
+      })
+      
+      // Dispatch event để notify Header component
       window.dispatchEvent(new Event('userLoggedIn'))
       
-      // Redirect về trang chủ sau khi đăng nhập thành công
-      navigate('/')
+      // Redirect về trang chủ sau 500ms để user thấy toast
+      setTimeout(() => {
+        navigate('/')
+      }, 500)
     } catch (err) {
       console.error('Login error:', err)
-      // Message thống nhất cho bảo mật (không lộ thông tin email tồn tại hay không)
-      setError('Email hoặc mật khẩu không đúng. Vui lòng thử lại.')
+      
+      // Xử lý error message từ backend
+      const errorMessage = err?.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.'
+      
+      setError(errorMessage)
+      toast.error(errorMessage, {
+        position: 'top-right',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
     } finally {
       setLoading(false)
     }

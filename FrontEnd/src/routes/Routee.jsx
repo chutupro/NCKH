@@ -28,6 +28,16 @@ import MapAdmin from "../pages/map/MapAdmin"; // Import MapAdmin
 import { fetchMapLocations } from "../pages/map/mapLocationsSlice";
 import MapAdminContributions from "../pages/map/MapAdminContributions";
 
+// Admin Dashboard
+import AdminLayout from "../Component/admin/AdminLayout";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import UserManagement from "../pages/admin/UserManagement";
+import ContentModeration from "../pages/admin/ContentModeration";
+import AIModels from "../pages/admin/AIModels";
+import SystemMonitor from "../pages/admin/SystemMonitor";
+import RolePermissions from "../pages/admin/RolePermissions";
+import ProtectedRoute from "../Component/common/ProtectedRoute";
+
 const Routee = () => {
   const dispatch = useDispatch();
 
@@ -80,6 +90,23 @@ const Routee = () => {
       <Route path="/map" element={<MapPage />} />
       <Route path="/map/admin" element={<MapAdmin />} /> {/* giữ lại */}
       <Route path="/map/admin/contributions" element={<MapAdminContributions />} /> {/* THÊM DÒNG NÀY */}
+
+      {/* ADMIN DASHBOARD: CHỈ ADMIN */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={['Admin']}>
+            <AdminLayout /> 
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="content" element={<ContentModeration />} />
+        <Route path="ai-models" element={<AIModels />} />
+        <Route path="system-monitor" element={<SystemMonitor />} />
+        <Route path="permissions" element={<RolePermissions />} />
+      </Route>
     </Routes>
   );
 };

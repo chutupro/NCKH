@@ -13,6 +13,7 @@ import { CommentModule } from './modules/comments/comment.module';
 import { GalleryModule } from './gallerys/gallery.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { CrawlerModule } from './modules/crawler/crawler.module';
+import { AdminModule } from './modules/modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -26,12 +27,14 @@ import { CrawlerModule } from './modules/crawler/crawler.module';
     TimelineModule,
     MapLocationsModule,
     // AuthModule,
+    AuthModule, // ✅ UNCOMMENT - Auth routes
     ArticleModule,
     CommentModule,
     GalleryModule,
     UploadModule, 
     CrawlerModule,
-    CategoriesModule
+    CategoriesModule,
+    AdminModule, // ✅ ADMIN MODULE
   ],
 })
 export class AppModule {}

@@ -1,3 +1,4 @@
+import axios from 'axios'; // ✅ Import axios gốc cho refreshToken
 import apiClient from './api';
 
 /**
@@ -72,16 +73,22 @@ const authService = {
 
   /**
    * Refresh access token
-   * @returns {Promise} Response với accessToken mới
+   * ⚠️ QUAN TRỌNG: Dùng axios trực tiếp, KHÔNG dùng apiClient để tránh interceptor loop
+   * @returns {Promise} Response với accessToken và user info mới
    */
   refreshToken: async () => {
     try {
-      // ✅ KHÔNG CẦN GỬI GÌ - Cookie tự động gửi
-      const response = await apiClient.post('/auth/refresh');
+      // ✅ Dùng axios.create() mới, KHÔNG interceptor
+      const cleanAxios = axios.create({
+        baseURL: 'http://localhost:3000',
+        withCredentials: true, // Gửi HttpOnly cookie
+      });
 
-      const { accessToken } = response.data;
+      const response = await cleanAxios.post('/auth/refresh');
 
-      return { accessToken };
+      const { accessToken, user } = response.data;
+
+      return { accessToken, user };
     } catch (error) {
       throw error.response?.data || error.message;
     }

@@ -1,14 +1,11 @@
 // Trợ giúp API đơn giản cho các endpoint `articles_post` sử dụng axios
-import axios from 'axios'
-
-const BASE = 'http://localhost:3000'
+import apiClient from '../services/api'
 
 export async function getArticlesPosts(signal) {
 	try {
-		const res = await axios.get(`${BASE}/articles_post`, { signal })
+		const res = await apiClient.get('/articles_post', { signal })
 		return res.data
 	} catch (err) {
-		// Cố gắng lấy chi tiết lỗi hữu ích từ server nếu có
 		const server = err?.response?.data || err?.response
 		const msg = (server && (server.message || JSON.stringify(server))) || err.message || String(err)
 		const e = new Error(msg)
@@ -19,7 +16,7 @@ export async function getArticlesPosts(signal) {
 
 export async function createArticlePost(payload) {
 	try {
-		const res = await axios.post(`${BASE}/articles_post`, payload)
+		const res = await apiClient.post('/articles_post', payload)
 		return res.data
 	} catch (err) {
 		const server = err?.response?.data || err?.response
@@ -37,7 +34,7 @@ export default {
 
 export async function deleteArticlePost(id) {
 	try {
-		const res = await axios.delete(`${BASE}/articles_post/${id}`)
+		const res = await apiClient.delete(`/articles_post/${id}`)
 		return res.data
 	} catch (err) {
 		const server = err?.response?.data || err?.response
