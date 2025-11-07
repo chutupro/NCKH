@@ -19,27 +19,40 @@ export class MapLocationsService {
  async findAll() {
   const locations = await this.mapLocationsRepository
     .createQueryBuilder('loc')
-    .leftJoinAndSelect('loc.category', 'category') // ← PHẢI DÙNG AndSelect
+    .leftJoin('loc.category', 'category')
     .select([
-      'loc.LocationID AS "LocationID"',
-      'loc.Name AS "Name"',
-      'loc.Latitude AS "Latitude"',
-      'loc.Longitude AS "Longitude"',
-      'loc.Address AS "Address"',
-      'loc.Image AS "Image"',
-      'loc.OldImage AS "OldImage"',
-      'loc.description AS "description"',
-      'loc.fullDescription AS "fullDescription"',
-      'loc.CategoryID AS "CategoryID"',
-      'category.Name AS "categoryName"', // ← BẮT BUỘC
-      'loc.Rating AS "Rating"',
-      'loc.Reviews AS "Reviews"',
+      'loc.LocationID',
+      'loc.Name',
+      'loc.Latitude',
+      'loc.Longitude',
+      'loc.Address',
+      'loc.Image',
+      'loc.OldImage',
+      'loc.ArticleID',
+      'loc.TimelineID',
+      'loc.CategoryID',
+      'loc.Rating',
+      'loc.Reviews',
+      'category.Name',
     ])
+    .addSelect('loc.Desc', 'description')           // ← DB column Desc
+    .addSelect('loc.FullDesc', 'fullDescription')   // ← DB column FullDesc
     .getRawMany();
 
   return locations.map(loc => ({
-    ...loc,
-    categoryName: loc.categoryName || 'Chưa phân loại',
+    LocationID: loc.loc_LocationID,
+    Name: loc.loc_Name,
+    Latitude: parseFloat(loc.loc_Latitude) || null,
+    Longitude: parseFloat(loc.loc_Longitude) || null,
+    Address: loc.loc_Address,
+    Image: loc.loc_Image,
+    OldImage: loc.loc_OldImage,
+    description: loc.description,              // ← Alias từ addSelect
+    fullDescription: loc.fullDescription,      // ← Alias từ addSelect
+    CategoryID: loc.loc_CategoryID,
+    categoryName: loc.category_Name || 'Chưa phân loại',
+    Rating: parseFloat(loc.loc_Rating) || null,
+    Reviews: loc.loc_Reviews,
   }));
 }
 

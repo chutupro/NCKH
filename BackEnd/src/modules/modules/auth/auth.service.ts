@@ -270,14 +270,28 @@ export class AuthService {
     const match = await bcrypt.compare(password, user.PasswordHash);
     if (!match) throw new UnauthorizedException('Mật khẩu không đúng');
 
-    return user;
+    // ✅ Query role relation để dùng trong getTokens()
+    const userWithRole = await this.userRepo.findOne({
+      where: { UserID: user.UserID },
+      relations: ['role'],
+    });
+
+    return userWithRole || user;
   }
 
   async getTokens(user: any) {
+    // 🔥 LẤY ROLE NAME TỪ DATABASE
+    const userWithRole = await this.userRepo.findOne({
+      where: { UserID: user.UserID },
+      relations: ['role'],
+    });
+
+    const roleName = userWithRole?.role?.RoleName || 'User';
+
     const payload = {
       sub: user.UserID,
       email: user.Email,
-      role: user.RoleID,
+      role: roleName, // ✅ ĐỔI: Dùng role name thay vì RoleID
     };
 
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -304,22 +318,16 @@ export class AuthService {
     // 🔥 redis.set('rt:hash', userId, 'EX', 7 ngày = 604800 seconds)
     await this.redis.set(redisKey, user.UserID.toString(), 604800);
     
-    // 🔥 LẤY ROLE NAME TỪ DATABASE
-    const userWithRole = await this.userRepo.findOne({
-      where: { UserID: user.UserID },
-      relations: ['role'],
-    });
-    
-    // 🔥 TRẢ CẢ 2 TOKENS - Controller sẽ set vào HttpOnly cookie
+    // user đã có role relation từ validateUser()
     return {
-      accessToken: tokens.access_token,   // → HttpOnly cookie
-      refreshToken: tokens.refresh_token, // → HttpOnly cookie
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
       user: {
         userId: user.UserID,
         email: user.Email,
         fullName: user.FullName ?? '',
         roleId: user.RoleID,
-        role: userWithRole?.role?.RoleName || 'User', // ✅ THÊM ROLE NAME
+        role: user?.role?.RoleName || 'User',
       },
     };
   }
@@ -342,7 +350,12 @@ export class AuthService {
     const user = await this.userService.findById(userId);
     if (!user) throw new UnauthorizedException('Không tìm thấy user');
 
-    // � HMAC-SHA256 (deterministic + secure)
+    // Query role relation để dùng trong getTokens()
+    const userWithRole = await this.userRepo.findOne({
+      where: { UserID: userId },
+      relations: ['role'],
+    });
+
     const refreshTokenHash = this.hashRefreshToken(refreshToken);
     const redisKey = `rt:${refreshTokenHash}`;
     
@@ -355,20 +368,14 @@ export class AuthService {
     // 🔥 TOKEN ROTATION: XÓA KEY CŨ, TẠO TOKEN MỚI
     await this.redis.del(redisKey);
 
-    const newTokens = await this.getTokens(user);
+    const newTokens = await this.getTokens(userWithRole || user);
     const newHash = this.hashRefreshToken(newTokens.refresh_token);
     const newRedisKey = `rt:${newHash}`;
     
     // Lưu token mới vào Redis - 7 ngày
     await this.redis.set(newRedisKey, user.UserID.toString(), 604800);
 
-    // 🔥 LẤY ROLE NAME TỪ DATABASE
-    const userWithRole = await this.userRepo.findOne({
-      where: { UserID: user.UserID },
-      relations: ['role'],
-    });
-
-    // ✅ TRẢ VỀ CẢ USER INFO
+    // userWithRole đã được query ở trên
     return { 
       accessToken: newTokens.access_token, 
       refreshToken: newTokens.refresh_token,
@@ -377,7 +384,7 @@ export class AuthService {
         email: user.Email,
         fullName: user.FullName,
         roleId: user.RoleID,
-        role: userWithRole?.role?.RoleName || 'User', // ✅ THÊM ROLE NAME
+        role: userWithRole?.role?.RoleName || 'User',
       }
     };
   }

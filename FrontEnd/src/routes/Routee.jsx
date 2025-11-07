@@ -91,11 +91,11 @@ const Routee = () => {
       <Route path="/map/admin" element={<MapAdmin />} /> {/* giữ lại */}
       <Route path="/map/admin/contributions" element={<MapAdminContributions />} /> {/* THÊM DÒNG NÀY */}
 
-      {/* ADMIN DASHBOARD: CHỈ ADMIN VÀ MODERATOR */}
+      {/* ADMIN DASHBOARD: CHỈ ADMIN */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute allowedRoles={['Admin', 'Moderator']}>
+          <ProtectedRoute allowedRoles={['Admin']}>
             <AdminLayout /> 
           </ProtectedRoute>
         }

@@ -14,13 +14,6 @@ const RolePermissions = () => {
       color: '#ef4444',
     },
     {
-      name: 'Moderator',
-      description: 'Kiểm duyệt nội dung, quản lý người dùng',
-      permissions: ['content.read', 'content.approve', 'content.delete', 'users.read', 'users.edit'],
-      userCount: 5,
-      color: '#f59e0b',
-    },
-    {
       name: 'Editor',
       description: 'Tạo và chỉnh sửa nội dung',
       permissions: ['content.read', 'content.create', 'content.edit', 'content.delete.own'],
@@ -28,8 +21,8 @@ const RolePermissions = () => {
       color: '#3b82f6',
     },
     {
-      name: 'Viewer',
-      description: 'Chỉ xem nội dung',
+      name: 'User',
+      description: 'Người dùng thông thường',
       permissions: ['content.read'],
       userCount: 1229,
       color: '#6b7280',
@@ -46,9 +39,6 @@ const RolePermissions = () => {
     { id: 'users.create', name: 'Tạo người dùng', category: 'Users' },
     { id: 'users.edit', name: 'Sửa người dùng', category: 'Users' },
     { id: 'users.delete', name: 'Xóa người dùng', category: 'Users' },
-    { id: 'system.config', name: 'Cấu hình hệ thống', category: 'System' },
-    { id: 'system.logs', name: 'Xem logs', category: 'System' },
-    { id: 'ai.manage', name: 'Quản lý AI', category: 'AI' },
   ];
 
   const [selectedRole, setSelectedRole] = useState(roles[0]);
@@ -172,7 +162,7 @@ const RolePermissions = () => {
         </div>
 
         <div style={{ padding: '1rem 0' }}>
-          {['Content', 'Users', 'System', 'AI'].map((category) => (
+          {['Content', 'Users'].map((category) => (
             <div key={category} style={{ marginBottom: '2rem' }}>
               <h3 style={{ 
                 fontSize: '1rem', 
@@ -226,48 +216,8 @@ const RolePermissions = () => {
       </div>
 
       {/* Access Control Rules */}
-      <div className="data-table-container" style={{ marginTop: '2rem' }}>
-        <div className="table-header">
-          <h2 className="table-title">Quy tắc kiểm soát truy cập (RBAC)</h2>
-        </div>
 
-        <div style={{ fontSize: '0.875rem', color: '#6b7280', lineHeight: 1.6 }}>
-          <div style={{ marginBottom: '1rem' }}>
-            <strong style={{ color: '#1f2937' }}>🔒 Nguyên tắc hoạt động:</strong>
-          </div>
-          <ul style={{ paddingLeft: '1.5rem' }}>
-            <li>Mỗi user được gán 1 vai trò (role)</li>
-            <li>Mỗi role có tập quyền (permissions) xác định</li>
-            <li>Hệ thống kiểm tra quyền trước khi cho phép thao tác</li>
-            <li>Admin có toàn quyền, bypass mọi kiểm tra</li>
-          </ul>
 
-          <div style={{ marginTop: '1.5rem' }}>
-            <strong style={{ color: '#1f2937' }}>📋 Ví dụ áp dụng trong UI:</strong>
-          </div>
-          <div style={{ 
-            background: '#1f2937',
-            color: '#e5e7eb',
-            padding: '1rem',
-            borderRadius: '8px',
-            fontFamily: 'monospace',
-            fontSize: '0.75rem',
-            marginTop: '0.5rem',
-          }}>
-            {`// Frontend: Ẩn nút nếu không đủ quyền
-{user.hasPermission('content.delete') && (
-  <button onClick={deletePost}>Xóa bài viết</button>
-)}
-
-// Backend: Middleware kiểm tra quyền
-@UseGuards(JwtAuthGuard, RolesGuard)
-@RequirePermission('content.delete')
-async deleteArticle(@Param('id') id: number) {
-  // Logic xóa
-}`}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

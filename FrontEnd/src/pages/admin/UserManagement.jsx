@@ -1,257 +1,172 @@
-import React, { useEffect, useState } from 'react';
-import { apiClient } from '../../services/api';
+﻿import React, { useEffect, useState } from 'react';
+import adminUsersService from '../../services/adminUsersService';
 import { toast } from 'react-toastify';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, editors: 0 });
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
+  const [newUser, setNewUser] = useState({ email: '', password: '', fullName: '', roleId: 2 });
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    fetchStats();
+  }, [pagination.page, searchQuery]);
 
   const fetchUsers = async () => {
-    setLoading(true);
     try {
-      // TODO: Replace with real API
-      // const response = await apiClient.get('/admin/users');
-      // setUsers(response.data);
-
-      // Mock data
-      setUsers([
-        {
-          id: 1,
-          fullName: 'Nguyễn Văn An',
-          email: 'nva@example.com',
-          role: 'Editor',
-          status: 'active',
-          createdAt: '2025-01-15',
-          lastLogin: '2025-11-06',
-        },
-        {
-          id: 2,
-          fullName: 'Trần Thị Bình',
-          email: 'ttb@example.com',
-          role: 'Moderator',
-          status: 'active',
-          createdAt: '2025-02-20',
-          lastLogin: '2025-11-05',
-        },
-        {
-          id: 3,
-          fullName: 'Lê Văn Cường',
-          email: 'lvc@example.com',
-          role: 'Viewer',
-          status: 'inactive',
-          createdAt: '2025-03-10',
-          lastLogin: '2025-10-28',
-        },
-        {
-          id: 4,
-          fullName: 'Phạm Thị Dung',
-          email: 'ptd@example.com',
-          role: 'Editor',
-          status: 'active',
-          createdAt: '2025-04-05',
-          lastLogin: '2025-11-06',
-        },
-      ]);
+      setLoading(true);
+      const params = { page: pagination.page, limit: pagination.limit };
+      if (searchQuery) params.search = searchQuery;
+      const response = await adminUsersService.getUsers(params);
+      setUsers(response.data);
+      setPagination(prev => ({ 
+        ...prev, 
+        total: response.pagination.total, 
+        totalPages: response.pagination.totalPages 
+      }));
     } catch (error) {
-      toast.error('❌ Không thể tải danh sách người dùng');
-      console.error(error);
+      console.error('Error:', error);
+      toast.error('Không thể tải danh sách');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChangeRole = async (userId, newRole) => {
+  const fetchStats = async () => {
     try {
-      // await apiClient.patch(`/admin/users/${userId}/role`, { role: newRole });
-      
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      toast.success(`✅ Đã thay đổi vai trò thành ${newRole}`);
+      const statsData = await adminUsersService.getStats();
+      setStats(statsData);
     } catch (error) {
-      toast.error('❌ Không thể thay đổi vai trò');
+      console.error('Error:', error);
     }
   };
 
-  const handleToggleStatus = async (userId) => {
+  const handleChangeRole = async (userId, newRoleId) => {
     try {
-      const user = users.find(u => u.id === userId);
-      const newStatus = user.status === 'active' ? 'inactive' : 'active';
-      
-      // await apiClient.patch(`/admin/users/${userId}/status`, { status: newStatus });
-      
-      setUsers(users.map(u => u.id === userId ? { ...u, status: newStatus } : u));
-      toast.success(`✅ Đã ${newStatus === 'active' ? 'mở khóa' : 'khóa'} tài khoản`);
+      await adminUsersService.updateUser(userId, { roleId: parseInt(newRoleId) });
+      toast.success('Đã cập nhật vai trò');
+      fetchUsers();
+      fetchStats();
     } catch (error) {
-      toast.error('❌ Không thể thay đổi trạng thái');
+      toast.error('Lỗi');
+    }
+  };
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'locked' : 'active';
+    if (!window.confirm(newStatus === 'locked' ? 'Khóa?' : 'Mở?')) return;
+    try {
+      await adminUsersService.updateUser(userId, { status: newStatus });
+      toast.success(newStatus === 'locked' ? 'Đã khóa' : 'Đã mở');
+      fetchUsers();
+      fetchStats();
+    } catch (error) {
+      toast.error('Lỗi');
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa người dùng này?')) return;
-
+    if (!window.confirm('Xóa?')) return;
     try {
-      // await apiClient.delete(`/admin/users/${userId}`);
-      
-      setUsers(users.filter(u => u.id !== userId));
-      toast.success('✅ Đã xóa người dùng');
+      await adminUsersService.deleteUser(userId);
+      toast.success('Đã xóa');
+      fetchUsers();
+      fetchStats();
     } catch (error) {
-      toast.error('❌ Không thể xóa người dùng');
+      toast.error('Lỗi');
     }
   };
 
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!newUser.email || !newUser.password || !newUser.fullName) {
+      toast.error('Thiếu thông tin');
+      return;
+    }
+    try {
+      await adminUsersService.createUser({ ...newUser, roleId: parseInt(newUser.roleId) });
+      toast.success('Tạo thành công');
+      setShowAddModal(false);
+      setNewUser({ email: '', password: '', fullName: '', roleId: 2 });
+      fetchUsers();
+      fetchStats();
+    } catch (error) {
+      toast.error('Lỗi');
+    }
+  };
+
+  if (loading && users.length === 0) return <div className="admin-content">Đang tải...</div>;
+
   return (
-    <div>
-      {/* Header Stats */}
-      <div className="stats-grid" style={{ marginBottom: '2rem' }}>
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon primary">👥</div>
-          </div>
-          <div className="stats-card-title">Tổng người dùng</div>
-          <div className="stats-card-value">{users.length}</div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon success">✅</div>
-          </div>
-          <div className="stats-card-title">Đang hoạt động</div>
-          <div className="stats-card-value">
-            {users.filter(u => u.status === 'active').length}
-          </div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon warning">⏸️</div>
-          </div>
-          <div className="stats-card-title">Bị khóa</div>
-          <div className="stats-card-value">
-            {users.filter(u => u.status === 'inactive').length}
-          </div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon danger">👨‍💼</div>
-          </div>
-          <div className="stats-card-title">Moderator</div>
-          <div className="stats-card-value">
-            {users.filter(u => u.role === 'Moderator').length}
-          </div>
-        </div>
+    <div className="admin-content">
+      <div className="admin-header">
+        <h1>Quản Lý Người Dùng</h1>
+        <button className="admin-btn admin-btn-primary" onClick={() => setShowAddModal(true)}>Thêm</button>
       </div>
-
-      {/* User Table */}
-      <div className="data-table-container">
-        <div className="table-header">
-          <h2 className="table-title">Danh sách người dùng</h2>
-          <div className="table-actions">
-            <input
-              type="text"
-              placeholder="🔍 Tìm kiếm..."
-              style={{
-                padding: '0.5rem 1rem',
-                border: '1px solid var(--admin-border)',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-              }}
-            />
-            <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-              ➕ Thêm người dùng
-            </button>
-          </div>
-        </div>
-
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <div style={{ fontSize: '2rem' }}>⏳</div>
-            <div style={{ marginTop: '1rem', color: '#6b7280' }}>Đang tải...</div>
-          </div>
-        ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Họ tên</th>
-                <th>Email</th>
-                <th>Vai trò</th>
-                <th>Trạng thái</th>
-                <th>Ngày tạo</th>
-                <th>Đăng nhập cuối</th>
-                <th>Thao tác</th>
+      <div className="admin-stats-grid">
+        <div className="stats-card"><div className="stats-icon stats-icon-primary"></div><div className="stats-info"><h3>Tổng</h3><p className="stats-value">{stats.total}</p></div></div>
+        <div className="stats-card"><div className="stats-icon stats-icon-success"></div><div className="stats-info"><h3>Active</h3><p className="stats-value">{stats.active}</p></div></div>
+        <div className="stats-card"><div className="stats-icon stats-icon-warning"></div><div className="stats-info"><h3>Locked</h3><p className="stats-value">{stats.inactive}</p></div></div>
+        <div className="stats-card"><div className="stats-icon stats-icon-danger"></div><div className="stats-info"><h3>Editor</h3><p className="stats-value">{stats.editors}</p></div></div>
+      </div>
+      <div className="admin-filters">
+        <input type="text" className="admin-search" placeholder="Tìm..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPagination(prev => ({ ...prev, page: 1 })); }} />
+      </div>
+      <div className="admin-table-container">
+        <table className="admin-table">
+          <thead><tr><th>ID</th><th>Email</th><th>Tên</th><th>Role</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody>
+            {users.length === 0 ? <tr><td colSpan="7" style={{ textAlign: 'center' }}>No data</td></tr> : users.map(user => (
+              <tr key={user.id}>
+                <td>{user.id}</td>
+                <td>{user.email}</td>
+                <td>{user.fullName || '-'}</td>
+                <td>
+                  <select className="admin-select" value={user.roleId} onChange={(e) => handleChangeRole(user.id, e.target.value)}>
+                    <option value="1">Admin</option>
+                    <option value="2">User</option>
+                    <option value="4">Editor</option>
+                  </select>
+                </td>
+                <td><span className={`admin-badge admin-badge-${user.status === 'active' ? 'success' : 'danger'}`}>{user.status === 'active' ? '✅' : '🔒'}</span></td>
+                <td>{new Date(user.createdAt).toLocaleDateString('vi-VN')}</td>
+                <td>
+                  <div className="admin-actions">
+                    <button className={`admin-btn admin-btn-sm ${user.status === 'active' ? 'admin-btn-warning' : 'admin-btn-success'}`} onClick={() => handleToggleStatus(user.id, user.status)}>{user.status === 'active' ? '🔒' : '🔓'}</button>
+                    <button className="admin-btn admin-btn-sm admin-btn-danger" onClick={() => handleDeleteUser(user.id)}>🗑️</button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>
-                    <strong style={{ color: '#1f2937' }}>{user.fullName}</strong>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleChangeRole(user.id, e.target.value)}
-                      style={{
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '6px',
-                        border: '1px solid var(--admin-border)',
-                        fontSize: '0.75rem',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <option value="Viewer">Viewer</option>
-                      <option value="Editor">Editor</option>
-                      <option value="Moderator">Moderator</option>
-                      <option value="Admin">Admin</option>
-                    </select>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${user.status}`}>
-                      {user.status === 'active' ? '✅ Hoạt động' : '🔒 Bị khóa'}
-                    </span>
-                  </td>
-                  <td>{user.createdAt}</td>
-                  <td>{user.lastLogin}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        className={`btn btn-sm ${user.status === 'active' ? 'btn-danger' : 'btn-success'}`}
-                        onClick={() => handleToggleStatus(user.id)}
-                      >
-                        {user.status === 'active' ? '🔒 Khóa' : '🔓 Mở'}
-                      </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDeleteUser(user.id)}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      {/* Pagination */}
-      <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
-        <button className="btn btn-secondary btn-sm">← Trước</button>
-        <button className="btn btn-primary btn-sm">1</button>
-        <button className="btn btn-secondary btn-sm">2</button>
-        <button className="btn btn-secondary btn-sm">3</button>
-        <button className="btn btn-secondary btn-sm">Sau →</button>
-      </div>
+      {pagination.totalPages > 1 && (
+        <div className="admin-pagination">
+          <button className="admin-pagination-btn" onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))} disabled={pagination.page === 1}> Trước</button>
+          <span>Trang {pagination.page} / {pagination.totalPages}</span>
+          <button className="admin-pagination-btn" onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))} disabled={pagination.page === pagination.totalPages}>Sau </button>
+        </div>
+      )}
+      {showAddModal && (
+        <div className="admin-modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header"><h2>Thêm User</h2><button className="admin-modal-close" onClick={() => setShowAddModal(false)}></button></div>
+            <form className="admin-modal-body" onSubmit={handleCreateUser}>
+              <div className="admin-form-group"><label>Email *</label><input type="email" required className="admin-input" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} /></div>
+              <div className="admin-form-group"><label>Password *</label><input type="password" required className="admin-input" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} minLength={6} /></div>
+              <div className="admin-form-group"><label>Tên *</label><input type="text" required className="admin-input" value={newUser.fullName} onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })} /></div>
+              <div className="admin-form-group"><label>Role</label><select className="admin-select" value={newUser.roleId} onChange={(e) => setNewUser({ ...newUser, roleId: parseInt(e.target.value) })}><option value="2">User</option><option value="4">Editor</option><option value="1">Admin</option></select></div>
+              <div className="admin-modal-footer"><button type="button" className="admin-btn" onClick={() => setShowAddModal(false)}>Hủy</button><button type="submit" className="admin-btn admin-btn-primary">Tạo</button></div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

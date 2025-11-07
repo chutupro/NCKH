@@ -6,7 +6,7 @@ import { useAppContext } from '../../context/useAppContext';
 /**
  * ProtectedRoute - Bảo vệ routes theo vai trò
  * @param {React.ReactNode} children - Component con cần bảo vệ
- * @param {string[]} allowedRoles - Mảng các vai trò được phép (vd: ['Admin', 'Moderator'])
+ * @param {string[]} allowedRoles - Mảng các vai trò được phép (vd: ['Admin', 'Editor'])
  */
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, isAuthenticated, isAuthLoading } = useAppContext();
@@ -34,7 +34,12 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   // Map RoleID sang RoleName nếu chưa có Role field
-  const userRole = user?.Role || (user?.roleId === 1 ? 'Admin' : user?.roleId === 3 ? 'Moderator' : 'User');
+  // RoleID: 1=Admin, 2=User, 4=Editor
+  const userRole = user?.Role || (
+    user?.roleId === 1 ? 'Admin' : 
+    user?.roleId === 4 ? 'Editor' : 
+    'User'
+  );
   
   console.log('[ProtectedRoute] User Role:', userRole);
 
