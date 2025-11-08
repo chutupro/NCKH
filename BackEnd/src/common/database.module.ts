@@ -19,6 +19,8 @@ import { Notifications } from 'src/modules/entities/notification.entity';
 import { MapLocations } from 'src/modules/entities/map-location.entity';
 import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
 import { ImageComparison } from '../modules/entities/image-comparison.entity'; // <-- thêm nếu cần
+import { Collections } from 'src/modules/entities/collection.entity';
+import { CollectionArticles } from 'src/modules/entities/collection-article.entity';
 
 @Module({
   imports: [
@@ -47,6 +49,8 @@ import { ImageComparison } from '../modules/entities/image-comparison.entity'; /
           Feedback,
           Contributions,
           Images,
+          Collections,
+          CollectionArticles,
           LearningMaterials,
           Timelines,
           VersionHistory,

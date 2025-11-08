@@ -1,36 +1,49 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import articles from '../../util/mockArticles';
-import compareList from '../../util/compareList';
+// compareList removed: not used in collection detail
+import { getCollectionById } from '../../API/collections';
 import '../../Styles/ImageLibrary/ImageLibraryInformation.css';
-import { displayCategoryName } from '../../util/categoryMap';
+// displayCategoryName removed; using category from collection response
 
 const ImageLibraryInformation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   // i18n removed: dùng chuỗi tiếng Việt trực tiếp
-  const articleId = Number(id);
-  const article = articles.find(a => a.ArticleID === articleId);
+  const collectionId = Number(id);
+  const [collection, setCollection] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
-  if (!article) {
-    return (
-      <div className="lib-info-container">
-        <div className="not-found">
-          <h2>{'Bài viết không tìm thấy'}</h2>
-          <Link to="/ImageLibrary" className="back-btn">← {'Quay lại thư viện'}</Link>
-        </div>
+  React.useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const c = await getCollectionById(collectionId);
+        if (mounted) setCollection(c);
+      } catch (err) {
+        if (mounted) setError(err.message || String(err));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [collectionId]);
+
+  if (loading) return <div className="lib-info-container"><div className="loading">Đang tải...</div></div>;
+  if (error) return <div className="lib-info-container"><div className="error">Lỗi: {error}</div></div>;
+  if (!collection) return (
+    <div className="lib-info-container">
+      <div className="not-found">
+        <h2>{'Bộ sưu tập không tìm thấy'}</h2>
+        <Link to="/ImageLibrary" className="back-btn">← {'Quay lại thư viện'}</Link>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Ảnh chính lấy từ Images.FilePath
-  const mainImage = article.images && article.images.length ? article.images[0].FilePath : '';
-
-  // Các mục compare liên quan: article.relatedCompareIds có thể tham chiếu compareList.id hoặc ComparisonID
-  const relatedCompares = (article.relatedCompareIds || [])
-    .map(refId => compareList.find(c => c.id === refId || c.ComparisonID === refId))
-    .filter(Boolean)
-    .slice(0, 2);
+  const mainImage = collection.ImagePath || collection.image || '';
+  const relatedCompares = [];
 
   return (
     <div className="lib-info-container">
@@ -43,23 +56,23 @@ const ImageLibraryInformation = () => {
           <span>/</span>
           <Link to="/ImageLibrary">{'Thư viện ảnh'}</Link>
           <span>/</span>
-          <span>{article.Title}</span>
+          <span>{collection.Title || collection.Name || `#${collection.CollectionID || collection.id}`}</span>
         </div>
       </div>
 
       <div className="lib-info-hero">
         <div className="hero-image" style={{ backgroundImage: `url(${mainImage})` }}>
           <div className="hero-overlay">
-            <span className="hero-category">{displayCategoryName(article.categoryName)}</span>
+            <span className="hero-category">{collection.Category?.Name || (`ID:${collection.CategoryID ?? collection.CategoryId ?? ''}`)}</span>
           </div>
         </div>
         <div className="hero-content">
-          <h1 className="hero-title">{article.Title}</h1>
+          <h1 className="hero-title">{collection.Title || collection.Name}</h1>
           <div className="hero-meta">
-            <span className="meta-item">📅 {'Năm'} {new Date(article.CreatedAt).getFullYear()}</span>
-            <span className="meta-item">❤️ {article.likes || 0} {'lượt thích'}</span>
+            <span className="meta-item">📅 {'Năm'} {collection.CreatedAt ? new Date(collection.CreatedAt).getFullYear() : ''}</span>
+            {/* Likes removed per request */}
           </div>
-          <p className="hero-description">{article.description || article.Content}</p>
+          <p className="hero-description">{collection.Description || collection.description || collection.Content}</p>
         </div>
       </div>
 
@@ -93,7 +106,7 @@ const ImageLibraryInformation = () => {
                   <p className="compare-description">{compare.description}</p>
                   <div className="compare-stats">
                     <span>📍 {compare.location}</span>
-                    <span>❤️ {compare.likes}</span>
+                    {/* Likes removed per request */}
                   </div>
                 </div>
               </div>

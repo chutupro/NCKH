@@ -14,6 +14,7 @@ import { GalleryModule } from './gallerys/gallery.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { CrawlerModule } from './modules/crawler/crawler.module';
 import { AdminModule } from './modules/modules/admin/admin.module';
+import { CollectionsModule } from './modules/collections/collections.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AdminModule } from './modules/modules/admin/admin.module';
     GalleryModule,
     UploadModule, 
     CrawlerModule,
+  CollectionsModule,
     CategoriesModule,
     AdminModule, // ✅ ADMIN MODULE
   ],
