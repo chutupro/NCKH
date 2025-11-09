@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../Styles/CompareCard/CompareCard.css';
+import { displayCategoryName } from '../../util/categoryMap';
 import { useAppContext } from '../../context/useAppContext';
 import { useTranslation } from 'react-i18next';
 
@@ -110,11 +111,13 @@ const CompareCard = ({ item }) => {
           <span className="cc-tag cc-old">{t('compareCommon.oldShort')}</span>
           <span className="cc-tag cc-new">{t('compareCommon.newShort')}</span>
         </div>
+        {item?.category ? (
+          <div className="cc-category">{displayCategoryName(item.category)}</div>
+        ) : null}
         <h3 className="cc-title">{item.title}</h3>
         <p className="cc-post">📍 {item.location || t('compareDetail.defaultLocation')}</p>
         <div className="cc-meta">
           <span className="cc-drag-tip">← {t('compareCommon.dragShort')} →</span>
-          <div className="cc-likes">❤ {item.likes}</div>
         </div>
       </div>
     </div>

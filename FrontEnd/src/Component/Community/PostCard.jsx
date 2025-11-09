@@ -1,190 +1,154 @@
-import React, { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import React, { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import '../../Styles/community/Community.css'
-import ImageModal from '../common/ImageModal'
+import useAppContext from '../../context/useAppContext'
+import { likeArticle, unlikeArticle, listLikes, getArticleLikesList } from '../../API/likes'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHeart, faComment, faShareNodes, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
+import { faHeart, faComment, faShareNodes } from '@fortawesome/free-solid-svg-icons'
+import '../../Styles/community/Community.css'
 
+// Minimal, robust PostCard component rewritten from scratch.
+// Behavior:
+// - Waits for auth restore (isAuthLoading) before fetching server state
+// - Uses accessToken from context when present to authenticate requests
+// - Optimistic UI on toggle, applies authoritative server response when available
+// - Reads like state from server on load (no localStorage persistence)
+// - Does NOT auto-clear liked on logout (keeps visual state until user toggles)
 
 const PostCard = ({ post, onDelete }) => {
-  const { t } = useTranslation();
+  const navigate = useNavigate()
+  const { isAuthenticated, isAuthLoading, accessToken, user } = useAppContext()
+
   const [liked, setLiked] = useState(false)
-  const [likes, setLikes] = useState(post.likes || 0)
-  const [showComments, setShowComments] = useState(false)
-  const [comments, setComments] = useState([])
-  const [commentText, setCommentText] = useState('')
-  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [likes, setLikes] = useState(post?.likes || 0)
+  const [loading, setLoading] = useState(false)
 
-  const toggleLike = () => {
-    setLiked((s) => !s)
-    setLikes((n) => (liked ? n - 1 : n + 1))
-  }
+  // short-lived override to prevent immediate GET from clobbering a recent toggle
+  const overrideRef = useRef({})
 
-  const toggleComments = () => {
-    setShowComments((s) => !s)
-  }
+  // fetch authoritative state (called after auth restore)
+  useEffect(() => {
+    let mounted = true
+    const run = async () => {
+      if (isAuthLoading) return
 
-  const handleAddComment = () => {
-    if (commentText.trim()) {
-      const newComment = {
-        id: Date.now(),
-          author: t('postCard.user'),
-        text: commentText,
-          when: t('postCard.justNow')
+      // Always fetch the per-article likes list (userIds + count) from the
+      // backend. This endpoint (`/articles_post/:id/likes`) is public and
+      // returns the list of user IDs who liked the article. Using it avoids
+      // relying on the Authorization timing for `GET /articles_post/:id/like`.
+      try {
+        const res = await getArticleLikesList(post.id, accessToken)
+        if (!mounted) return
+        // res expected { count, userIds }
+        const count = res?.count ?? (Array.isArray(res?.userIds) ? res.userIds.length : 0)
+        const userIds = Array.isArray(res?.userIds) ? res.userIds : []
+        setLikes(count)
+        if (user?.userId != null) {
+          const found = userIds.some((id) => Number(id) === Number(user.userId))
+          setLiked(!!found)
+        } else {
+          setLiked(false)
+        }
+      } catch (err) {
+        void err
+        // fallback: try the generic /likes list and compute similarly
+        try {
+          const all = await listLikes()
+          if (!mounted) return
+          const articleLikes = (Array.isArray(all) ? all.filter((l) => Number(l.ArticleID) === Number(post.id)) : [])
+          setLikes(articleLikes.length)
+          if (user?.userId != null) {
+            const userLiked = articleLikes.some((l) => Number(l.UserID) === Number(user.userId))
+            setLiked(!!userLiked)
+          } else {
+            setLiked(false)
+          }
+        } catch (err) { void err }
       }
-      setComments([...comments, newComment])
-      setCommentText('')
     }
-  }
 
-  const handleShare = (platform) => {
-    const shareUrl = window.location.href
-      const shareText = `${t('postCard.viewPost')} ${post.author}: ${post.text}`
-    
-    switch(platform) {
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')
-        break
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank')
-        break
-      case 'copy':
-        navigator.clipboard.writeText(shareUrl)
-        toast.success(t('postCard.linkCopied'), { position: "top-right", autoClose: 2000 })
-        break
-      default:
-        break
+    run()
+    return () => { mounted = false }
+    // intentionally include accessToken and user so we re-run when they change
+  }, [post?.id, post?.likes, isAuthLoading, isAuthenticated, accessToken, user])
+
+  const handleToggle = async () => {
+    if (!isAuthenticated) {
+      if (window.confirm('Bạn cần đăng nhập để bày tỏ cảm xúc. Đến trang đăng nhập?')) {
+        navigate('/login')
+      }
+      return
     }
-    setShowShareMenu(false)
-  }
 
-  const avatarText = (() => {
+    setLoading(true)
+    const willLike = !liked
+
+    // optimistic
+    setLiked(willLike)
+    setLikes((n) => Math.max(0, n + (willLike ? 1 : -1)))
+
     try {
-      return post.author.split(' ').map(n => n[0]).slice(0,2).join('')
-    } catch {
-      return post.author?.slice(0,2) || 'U'
-    }
-  })()
+      if (willLike) {
+        const res = await likeArticle(post.id, accessToken)
+        if (res && typeof res.liked === 'boolean') setLiked(res.liked)
+        if (res && typeof res.likesCount === 'number') setLikes(res.likesCount)
 
-  const PLACEHOLDER_SVG = `data:image/svg+xml;utf8,` + encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'><rect width='100%' height='100%' fill='%23221f1b'/><text x='50%' y='50%' fill='%23cccccc' font-size='20' font-family='Arial, Helvetica, sans-serif' text-anchor='middle' alignment-baseline='middle'>Ảnh không có sẵn</text></svg>`
-  )
+        // set short override so immediate GET doesn't overwrite
+        overrideRef.current[post.id] = { liked: true, expires: Date.now() + 4000 }
+      } else {
+        const res = await unlikeArticle(post.id, accessToken)
+        if (res && typeof res.liked === 'boolean') setLiked(res.liked)
+        if (res && typeof res.likesCount === 'number') setLikes(res.likesCount)
+
+        overrideRef.current[post.id] = { liked: false, expires: Date.now() + 4000 }
+      }
+
+      // no local persistence: server is the source of truth
+
+    } catch (err) {
+      // rollback on error
+      setLiked((prev) => !prev)
+      setLikes((n) => Math.max(0, n + (willLike ? -1 : 1)))
+      toast.error(err?.message || 'Đã có lỗi. Vui lòng thử lại')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <article className="post-card" id={`post-${post.id}`}>
       <header className="post-header">
-        <div className="avatar">{avatarText}</div>
+        <div className="avatar">{(post.author || 'U').slice(0,2).toUpperCase()}</div>
         <div className="meta">
           <div className="name">{post.author}</div>
           <div className="sub">{post.when} · {post.category}</div>
         </div>
         <div className="spacer" />
-        {/* delete button on the right */}
         {onDelete && (
-          <button
-            type="button"
-            className="delete-btn"
-            onClick={() => onDelete(post.id)}
-            aria-label="Xóa bài"
-          >
-            Xóa
-          </button>
+          <button className="delete-btn" onClick={() => onDelete(post.id)}>Xóa</button>
         )}
       </header>
 
       <div className="post-body">
         <p className="post-text">{post.text}</p>
-        <div className="post-image-wrap">
-          {post.image ? (
-            <img
-              className="post-image crisper"
-              src={post.image}
-              alt={`Ảnh bài đăng của ${post.author}`}
-              style={{ cursor: 'zoom-in', imageRendering: 'auto' }}
-              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = PLACEHOLDER_SVG }}
-              decoding="async"
-              loading="lazy"
-            />
-          ) : (
-            <img className="post-image crisper" src={PLACEHOLDER_SVG} alt="no image" decoding="async" />
-          )}
-        </div>
+        {post.image && <img className="post-image" src={post.image} alt="post" />}
       </div>
 
       <footer className="post-footer">
         <div className="actions">
           <button
+            className={`like-btn${liked ? ' liked' : ''}`}
+            onClick={handleToggle}
+            disabled={loading}
             aria-pressed={liked}
-            className={"like-btn" + (liked ? ' liked' : '')}
-            onClick={toggleLike}
           >
-            <FontAwesomeIcon icon={faHeart} className="like-icon" />
-              {liked ? t('postCard.liked') : t('postCard.like')}
+            <FontAwesomeIcon icon={faHeart} /> {liked ? 'Đã thích' : 'Thích'}
           </button>
-          <button
-            className="comment-btn"
-            onClick={toggleComments}
-          >
-            <FontAwesomeIcon icon={faComment} className="comment-icon" />
-              {t('postCard.comment')}
-          </button>
-          <div className="share-container">
-            <button
-              className="share-btn"
-              onClick={() => setShowShareMenu(!showShareMenu)}
-            >
-              <FontAwesomeIcon icon={faShareNodes} className="share-icon" />
-                {t('postCard.share')}
-            </button>
-            {showShareMenu && (
-              <div className="share-menu">
-                <button onClick={() => handleShare('facebook')}>Facebook</button>
-                <button onClick={() => handleShare('twitter')}>Twitter</button>
-                  <button onClick={() => handleShare('copy')}>{t('postCard.copyLink')}</button>
-              </div>
-            )}
-          </div>
+          <button className="comment-btn"><FontAwesomeIcon icon={faComment} /> Bình luận</button>
+          <button className="share-btn"><FontAwesomeIcon icon={faShareNodes} /> Chia sẻ</button>
         </div>
-        <div className="counts">
-            <span className="likes-count">{likes.toLocaleString()} {t('postCard.likesCount')}</span>
-          {comments.length > 0 && (
-              <span className="comments-count"> · {comments.length} {t('postCard.commentsCount')}</span>
-          )}
-        </div>
+        <div className="counts">{likes.toLocaleString()} lượt thích</div>
       </footer>
-
-      {showComments && (
-        <div className="comments-section">
-          <div className="comments-list">
-            {comments.map((comment) => (
-              <div key={comment.id} className="comment-item">
-                <div className="comment-avatar">{comment.author[0]}</div>
-                <div className="comment-content">
-                  <div className="comment-author">{comment.author}</div>
-                  <div className="comment-text">{comment.text}</div>
-                  <div className="comment-time">{comment.when}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="comment-input-wrapper">
-            <input
-              type="text"
-              className="comment-input"
-              placeholder={t('postCard.writeComment')}
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
-            />
-            <button className="comment-submit" onClick={handleAddComment}>
-              <FontAwesomeIcon icon={faPaperPlane} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* modal disabled: clicking the post should not open anything */}
     </article>
   )
 }

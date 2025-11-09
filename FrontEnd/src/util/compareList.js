@@ -34,9 +34,7 @@ const compareList = [
   {
     id: 1,
     ComparisonID: 1,
-    HistoricalImageID: 201,
-    ModernImageID: 301,
-    ArticleID: 1,
+  ArticleID: 1,
     title: "Chùa Linh Ứng",
     oldSrc: "https://tse2.mm.bing.net/th/id/OIP.24VLsgPNrVCfPL3sKj_WPwHaE4?pid=Api&P=0&h=220",
     newSrc: "https://statics.vinpearl.com/chua-linh-ung-da-nang-3.jpg",
@@ -55,9 +53,7 @@ const compareList = [
   {
     id: 2,
     ComparisonID: 2,
-    HistoricalImageID: 202,
-    ModernImageID: 302,
-    ArticleID: 2,
+  ArticleID: 2,
     title: "Cầu Rồng",
     oldSrc: "https://example.com/dragon_old.jpg",
     newSrc: "https://haycafe.vn/wp-content/uploads/2022/01/Hinh-anh-cau-Rong.jpg",
@@ -73,9 +69,7 @@ const compareList = [
   {
     id: 3,
     ComparisonID: 3,
-    HistoricalImageID: 203,
-    ModernImageID: 303,
-    ArticleID: 3,
+  ArticleID: 3,
     title: "Bãi biển Mỹ Khê",
     oldSrc: "https://example.com/mykhe_old.jpg",
     newSrc: "https://images.unsplash.com/photo-1549880338-65ddcdfd017b",

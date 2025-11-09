@@ -55,7 +55,6 @@
   border-radius: 20px;
   padding: 40px 32px;
   text-align: center;
-  transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
 }
@@ -69,18 +68,9 @@
   height: 4px;
   background: linear-gradient(90deg, #e8d7b7, #d4c4a8);
   transform: scaleX(0);
-  transition: transform 0.4s ease;
 }
 
-.impact-card:hover::before {
-  transform: scaleX(1);
-}
 
-.impact-card:hover {
-  transform: translateY(-12px);
-  border-color: rgba(232, 215, 183, 0.3);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-}
 
 .impact-card-glow {
   position: absolute;
@@ -91,11 +81,6 @@
   background: radial-gradient(circle, rgba(232, 215, 183, 0.1), transparent);
   border-radius: 50%;
   transform: translate(-50%, -50%) scale(0);
-  transition: transform 0.4s ease;
-}
-
-.impact-card:hover .impact-card-glow {
-  transform: translate(-50%, -50%) scale(1);
 }
 
 .impact-icon-wrapper {
@@ -107,23 +92,15 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 24px;
-  transition: all 0.4s ease;
 }
 
-.impact-card:hover .impact-icon-wrapper {
-  transform: scale(1.1) rotate(5deg);
-  background: linear-gradient(135deg, rgba(232, 215, 183, 0.25), rgba(232, 215, 183, 0.1));
-}
+
 
 .impact-icon {
   font-size: 36px;
   color: #e8d7b7;
-  transition: all 0.3s ease;
 }
 
-.impact-card:hover .impact-icon {
-  color: #fff;
-}
 
 .impact-card-title {
   font-size: 22px;

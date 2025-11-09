@@ -7,12 +7,16 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import passport from 'passport';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // --- Enable Cookie Parser ---
   app.use(cookieParser());
+
+  // --- Initialize passport (required for AuthGuard strategies) ---
+  app.use(passport.initialize());
 
   // --- Global Exception Filter ---
   app.useGlobalFilters(new AllExceptionsFilter());

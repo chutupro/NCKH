@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import CompareCard from '../../Component/Compare/CompareCard';
-import compareList from '../../util/compareList';
+import { getImageComparisons } from '../../API/imageComparisons';
 import '../../Styles/CompareCard/CompareCard.css';
 import '../../App.css';
 import { getCodeFromName, labelFor, CODE_TO_VN, KNOWN_CODES } from '../../util/categoryMap';
@@ -12,20 +12,45 @@ const CompareGallery = () => {
   const [category, setCategory] = useState('all');
   const [page, setPage] = useState(1);
   const PER_PAGE = 9;
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+    getImageComparisons(ac.signal)
+      .then((data) => {
+        if (!mounted) return;
+        if (Array.isArray(data)) setItems(data);
+        else setItems([]);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError(err?.message || String(err));
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setLoading(false);
+      });
+    return () => { mounted = false; ac.abort(); };
+  }, []);
 
   // derive categories from data (keeps in sync with DB)
   const CATEGORIES = useMemo(() => {
     // derive known category codes from data; include 'other' if unknowns exist
     const codes = new Set(['all']);
-    compareList.forEach(c => {
+    (items || []).forEach(c => {
       const code = getCodeFromName(c.category || '');
       if (KNOWN_CODES.includes(code)) codes.add(code); else if (code === 'other') codes.add('other');
     });
     return Array.from(codes);
-  }, []);
+  }, [items]);
 
   const filtered = useMemo(() => {
-    let list = compareList;
+    let list = items || [];
     if (category && category !== 'all') {
       const vn = CODE_TO_VN[category] || null;
       if (vn) list = list.filter((i) => (i.category || '') === vn);
@@ -36,7 +61,7 @@ const CompareGallery = () => {
       list = list.filter((i) => (i.title || '').toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q));
     }
     return list;
-  }, [query, category]);
+  }, [query, category, items]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const pageItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -49,6 +74,8 @@ const CompareGallery = () => {
 
   return (
     <div className="cc-root">
+      {loading && <div className="cc-loading">Loading...</div>}
+      {error && <div className="cc-error">{String(error)}</div>}
       <header className="compare-header">
         <h1>{t('compare.title')}</h1>
         <p className="subtitle">{t('compare.subtitle')}</p>

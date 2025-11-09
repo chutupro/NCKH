@@ -2,6 +2,7 @@ import "../../Styles/ImageLibrary/ImageLibrary.css";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCollections, getCategories } from "../../API/collections";
+import { CODE_TO_VN } from '../../util/categoryMap'
 
 // NOTE: Replaced local util/mockArticles and categoryMap with a live API call
 // to http://localhost:3000/collections as requested. Assumptions:
@@ -140,16 +141,35 @@ const ImageLibrary = () => {
       setSearch(q);
       setPage(1);
     }
-    // nếu category có trong query, cập nhật nó
+
+    // nếu category có trong query, cố gắng resolve nó sang CategoryID nếu cần
     if (c) {
-      // only update if different
-      if (c !== category) {
-        setCategory(c);
-        setPage(1);
-      }
+      // resolve now or after categories are loaded
+      const resolveCategory = () => {
+        let resolved = c;
+        // numeric -> assume CategoryID
+        if (/^\d+$/.test(c) || c === 'all' || c === 'other') {
+          resolved = c;
+        } else {
+          // try map code -> Vietnamese name -> find CategoryID in fetched categories
+          const vnName = CODE_TO_VN?.[c] || labelFor(c);
+          if (vnName && categories.length) {
+            const match = categories.find(cat => (cat.Name || cat.name) === vnName);
+            if (match) {
+              resolved = String(match.CategoryID ?? match.id ?? match.CategoryId ?? match.ID);
+            }
+          }
+        }
+        if (resolved !== category) {
+          setCategory(resolved);
+          setPage(1);
+        }
+      };
+
+      resolveCategory();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search]);
+  }, [location.search, categories]);
 
   // Các handler
   const handleSearch = e => { setSearch(e.target.value); setPage(1); };

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
@@ -18,6 +19,7 @@ import { RedisService } from '../../../common/redis.service';
     ConfigModule,
     UserModule,
     TypeOrmModule.forFeature([Users]),
+  PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (cs: ConfigService) => ({

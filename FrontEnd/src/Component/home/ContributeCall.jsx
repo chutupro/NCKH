@@ -1,5 +1,6 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAppContext } from '../../context/useAppContext'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/Home/ContributeCall.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -7,6 +8,22 @@ import { faCamera, faHeart, faUsers, faArrowRight } from '@fortawesome/free-soli
 
 const ContributeCall = () => {
   const { t } = useTranslation();
+
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAppContext()
+
+  const onContributeClick = (e) => {
+    // if not authenticated, show message and redirect to login
+    if (!isAuthenticated) {
+      e.preventDefault()
+      // simple alert for now — we can replace with a nicer modal later
+      const goLogin = window.confirm('Bạn cần đăng nhập để đóng góp. Đi tới trang đăng nhập?')
+      if (goLogin) navigate('/login')
+      return
+    }
+    // if authenticated, navigate to contribute page
+    navigate('/contribute')
+  }
 
   return (
     <section className="contribute-call-section">
@@ -34,11 +51,11 @@ const ContributeCall = () => {
                 </div>
               </div>
             </div>
-            <Link to="/contribute" className="contribute-call-btn" onClick={() => window.scrollTo(0, 0)}>
+            <a href="/contribute" className="contribute-call-btn" onClick={(e) => { window.scrollTo(0, 0); onContributeClick(e); }}>
               <FontAwesomeIcon icon={faCamera} />
               {t('contribute.button')}
               <FontAwesomeIcon icon={faArrowRight} className="btn-arrow" />
-            </Link>
+            </a>
           </div>
           <div className="contribute-call-right">
             <div className="contribute-call-images">

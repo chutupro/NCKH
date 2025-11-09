@@ -15,6 +15,7 @@ import { UploadModule } from './modules/upload/upload.module';
 import { CrawlerModule } from './modules/crawler/crawler.module';
 import { AdminModule } from './modules/modules/admin/admin.module';
 import { CollectionsModule } from './modules/collections/collections.module';
+import { ImageComparisonsModule } from './modules/image-comparisons/image-comparisons.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { CollectionsModule } from './modules/collections/collections.module';
     UploadModule, 
     CrawlerModule,
   CollectionsModule,
+    ImageComparisonsModule,
     CategoriesModule,
     AdminModule, // ✅ ADMIN MODULE
   ],

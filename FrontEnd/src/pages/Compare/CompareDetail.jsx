@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import compareList from '../../util/compareList';
+import { getImageComparisonById } from '../../API/imageComparisons';
 import '../../Styles/CompareCard/CompareDetail.css';
 import CompareDetailHeader from '../../Component/Compare/CompareDetailHeader';
 import CompareDetailHero from '../../Component/Compare/CompareDetailHero';
@@ -14,12 +14,35 @@ const CompareDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // find by id or ComparisonID for compatibility with DB-derived data
-  const item = compareList.find(i => i.id === parseInt(id, 10) || i.ComparisonID === parseInt(id, 10));
+  // fetch item from API
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  useEffect(() => {
+    let mounted = true;
+    const ac = new AbortController();
+    setLoading(true);
+    getImageComparisonById(id, ac.signal)
+      .then((data) => {
+        if (!mounted) return;
+        setItem(data || null);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        console.warn(err);
+        setItem(null);
+      })
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; ac.abort(); };
+  }, [id]);
+
+  if (loading) {
+    return <div className="cd-loading">Loading...</div>;
+  }
 
   if (!item) {
     return (

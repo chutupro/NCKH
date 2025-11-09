@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 // compareList removed: not used in collection detail
 import { getCollectionById } from '../../API/collections';
+import { getImageComparisons } from '../../API/imageComparisons';
 import '../../Styles/ImageLibrary/ImageLibraryInformation.css';
 // displayCategoryName removed; using category from collection response
 
@@ -13,6 +14,7 @@ const ImageLibraryInformation = () => {
   const [collection, setCollection] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
+  const [relatedCompares, setRelatedCompares] = React.useState([]);
 
   React.useEffect(() => {
     let mounted = true;
@@ -31,6 +33,44 @@ const ImageLibraryInformation = () => {
     return () => { mounted = false; };
   }, [collectionId]);
 
+  // Fetch comparisons and compute related items when collection loads
+  React.useEffect(() => {
+    if (!collection) return;
+    const ac = new AbortController();
+    let mounted = true;
+    (async () => {
+      try {
+        const all = await getImageComparisons(ac.signal);
+        if (!mounted) return;
+        const title = (collection.Title || collection.Name || '').toLowerCase();
+        const location = (collection.Address || collection.Location || collection.DiaDiem || collection.LocationName || '').toLowerCase();
+        const category = (collection.Category && (collection.Category.Name || collection.Category.name)) || '';
+
+        const related = all.filter(item => {
+          const t = (item.title || item.Title || '').toLowerCase();
+          const d = (item.description || item.Description || '').toLowerCase();
+          const loc = (item.location || item.Location || '').toLowerCase();
+          const cat = (item.category || (item.Category && (item.Category.Name || item.Category.name)) || '').toLowerCase();
+
+          // heuristics: title match, description match, location match, or same category
+          if (title && (t.includes(title) || d.includes(title))) return true;
+          if (location && loc && loc.includes(location)) return true;
+          if (category && cat && cat === category.toLowerCase()) return true;
+          return false;
+        });
+
+        // limit to a few items
+        setRelatedCompares(related.slice(0, 6));
+      } catch (err) {
+        // keep a minimal log for debugging
+        // (do not break page if comparisons fail)
+        console.warn('related comparisons load failed', err);
+      }
+    })();
+
+    return () => { mounted = false; ac.abort(); };
+  }, [collection]);
+
   if (loading) return <div className="lib-info-container"><div className="loading">Đang tải...</div></div>;
   if (error) return <div className="lib-info-container"><div className="error">Lỗi: {error}</div></div>;
   if (!collection) return (
@@ -43,7 +83,6 @@ const ImageLibraryInformation = () => {
   );
 
   const mainImage = collection.ImagePath || collection.image || '';
-  const relatedCompares = [];
 
   return (
     <div className="lib-info-container">

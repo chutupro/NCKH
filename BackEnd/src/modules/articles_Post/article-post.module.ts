@@ -9,6 +9,8 @@ import { Analytics } from '../entities/analytics.entity';
 import { Likes } from '../entities/like.entity';
 import { ArticleService } from './article-post.service'; 
 import { ArticleController } from './article-post.controller'; 
+import { ArticleLikeController } from './article-like.controller';
+import { LikesController } from './likes.controller';
 
 @Module({
   imports: [
@@ -23,6 +25,6 @@ import { ArticleController } from './article-post.controller';
     ]),
   ],
   providers: [ArticleService],
-  controllers: [ArticleController],
+  controllers: [ArticleController, ArticleLikeController, LikesController],
 })
 export class ArticleModule {}

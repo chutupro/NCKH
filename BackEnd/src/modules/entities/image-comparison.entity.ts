@@ -8,10 +8,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Articles } from './article.entity';
+// Articles relation removed for this entity
 import { Categories } from './category.entity';
-import { Images } from './image.entity';
-import { Users } from './user.entity';
+// Images relation removed for this entity
+// Users relation removed for this entity
 
 @Entity('imagecomparisons')
 export class ImageComparison {
@@ -32,19 +32,13 @@ export class ImageComparison {
 
   // --- Foreign keys (IDs) ---
   @Column({ type: 'int', nullable: true })
-  ArticleID: number;
-
-  @Column({ type: 'int', nullable: true })
   CategoryID: number;
+  
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  Address: string;
+  
 
-  @Column({ type: 'int', nullable: true })
-  HistoricalImageID: number;
-
-  @Column({ type: 'int', nullable: true })
-  ModernImageID: number;
-
-  @Column({ type: 'int', nullable: true })
-  UserID: number;
+  
 
   // --- Optional backup filepaths (kept if needed) ---
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -54,25 +48,13 @@ export class ImageComparison {
   NewImagePath: string;
 
   // --- Relations ---
-  @ManyToOne(() => Articles, (article) => article.analytics, { nullable: true })
-  @JoinColumn({ name: 'ArticleID' })
-  article?: Articles;
-
   @ManyToOne(() => Categories, (cat) => cat.articles, { nullable: true })
   @JoinColumn({ name: 'CategoryID' })
   category?: Categories;
 
-  @ManyToOne(() => Images, (img) => img.ImageID, { nullable: true })
-  @JoinColumn({ name: 'HistoricalImageID' })
-  historicalImage?: Images;
+  
 
-  @ManyToOne(() => Images, (img) => img.ImageID, { nullable: true })
-  @JoinColumn({ name: 'ModernImageID' })
-  modernImage?: Images;
-
-  @ManyToOne(() => Users, (u) => u.articles, { nullable: true })
-  @JoinColumn({ name: 'UserID' })
-  user?: Users;
+  
 
   @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;

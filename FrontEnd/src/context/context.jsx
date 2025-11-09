@@ -1,4 +1,5 @@
 import React, { createContext, useEffect, useState, useMemo, useRef } from 'react';
+import { setupTokenGetters } from '../services/api'
 
 // Banner images and locations - only used in this context
 const BANNER_IMAGES = [
@@ -139,6 +140,29 @@ export const AppProvider = ({ children }) => {
     setIsSidebarOpen,
     setShowMap,
   };
+
+  // Wire api client token getters so axios will attach Authorization header
+  useEffect(() => {
+    // setupTokenGetters is safe to call; if it throws we don't need to handle it further
+    try {
+      setupTokenGetters(() => accessToken, setAccessToken)
+    } catch (e) {
+      void e
+    }
+  }, [accessToken, setAccessToken])
+
+  // DEBUG: log accessToken/user changes to help diagnose auth timing
+  useEffect(() => {
+    try {
+      console.debug('[AppContext] accessToken changed', { accessToken })
+    } catch (e) { void e }
+  }, [accessToken])
+
+  useEffect(() => {
+    try {
+      console.debug('[AppContext] user changed', { user })
+    } catch (e) { void e }
+  }, [user])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

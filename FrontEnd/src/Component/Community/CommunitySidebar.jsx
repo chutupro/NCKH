@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import ProtectedLink from '../../Component/common/ProtectedLink'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/community/CommunitySidebar.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -210,10 +211,10 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
         </div>
           <h3 className="cta-title">{t('sidebar.havePhotos')}</h3>
           <p className="cta-description">{t('sidebar.sharePhotos')}</p>
-        <Link to="/contribute" className="cta-button">
+        <ProtectedLink to="/contribute" className="cta-button">
             {t('sidebar.contributeNow')}
           <FontAwesomeIcon icon={faArrowRight} />
-        </Link>
+        </ProtectedLink>
       </div>
     </aside>
   )

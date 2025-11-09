@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import '../../Styles/About/About.css'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import ProtectedLink from '../../Component/common/ProtectedLink'
 
 const About = () => {
   const { t } = useTranslation()
@@ -34,7 +35,7 @@ const About = () => {
           <h1 className="about-title">{t('about.title') || 'Về chúng tôi'}</h1>
           <p className="about-sub">{t('about.subtitle') || 'Kho tàng di sản Đà Nẵng - Nơi lưu giữ và chia sẻ những giá trị văn hóa quý báu của thành phố.'}</p>
           <div className="about-hero-actions">
-            <Link to="/contribute" className="about-cta">{t('about.contributeNow') || 'Đóng góp ảnh'}</Link>
+            <ProtectedLink to="/contribute" className="about-cta">{t('about.contributeNow') || 'Đóng góp ảnh'}</ProtectedLink>
             <Link to="/ImageLibrary" className="about-cta ghost">{t('about.browse') || 'Duyệt bộ sưu tập'}</Link>
           </div>
         </div>

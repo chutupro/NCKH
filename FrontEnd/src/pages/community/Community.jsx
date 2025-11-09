@@ -9,6 +9,7 @@ import PostCard from '../../Component/Community/PostCard'
 import CommunitySidebar from '../../Component/Community/CommunitySidebar'
 import Headers from '../../Component/home/Headers'
 import { Link, useLocation } from 'react-router-dom';
+import ProtectedLink from '../../Component/common/ProtectedLink'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faUsers } from '@fortawesome/free-solid-svg-icons'
 
@@ -136,10 +137,10 @@ const Community = () => {
           </div>
           <h2 className="hero-title">{t('community.title')}</h2>
           <p className="hero-sub">{t('community.subtitle')}</p>
-          <Link to='/contribute' className="contribute-primary">
+          <ProtectedLink to='/contribute' className="contribute-primary">
             <FontAwesomeIcon icon={faPlus} />
             {t('community.createPost')}
-          </Link>
+          </ProtectedLink>
         </div>
 
         <div className="community-content">

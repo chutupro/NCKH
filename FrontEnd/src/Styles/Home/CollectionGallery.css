@@ -168,10 +168,7 @@
   overflow: hidden;
 }
 
-.collection-likes {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
-}
+/* likes removed - UI element deprecated */
 
 .collection-footer {
   text-align: center;
