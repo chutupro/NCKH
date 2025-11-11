@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/useAppContext';
+import authService from '../../services/authService';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const AdminNavbar = ({ sidebarCollapsed, title = 'Dashboard' }) => {
   const navigate = useNavigate();
-  const { user, logout } = useAppContext();
+  const { user, setUser, setAccessToken, setIsAuthenticated } = useAppContext();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      // ✅ CLEAR CONTEXT
+      setUser(null);
+      setAccessToken(null);
+      setIsAuthenticated(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

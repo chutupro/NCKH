@@ -33,7 +33,7 @@ const Headers = () => {
       setAccessToken(null);
       setIsAuthenticated(false);
       setShowDropdown(false);
-      navigate('/');
+      navigate('/login'); // ✅ CHUYỂN VỀ TRANG LOGIN
     } catch (error) {
       console.error('Logout error:', error);
     }
