@@ -6,28 +6,29 @@ export const fetchMapLocations = createAsyncThunk(
   'mapLocations/fetchMapLocations',
   async () => {
     const response = await axios.get('http://localhost:3000/map-locations');
-    return response.data.map((loc) => ({
-      id: loc.LocationID,
-      title: loc.Name,
-      address: loc.Address,
-      position: [loc.Latitude, loc.Longitude],
-      image: loc.Image,
-      oldImage: loc.OldImage,
-      desc: loc.description,           // ĐÃ ĐỔI
-      fullDesc: loc.fullDescription,   // ĐÃ ĐỔI
-      categoryId: loc.CategoryID,
-      categoryName: loc.categoryName || 'Chưa phân loại',
-      rating: loc.Rating || 0,
-      reviews: loc.Reviews || 0,
+    return response.data.map(place => ({
+      id: place.LocationID,
+      position: [place.Latitude, place.Longitude],
+      title: place.Name,
+      rating: place.Rating || 0,
+      reviews: place.Reviews || 0,
+      address: place.Address || '',
+      image: place.Image || '',
+      oldImage: place.OldImage || '',
+      desc: place.description || '',
+      fullDesc: place.fullDescription || '',
+      categoryId: place.CategoryID || null,
+      categoryName: place.categoryName || 'Chưa phân loại', // DÙNG TRỰC TIẾP categoryName TỪ BACKEND
     }));
   }
 );
 
-// addMapLocation, updateMapLocation giữ nguyên (đã đúng)
+// Các thunk khác giữ nguyên
 export const addMapLocation = createAsyncThunk(
   'mapLocations/addMapLocation',
   async (newLocation) => {
     const response = await axios.post('http://localhost:3000/map-locations', {
+      id: newLocation.id || Date.now(),
       title: newLocation.title,
       latitude: newLocation.position[0],
       longitude: newLocation.position[1],
@@ -38,7 +39,7 @@ export const addMapLocation = createAsyncThunk(
       oldImage: newLocation.oldImage,
       desc: newLocation.desc,
       fullDesc: newLocation.fullDesc,
-      categoryId: newLocation.categoryId,
+      CategoryID: newLocation.categoryId,
     });
     return response.data;
   }
@@ -48,6 +49,7 @@ export const updateMapLocation = createAsyncThunk(
   'mapLocations/updateMapLocation',
   async (updatedLocation) => {
     const response = await axios.put(`http://localhost:3000/map-locations/${updatedLocation.id}`, {
+      id: updatedLocation.id,
       title: updatedLocation.title,
       latitude: updatedLocation.position[0],
       longitude: updatedLocation.position[1],
@@ -58,13 +60,12 @@ export const updateMapLocation = createAsyncThunk(
       oldImage: updatedLocation.oldImage,
       desc: updatedLocation.desc,
       fullDesc: updatedLocation.fullDesc,
-      categoryId: updatedLocation.categoryId,
+      CategoryID: updatedLocation.categoryId,
     });
     return response.data;
   }
 );
 
-// delete, feedback giữ nguyên
 export const deleteMapLocation = createAsyncThunk(
   'mapLocations/deleteMapLocation',
   async (id) => {
@@ -119,11 +120,11 @@ const mapLocationsSlice = createSlice({
         state.places.push(action.payload);
       })
       .addCase(updateMapLocation.fulfilled, (state, action) => {
-        const index = state.places.findIndex((p) => p.id === action.payload.id);
+        const index = state.places.findIndex(p => p.id === action.payload.id);
         if (index !== -1) state.places[index] = action.payload;
       })
       .addCase(deleteMapLocation.fulfilled, (state, action) => {
-        state.places = state.places.filter((p) => p.id !== action.payload);
+        state.places = state.places.filter(p => p.id !== action.payload);
       })
       .addCase(fetchFeedback.fulfilled, (state, action) => {
         state.feedback = action.payload;

@@ -11,6 +11,7 @@ import TimelineDetail from "../pages/Timeline/TimelineDetail"; // khác → gi�
 import Home from "../pages/common/Home";
 import Contribute from "../pages/contribute/Contribute";
 import ContributeInformation from "../pages/contribute/ContributeInformation";
+
 import ImageLibrary from "../pages/gallery/ImageLibrary";
 import ImageLibraryInformation from "../pages/gallery/ImageLibraryInformation";
 import About from "../pages/about/About"; // khác → giữ thêm
@@ -24,9 +25,9 @@ import Community from "../pages/community/Community";
 import CompareGallery from "../pages/Compare/CompareGallery";
 import CompareDetail from "../pages/Compare/CompareDetail";
 import MapPage from "../pages/map/MapPage";
-import MapAdmin from "../pages/map/MapAdmin"; // Import MapAdmin
+import MapAdmin from "../pages/map/MapAdmin";
 import { fetchMapLocations } from "../pages/map/mapLocationsSlice";
-import MapAdminContributions from "../pages/map/MapAdminContributions";
+
 
 // Admin Dashboard
 import AdminLayout from "../Component/admin/AdminLayout";
@@ -86,25 +87,18 @@ const Routee = () => {
       <Route path="/verify-email" element={<VerifyEmail />} /> {/* 🔥 NEW */}
   <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {/* ✅ GOOGLE CALLBACK */}
   <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
+      
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
       
-      {/* MAP ADMIN: CHỈ ADMIN & EDITOR */}
-      <Route
-        path="/map/admin"
+      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/EDITOR */}
+      <Route 
+        path="/map/admin" 
         element={
           <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
             <MapAdmin />
           </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/map/admin/contributions"
-        element={
-          <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
-            <MapAdminContributions />
-          </ProtectedRoute>
-        }
+        } 
       />
 
       {/* ADMIN DASHBOARD: CHỈ ADMIN */}
