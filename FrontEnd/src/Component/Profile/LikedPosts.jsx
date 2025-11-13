@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
 import { useAppContext } from '../../context/useAppContext';
 import PostCard from '../Community/PostCard';
 import { getArticlesPosts } from '../../API/articlesPost';
@@ -47,9 +46,7 @@ const LikedPosts = () => {
         setPosts(mapped);
       } catch (error) {
         console.error('Error fetching liked posts:', error);
-        toast.error('Không thể tải bài viết đã thích', {
-          position: 'top-right',
-        });
+        // Không hiển thị toast error
       } finally {
         setLoading(false);
       }

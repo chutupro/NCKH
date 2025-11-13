@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/community/Community.css'
 // fetch posts from backend
-import { getArticlesPosts, deleteArticlePost } from '../../API/articlesPost'
+import { getArticlesPosts } from '../../API/articlesPost'
 import postsMock from '../../util/posts'
 const BACKEND_BASE = 'http://localhost:3000'
 import PostCard from '../../Component/Community/PostCard'
@@ -152,17 +152,7 @@ const Community = () => {
               <div className="error">{t('common.error') || 'Lỗi: '}{error}</div>
             ) : filteredPosts.length > 0 ? (
                       filteredPosts.map((p) => (
-                      <PostCard post={p} key={p.id} onDelete={async (id) => {
-                        // confirm then call API and remove from list
-                        const ok = window.confirm(t('community.confirmDelete') || 'Bạn có chắc muốn xóa bài viết này?')
-                        if (!ok) return
-                        try {
-                          await deleteArticlePost(id)
-                          setPosts((cur) => cur.filter(x => x.id !== id))
-                        } catch (err) {
-                          alert((t('community.deleteError') || 'Xóa thất bại: ') + (err?.message || String(err)))
-                        }
-                      }} />
+                      <PostCard post={p} key={p.id} />
                     ))
             ) : (
               <div className="no-posts">

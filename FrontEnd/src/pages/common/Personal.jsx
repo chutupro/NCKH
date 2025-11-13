@@ -5,7 +5,7 @@ import UserPosts from '../../Component/Profile/UserPosts';
 import LikedPosts from '../../Component/Profile/LikedPosts';
 
 const Personal = () => {
-  const { accessToken } = useAppContext();
+  const { accessToken, user, setUser } = useAppContext();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -17,6 +17,10 @@ const Personal = () => {
   
   // Tab state for posts section
   const [activeTab, setActiveTab] = useState('my-posts'); // 'my-posts' or 'liked-posts'
+  
+  // Stats state - tính toán động từ bài viết
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [totalLikes, setTotalLikes] = useState(0);
 
   // Fetch user profile
   useEffect(() => {
@@ -156,9 +160,8 @@ const Personal = () => {
           <div style={{ marginBottom: '20px' }}>
             <h3 style={{ marginBottom: '10px', fontSize:"30px" }}>Thống kê</h3>
             <div style={{ display: 'flex', gap: '20px' }}>
-              <div>📝 <strong>{profile.profile.totalContributions}</strong> Đóng góp</div>
-              <div>✏️ <strong>{profile.profile.totalEdits}</strong> Chỉnh sửa</div>
-              <div>❤️ <strong>{profile.profile.totalLikes}</strong> Lượt thích</div>
+              <div>📝 <strong>{totalPosts}</strong> Đóng góp</div>
+              <div>❤️ <strong>{totalLikes}</strong> Lượt thích</div>
             </div>
           </div>
 
@@ -368,7 +371,10 @@ const Personal = () => {
 
           {/* Tab Content */}
           <div style={{ minHeight: '200px' }}>
-            {activeTab === 'my-posts' && <UserPosts />}
+            {activeTab === 'my-posts' && <UserPosts onStatsUpdate={(posts, likes) => {
+              setTotalPosts(posts);
+              setTotalLikes(likes);
+            }} />}
             {activeTab === 'liked-posts' && <LikedPosts />}
           </div>
         </div>

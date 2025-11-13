@@ -4,7 +4,7 @@ import { useAppContext } from '../../context/useAppContext';
 import PostCard from '../Community/PostCard';
 import { getArticlesPosts } from '../../API/articlesPost';
 
-const UserPosts = () => {
+const UserPosts = ({ onStatsUpdate }) => {
   const { user } = useAppContext();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,11 +34,16 @@ const UserPosts = () => {
         }));
         
         setPosts(mapped);
+        
+        // Tính toán stats và gửi lên parent
+        if (onStatsUpdate) {
+          const totalPosts = mapped.length;
+          const totalLikes = mapped.reduce((sum, post) => sum + (post.likes || 0), 0);
+          onStatsUpdate(totalPosts, totalLikes);
+        }
       } catch (error) {
         console.error('Error fetching user posts:', error);
-        toast.error('Không thể tải bài viết của bạn', {
-          position: 'top-right',
-        });
+        // Không hiển thị toast error
       } finally {
         setLoading(false);
       }
@@ -47,7 +52,7 @@ const UserPosts = () => {
     if (user) {
       fetchUserPosts();
     }
-  }, [user]);
+  }, [user, onStatsUpdate]);
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm('Bạn có chắc muốn xóa bài viết này?');
@@ -61,6 +66,14 @@ const UserPosts = () => {
       toast.success('Đã xóa bài viết thành công', {
         position: 'top-right',
       });
+      
+      // Cập nhật stats sau khi xóa
+      if (onStatsUpdate) {
+        const newPosts = posts.filter(p => p.id !== id);
+        const totalPosts = newPosts.length;
+        const totalLikes = newPosts.reduce((sum, post) => sum + (post.likes || 0), 0);
+        onStatsUpdate(totalPosts, totalLikes);
+      }
     } catch (error) {
       console.error('Error deleting post:', error);
       toast.error('Không thể xóa bài viết', {
@@ -102,7 +115,7 @@ const UserPosts = () => {
           key={post.id} 
           post={post} 
           onDelete={handleDelete}
-          showActions={true}
+          showDeleteButton={true}
         />
       ))}
     </div>

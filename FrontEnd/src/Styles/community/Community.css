@@ -434,3 +434,38 @@
     padding: 0 16px;
   }
 }
+
+/* Delete Button for Personal Page */
+.delete-btn-personal {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.delete-btn-personal:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.delete-btn-personal:active {
+  transform: translateY(0);
+}
+
+.delete-btn-personal svg {
+  transition: transform 0.2s ease;
+}
+
+.delete-btn-personal:hover svg {
+  transform: scale(1.1);
+}
