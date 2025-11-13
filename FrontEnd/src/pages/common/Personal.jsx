@@ -85,6 +85,16 @@ const Personal = () => {
       setProfile(data);
       setEditing(false);
 
+      // ✅ Cập nhật user trong Context để header và các component khác hiển thị avatar mới
+      setUser({
+        ...user,
+        fullName: data.fullName,
+        avatar: data.profile?.avatar || avatar,
+      });
+
+      // ✅ Dispatch event để UserPosts component re-fetch
+      window.dispatchEvent(new Event('profileUpdated'));
+
       toast.success('Cập nhật profile thành công!', {
         position: 'top-right',
         autoClose: 3000,

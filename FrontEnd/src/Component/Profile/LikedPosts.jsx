@@ -36,6 +36,7 @@ const LikedPosts = () => {
         const mapped = likedArticles.map(a => ({
           id: a.id,
           author: a.author?.fullName || 'Người dùng',
+          authorAvatar: a.author?.avatar || '/img/default-avatar.png', // ✅ Thêm avatar
           when: a.createdAt ? new Date(a.createdAt).toLocaleString('vi-VN') : '',
           category: a.category || '',
           text: a.title || a.content || '',

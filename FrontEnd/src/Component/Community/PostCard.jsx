@@ -118,7 +118,16 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
   return (
     <article className="post-card" id={`post-${post.id}`}>
       <header className="post-header">
-        <div className="avatar">{(post.author || 'U').slice(0,2).toUpperCase()}</div>
+        <div 
+          className="avatar"
+          style={{
+            backgroundImage: post.authorAvatar ? `url(${post.authorAvatar})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {!post.authorAvatar && (post.author || 'U').slice(0,2).toUpperCase()}
+        </div>
         <div className="meta">
           <div className="name">{post.author}</div>
           <div className="sub">{post.when} · {post.category}</div>

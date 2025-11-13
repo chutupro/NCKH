@@ -46,6 +46,7 @@ export const useAuthRestore = () => {
           fullName: user?.fullName || user?.FullName || '',
           roleId: user?.roleId || user?.RoleID || null,
           Role: user?.role || 'User', // ✅ THÊM ROLE NAME
+          avatar: user?.profile?.avatar || user?.avatar || '/img/default-avatar.png', // ✅ THÊM AVATAR
         };
 
         // Restore state

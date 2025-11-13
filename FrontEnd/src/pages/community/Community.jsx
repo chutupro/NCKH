@@ -84,6 +84,7 @@ const Community = () => {
           return {
             id: a.id,
             author: a.author?.fullName || a.author?.FullName || 'Người dùng',
+            authorAvatar: a.author?.avatar || '/img/default-avatar.png', // ✅ Thêm avatar
             when: a.createdAt ? new Date(a.createdAt).toLocaleString() : '',
             category: a.category || '',
             text: a.title || a.content || '',

@@ -318,6 +318,12 @@ export class AuthService {
     // 🔥 redis.set('rt:hash', userId, 'EX', 7 ngày = 604800 seconds)
     await this.redis.set(redisKey, user.UserID.toString(), 604800);
     
+    // ✅ Load user profile để lấy avatar
+    const userWithProfile = await this.userRepo.findOne({
+      where: { UserID: user.UserID },
+      relations: ['role', 'profile'],
+    });
+    
     // user đã có role relation từ validateUser()
     return {
       accessToken: tokens.access_token,
@@ -328,6 +334,9 @@ export class AuthService {
         fullName: user.FullName ?? '',
         roleId: user.RoleID,
         role: user?.role?.RoleName || 'User',
+        profile: {
+          avatar: userWithProfile?.profile?.Avatar || '/img/default-avatar.png',
+        },
       },
     };
   }
@@ -353,7 +362,7 @@ export class AuthService {
     // Query role relation để dùng trong getTokens()
     const userWithRole = await this.userRepo.findOne({
       where: { UserID: userId },
-      relations: ['role'],
+      relations: ['role', 'profile'], // ✅ Thêm profile
     });
 
     const refreshTokenHash = this.hashRefreshToken(refreshToken);
@@ -385,6 +394,9 @@ export class AuthService {
         fullName: user.FullName,
         roleId: user.RoleID,
         role: userWithRole?.role?.RoleName || 'User',
+        profile: {
+          avatar: userWithRole?.profile?.Avatar || '/img/default-avatar.png',
+        },
       }
     };
   }

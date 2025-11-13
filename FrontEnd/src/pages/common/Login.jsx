@@ -68,6 +68,7 @@ const Login = () => {
         fullName: response?.user?.fullName ?? response?.user?.FullName ?? '',
         roleId: response?.user?.roleId ?? response?.user?.RoleID ?? null,
         Role: response?.user?.role ?? 'User', // ✅ THÊM ROLE NAME
+        avatar: response?.user?.profile?.avatar ?? response?.user?.avatar ?? '/img/default-avatar.png', // ✅ THÊM AVATAR
       };
 
       setAccessToken(response.accessToken);

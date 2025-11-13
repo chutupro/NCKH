@@ -8,6 +8,7 @@ const UserPosts = ({ onStatsUpdate }) => {
   const { user } = useAppContext();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0); // ✅ Để trigger re-fetch
 
   useEffect(() => {
     const fetchUserPosts = async () => {
@@ -26,6 +27,7 @@ const UserPosts = ({ onStatsUpdate }) => {
         const mapped = userPosts.map(a => ({
           id: a.id,
           author: a.author?.fullName || 'Người dùng',
+          authorAvatar: a.author?.avatar || user?.avatar || '/img/default-avatar.png', // ✅ Thêm avatar
           when: a.createdAt ? new Date(a.createdAt).toLocaleString('vi-VN') : '',
           category: a.category || '',
           text: a.title || a.content || '',
@@ -52,7 +54,17 @@ const UserPosts = ({ onStatsUpdate }) => {
     if (user) {
       fetchUserPosts();
     }
-  }, [user, onStatsUpdate]);
+  }, [user, onStatsUpdate, refreshKey]); // ✅ Thêm refreshKey để re-fetch khi cần
+
+  // ✅ Listen for profile update event
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setRefreshKey(prev => prev + 1); // Trigger re-fetch
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+  }, []);
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm('Bạn có chắc muốn xóa bài viết này?');
