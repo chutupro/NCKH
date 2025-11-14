@@ -3,6 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils';
 import '../../Styles/Contribute/contribute.css'
 
+// Centralized AI feature toggles so product can enable/disable behaviors quickly.
+// In future these can read from env vars or remote config instead of hard-coded values.
+const getAiFeatureConfig = () => ({
+  baseUrl: 'http://localhost:8000',
+  analyzeEndpoint: '/fast-analyze',
+  enableAnalyze: false,// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<false là tắt còn true là bật
+  gates: {
+    nsfw: true,
+    manipulation: true,
+    historical: true,
+  }
+})
+
 const Contribute = () => {
   // i18n removed: use Google Translate helper to detect language when needed
   const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'en'
@@ -16,12 +29,13 @@ const Contribute = () => {
   const [error, setError] = useState(null)
   const inputRef = useRef(null)
 
-  const clearFile = () => {
+  const clearFile = (options = {}) => {
+    const { preserveMessage = false } = options
     setFile(null)
     setFileName(null)
     setPreviewUrl(null)
     setAnalysis(null)
-    setMessage(null)
+    if (!preserveMessage) setMessage(null)
     setError(null)
     // reset native input value
     if (inputRef.current) inputRef.current.value = null
@@ -84,32 +98,56 @@ const Contribute = () => {
       setError('Hãy bỏ ảnh')
       return
     }
+    const aiConfig = getAiFeatureConfig()
+    if (!aiConfig.enableAnalyze) {
+      // Skip AI flow entirely; go straight to form
+      navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult: null, file } })
+      return
+    }
+
     setLoading(true)
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await fetch('http://localhost:8000/analyze', {
+      const endpoint = `${aiConfig.baseUrl}${aiConfig.analyzeEndpoint || '/fast-analyze'}`
+      const res = await fetch(endpoint, {
         method: 'POST',
         body: fd
       })
       if (!res.ok) throw new Error(`Server returned ${res.status}`)
       const json = await res.json()
+      const action = json?.action
       const isViolation = json?.nsfw_check?.is_violation
-      // show message and block navigation when AI marks image as violation (true)
-  if (isViolation === true) {
-        // stop loading and show message when AI blocks the image
+      const isFake = json?.manipulation?.is_fake === true
+      const isHistorical = json?.historical?.is_historical
+      const blockAndNotify = (msg) => {
         setLoading(false)
-  const msg = json?.nsfw_check?.message || 'Ảnh bị chặn bởi AI'
         setMessage(msg)
-        // show a browser alert as a fallback so user definitely sees the message
         try {
           window.alert(msg)
-          // after user dismisses the alert, clear the file so image is removed
-          clearFile()
         } catch {
-          /* ignore in non-browser env */
+          /* ignore */
         }
+        clearFile({ preserveMessage: true })
         setAnalysis(null)
+      }
+      // show message and block navigation when AI marks issues
+      if (action === 'blocked') {
+        const msg = json?.message || 'Ảnh bị chặn bởi AI'
+        blockAndNotify(msg)
+        return
+      }
+      if (aiConfig.gates?.nsfw && isViolation === true) {
+        const msg = json?.nsfw_check?.message || 'Ảnh bị chặn bởi AI'
+        blockAndNotify(msg)
+        return
+      }
+      if (aiConfig.gates?.manipulation && isFake) {
+        blockAndNotify('Không nhận hình ảnh đã chỉnh sửa/giả mạo')
+        return
+      }
+      if (aiConfig.gates?.historical && isHistorical === false) {
+        blockAndNotify('Ảnh này không phải ảnh lịch sử, vui lòng chọn ảnh khác')
         return
       }
       const label = Array.isArray(json?.activeLabels) && json.activeLabels.length ? json.activeLabels[0] : null
@@ -133,10 +171,9 @@ const Contribute = () => {
         title_vi: json?.caption_vi || null
       }
       setAnalysis({ label, caption_en: aiResult.title_en, caption_vi: aiResult.title_vi })
-      // navigate to details page; keep loading spinner visible until navigation
-  // pass the original File object too so the details page can upload the
-  // original image (not a possibly-resized dataURL) and avoid blurriness
-  navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult, file } })
+      setLoading(false)
+      // navigate to details page; pass preview + file + AI result
+      navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult, file } })
     } catch (err) {
       setError(err.message)
       setLoading(false)
