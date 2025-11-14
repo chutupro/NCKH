@@ -52,9 +52,18 @@ const FacebookAuthSuccess = () => {
             autoClose: 3000,
           });
           
-          // Redirect về trang chủ
+          // Kiểm tra xem có địa điểm cần quay lại không (từ map review)
+          const returnToPlaceData = localStorage.getItem('returnToPlace');
+          
+          // Redirect
           setTimeout(() => {
-            navigate('/');
+            if (returnToPlaceData) {
+              // Nếu có returnToPlace, redirect về map (không xóa localStorage, để MapPage xử lý)
+              navigate('/map');
+            } else {
+              // Nếu không, redirect về trang chủ
+              navigate('/');
+            }
           }, 1000);
         } catch (error) {
           console.error('Error in Facebook auth:', error);

@@ -165,101 +165,28 @@ export class AuthService {
       throw new BadRequestException(emailValidation.reason || 'Email không hợp lệ.');
     }
 
-    // 3. Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    const tokenExpiry = new Date();
-    tokenExpiry.setHours(tokenExpiry.getHours() + 24); // 24 hours expiry
-
-    console.log('🔑 [AuthService] Generated verification token');
-
-    // 4. Hash password
+    // 3. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. Create user with unverified status
+    // 4. Create user with unverified status
     const user = this.userRepo.create({
       Email: email,
       PasswordHash: hashedPassword,
       FullName: fullName || 'User',
       RoleID: role ? parseInt(role) : 2, // 🔥 Default role: 2 (User)
       IsEmailVerified: false,
-      EmailVerificationToken: verificationToken,
-      EmailVerificationExpiry: tokenExpiry,
     });
 
     await this.userRepo.save(user);
-    console.log('✅ [AuthService] User created with verification token');
+    console.log('✅ [AuthService] User created successfully');
 
-    // 6. Create UserProfile automatically
+    // 5. Create UserProfile automatically
     await this.userService.createUserProfile(user.UserID);
     console.log('✅ [AuthService] UserProfile created');
 
-    // 7. Send verification email
-    const frontendUrl = this.config.get<string>('FRONTEND_URL') || 'http://localhost:5173';
-    const verificationLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
-
-    console.log('📧 [AuthService] Sending verification email...');
-    const emailResult = await this.emailService.sendVerificationEmail(email, verificationLink, fullName || 'User');
-
-    if (!emailResult.success) {
-      // Delete user if email fails
-      console.log('❌ [AuthService] Email failed, deleting user...');
-      await this.userRepo.delete({ UserID: user.UserID });
-      throw new BadRequestException(emailResult.error || 'Không thể gửi email xác thực.');
-    }
-
     console.log('✅ [AuthService] Email confirmation registration completed');
     return {
-      message: 'Chúng tôi đã gửi link xác thực đến email của bạn. Vui lòng check email để hoàn tất đăng ký.',
-    };
-  }
-
-  // 🔥 NEW: Verify Email Token
-  async verifyEmailToken(token: string): Promise<{ message: string; user: any }> {
-    console.log('🔵 [AuthService] Verifying email token');
-
-    // Find user with this token
-    const user = await this.userRepo.findOne({
-      where: { EmailVerificationToken: token },
-    });
-
-    if (!user) {
-      console.log('❌ [AuthService] Invalid token');
-      throw new BadRequestException('Link xác thực không hợp lệ hoặc đã hết hạn.');
-    }
-
-    // Check if already verified
-    if (user.IsEmailVerified) {
-      console.log('⚠️ [AuthService] Email already verified');
-      return {
-        message: 'Email đã được xác thực trước đó. Bạn có thể đăng nhập.',
-        user: {
-          id: user.UserID,
-          email: user.Email,
-          fullName: user.FullName,
-        },
-      };
-    }
-
-    // Check token expiry
-    if (user.EmailVerificationExpiry && new Date() > user.EmailVerificationExpiry) {
-      console.log('❌ [AuthService] Token expired');
-      throw new BadRequestException('Link xác thực đã hết hạn. Vui lòng đăng ký lại.');
-    }
-
-    // Mark email as verified
-    user.IsEmailVerified = true;
-    user.EmailVerificationToken = null;
-    user.EmailVerificationExpiry = null;
-    await this.userRepo.save(user);
-
-    console.log('✅ [AuthService] Email verified successfully');
-    return {
-      message: 'Xác thực email thành công! Bạn có thể đăng nhập ngay bây giờ.',
-      user: {
-        id: user.UserID,
-        email: user.Email,
-        fullName: user.FullName,
-      },
+      message: 'Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.',
     };
   }
 

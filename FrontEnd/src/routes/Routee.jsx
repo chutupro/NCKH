@@ -17,7 +17,6 @@ import ImageLibraryInformation from "../pages/gallery/ImageLibraryInformation";
 import About from "../pages/about/About"; // khác → giữ thêm
 import Login from "../pages/common/Login";
 import Register from "../pages/common/Register";
-import VerifyEmail from "../pages/common/VerifyEmail"; // 🔥 NEW
 import GoogleAuthSuccess from "../pages/common/GoogleAuthSuccess"; // ✅ GOOGLE AUTH
 import FacebookAuthSuccess from "../pages/common/FacebookAuthSuccess"; // ✅ FACEBOOK AUTH
 import ForgotPassword from "../pages/common/ForgotPassword"; // ✅ FORGOT PASSWORD
@@ -84,7 +83,6 @@ const Routee = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} /> {/* ✅ FORGOT PASSWORD */}
-      <Route path="/verify-email" element={<VerifyEmail />} /> {/* 🔥 NEW */}
   <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {/* ✅ GOOGLE CALLBACK */}
   <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
       

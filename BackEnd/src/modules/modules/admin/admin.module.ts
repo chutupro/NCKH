@@ -6,10 +6,11 @@ import { AdminPermissionsController } from './admin-permissions.controller';
 import { AdminPermissionsService } from './admin-permissions.service';
 import { Users } from '../../entities/user.entity';
 import { UserProfiles } from '../../entities/user-profile.entity';
+import { Feedback } from '../../entities/feedback.entity';
 import { RedisService } from '../../../common/redis.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Users, UserProfiles])],
+  imports: [TypeOrmModule.forFeature([Users, UserProfiles, Feedback])],
   controllers: [AdminUsersController, AdminPermissionsController],
   providers: [AdminUsersService, AdminPermissionsService, RedisService],
 })

@@ -125,12 +125,12 @@ export class MapLocationsService {
   async getFeedbackByLocation(locationId: number) {
     return await this.feedbackRepository.find({
       where: { LocationID: locationId },
-      relations: ['user'],
+      relations: ['user', 'user.profile'], // ✅ Load user profile để lấy Avatar
       order: { CreatedAt: 'DESC' },
     });
   }
 
-  async addFeedback(locationId: number, userId: number, feedbackDto: { rating: number; comment: string }) {
+  async addFeedback(locationId: number, userId: number, feedbackDto: { rating: number; comment: string; imageUrls?: string[] }) {
     if (!feedbackDto.rating || !feedbackDto.comment) {
       throw new BadRequestException('Rating and comment are required');
     }
@@ -138,11 +138,18 @@ export class MapLocationsService {
     const location = await this.mapLocationsRepository.findOneBy({ LocationID: locationId });
     if (!location) throw new BadRequestException('Location not found');
 
+    // ✅ Convert imageUrls array to JSON string
+    const imageUrlsJson = feedbackDto.imageUrls && feedbackDto.imageUrls.length > 0
+      ? JSON.stringify(feedbackDto.imageUrls)
+      : undefined;
+
     const feedback = this.feedbackRepository.create({
       LocationID: locationId,
       UserID: userId,
       Rating: feedbackDto.rating,
       Comment: feedbackDto.comment,
+      ImageUrls: imageUrlsJson, // ✅ Store image paths as JSON
+      ImagesApproved: false,     // ✅ Default to false (pending admin approval)
       CreatedAt: new Date(),
     });
 
@@ -155,5 +162,37 @@ export class MapLocationsService {
     await this.mapLocationsRepository.save(location);
 
     return savedFeedback;
+  }
+
+  // ✅ Like feedback
+  async likeFeedback(feedbackId: number) {
+    const feedback = await this.feedbackRepository.findOneBy({ FeedbackID: feedbackId });
+    if (!feedback) {
+      throw new BadRequestException('Feedback not found');
+    }
+
+    feedback.Likes = (feedback.Likes || 0) + 1;
+    await this.feedbackRepository.save(feedback);
+
+    return { 
+      message: 'Liked successfully', 
+      likes: feedback.Likes 
+    };
+  }
+
+  // ✅ Unlike feedback
+  async unlikeFeedback(feedbackId: number) {
+    const feedback = await this.feedbackRepository.findOneBy({ FeedbackID: feedbackId });
+    if (!feedback) {
+      throw new BadRequestException('Feedback not found');
+    }
+
+    feedback.Likes = Math.max(0, (feedback.Likes || 0) - 1);
+    await this.feedbackRepository.save(feedback);
+
+    return { 
+      message: 'Unliked successfully', 
+      likes: feedback.Likes 
+    };
   }
 }

@@ -8,6 +8,7 @@ import CompareModal from "./CompareModal";
 import ReactDOM from "react-dom";
 import axios from "axios";
 import { useAppContext } from "../../context/useAppContext";
+import { useAuthRestore } from "../../hooks/useAuthRestore";
 
 const BASE_URL = "http://localhost:3000";
 
@@ -35,7 +36,10 @@ const DA_NANG_BOUNDS = [
 const MapPage = () => {
   const dispatch = useDispatch();
   const { places, status, error } = useSelector((state) => state.mapLocations);
-  const { user } = useAppContext(); // ✅ LẤY USER ĐÃ ĐĂNG NHẬP
+  const { user, isAuthLoading } = useAppContext(); // ✅ LẤY USER + AUTH LOADING STATE
+  
+  // ✅ RESTORE SESSION SAU KHI F5 (quan trọng!)
+  useAuthRestore();
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -49,6 +53,7 @@ const MapPage = () => {
   const hoverTimeoutRef = useRef(null);
   const favoritesSidebarRef = useRef(null);
   const allMarkersRef = useRef(new Map());
+  const tileLayerRef = useRef(null); // ✅ Ref cho tile layer
 
   /* ---------- STATE ---------- */
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,14 +62,553 @@ const MapPage = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [newRating, setNewRating] = useState(0);
+  const [newRating, setNewRating] = useState(null); // ✅ ĐỔI 0 → null để validation đúng
   const [newComment, setNewComment] = useState("");
+  const [selectedImages, setSelectedImages] = useState([]); // ✅ State for review images
   const [activeTab, setActiveTab] = useState("overview");
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // ✅ Lưu preference vào localStorage
+    const saved = localStorage.getItem("mapDarkMode");
+    return saved === "true";
+  });
+  const [isSidebarDark, setIsSidebarDark] = useState(() => {
+    // ✅ Dark mode cho sidebar
+    const saved = localStorage.getItem("sidebarDarkMode");
+    return saved === "true";
+  });
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem("favorites");
     return saved ? JSON.parse(saved) : [];
   });
   const [comparePlace, setComparePlace] = useState(null);
+
+  /* ---------- KIỂM TRA REDIRECT SAU KHI LOGIN ---------- */
+  useEffect(() => {
+    if (!user || !user.userId) return;
+    
+    // Kiểm tra xem có địa điểm cần quay lại không
+    const returnToPlaceData = localStorage.getItem('returnToPlace');
+    if (!returnToPlaceData) return;
+    
+    try {
+      const placeData = JSON.parse(returnToPlaceData);
+      // Kiểm tra timestamp để tránh dữ liệu cũ (chỉ trong vòng 10 phút)
+      if (Date.now() - placeData.timestamp > 10 * 60 * 1000) {
+        localStorage.removeItem('returnToPlace');
+        return;
+      }
+      
+      // Xóa dữ liệu sau khi đọc
+      localStorage.removeItem('returnToPlace');
+      
+      // Tìm địa điểm trong danh sách places
+      const placeToOpen = places.find(p => p.id === placeData.placeId);
+      if (placeToOpen) {
+        // Set activeTab thành reviews nếu user muốn đánh giá
+        if (placeData.openReviewTab) {
+          setActiveTab('reviews');
+        }
+        // Mở sidebar cho địa điểm đó sau 500ms để đảm bảo map đã load xong
+        setTimeout(() => {
+          showPlaceDetail(placeToOpen, mapInstance.current);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error parsing returnToPlace data:', error);
+      localStorage.removeItem('returnToPlace');
+    }
+  }, [user, places]);
+
+  // ✅ RE-RENDER FORM ĐÁNH GIÁ SAU KHI USER RESTORE (KHÔNG RESET RATING)
+  useEffect(() => {
+    if (!user || !user.userId) return;
+    if (!sidebarRef.current) return;
+    if (!currentPlace.current) return;
+    
+    const isVisible = sidebarRef.current.style && sidebarRef.current.style.display === 'block';
+    if (!isVisible) return;
+    
+    // Chỉ update nếu đang ở tab reviews
+    if (activeTab !== 'reviews') return;
+    
+    console.log('🔄 [User Restored] Updating review form for user:', user.email);
+    
+    // Delay để đảm bảo DOM đã ready
+    const timer = setTimeout(() => {
+      try {
+        // Tìm content area
+        const contentArea = sidebarRef.current.querySelector('#reviews-tab-content, [style*="display:flex;flex-direction:column"]');
+        if (!contentArea) return;
+        
+        // Kiểm tra xem có đang hiển thị "Vui lòng đăng nhập" không
+        const loginPrompt = contentArea.querySelector('#login-to-review-link');
+        if (!loginPrompt) return; // Form đã đúng rồi
+        
+        console.log('✅ [User Restored] Replacing login prompt with review form');
+        
+        // Replace login prompt với form đánh giá
+        const loginPromptContainer = loginPrompt.closest('[style*="background:#fff3cd"]');
+        if (loginPromptContainer && loginPromptContainer.parentNode) {
+          // Lấy rating hiện tại (nếu có)
+          const savedRating = window.currentRating ?? newRating ?? 0;
+          
+          const reviewFormHTML = `
+            <div style="width:100%;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span>Đánh giá của bạn: </span>
+                <div id="star-rating" style="display:flex;gap:2px;">
+                  ${[1, 2, 3, 4, 5].map(i => `<span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= savedRating ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>`).join("")}
+                </div>
+              </div>
+              <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
+              <div style="margin-bottom:8px;">
+                <label for="review-images" style="display:block;font-size:0.9rem;margin-bottom:4px;color:#555;">Thêm ảnh (tùy chọn, tối đa 5):</label>
+                <input type="file" id="review-images" accept="image/*" multiple style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" />
+                <div id="image-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+              </div>
+              <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
+            </div>
+          `;
+          
+          loginPromptContainer.outerHTML = reviewFormHTML;
+          
+          // ✅ KHÔI PHỤC LẠI window.currentRating (QUAN TRỌNG!)
+          if (savedRating > 0) {
+            window.currentRating = savedRating;
+            console.log('🔄 [User Restored] Restored window.currentRating:', savedRating);
+          }
+          
+          // Re-attach event listeners
+          const submitBtn = document.getElementById("submit-review-btn");
+          const imageInput = document.getElementById("review-images");
+          const imagePreview = document.getElementById("image-preview");
+          
+          if (submitBtn) {
+            // Attach image input preview handler
+            if (imageInput) {
+              imageInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 5) {
+                  alert('⚠️ Chỉ được chọn tối đa 5 ảnh!');
+                  imageInput.value = '';
+                  return;
+                }
+                
+                // Show preview
+                if (imagePreview) {
+                  imagePreview.innerHTML = files.map((f, idx) => `
+                    <div style="position:relative;width:80px;height:80px;">
+                      <img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid #ccc" />
+                      <span style="position:absolute;top:-6px;right:-6px;background:#666;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer;" data-remove-idx="${idx}">✕</span>
+                    </div>
+                  `).join('');
+                  
+                  // Attach remove handlers
+                  imagePreview.querySelectorAll('[data-remove-idx]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                      const idx = parseInt(btn.getAttribute('data-remove-idx'));
+                      const dt = new DataTransfer();
+                      Array.from(imageInput.files).forEach((f, i) => {
+                        if (i !== idx) dt.items.add(f);
+                      });
+                      imageInput.files = dt.files;
+                      imageInput.dispatchEvent(new Event('change'));
+                    });
+                  });
+                }
+              });
+            }
+            
+            // Attach stars click handlers
+            for (let i = 1; i <= 5; i++) {
+              const star = document.getElementById(`star-${i}`);
+              if (star) {
+                star.addEventListener("click", () => {
+                  console.log('⭐ Star clicked:', i);
+                  window.setStarRating(i);
+                });
+              }
+            }
+            
+            // Attach submit handler
+            submitBtn.addEventListener("click", async () => {
+              const commentInput = document.getElementById("comment-input");
+              const comment = commentInput?.value?.trim();
+              
+              const currentRating = window.currentRating ?? newRating;
+              
+              console.log('📊 [SUBMIT] Rating check:', {
+                'window.currentRating': window.currentRating,
+                'newRating state': newRating,
+                'final currentRating': currentRating,
+                'type': typeof currentRating,
+                'comment': comment?.substring(0, 30)
+              });
+              
+              if (currentRating === null || currentRating === undefined || currentRating < 1 || currentRating > 5) {
+                console.error('❌ Rating validation failed:', {
+                  currentRating,
+                  windowCurrentRating: window.currentRating,
+                  newRatingState: newRating,
+                  type: typeof currentRating,
+                  isNull: currentRating === null,
+                  isUndefined: currentRating === undefined
+                });
+                alert("🌟 Vui lòng chọn số sao (1-5 sao) trước khi gửi đánh giá!");
+                return;
+              }
+              if (!comment) {
+                alert("💬 Vui lòng nhập bình luận!");
+                return;
+              }
+              
+              try {
+                console.log('🚀 [SUBMIT] Sending to API:', {
+                  userId: user.userId,
+                  rating: currentRating,
+                  comment: comment,
+                  endpoint: `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`
+                });
+                
+                // ✅ Build FormData to send images + data
+                const formData = new FormData();
+                formData.append('userId', user.userId);
+                formData.append('rating', currentRating);
+                formData.append('comment', comment);
+                
+                // Add images if selected
+                if (imageInput?.files) {
+                  Array.from(imageInput.files).forEach(file => {
+                    formData.append('images', file);
+                  });
+                }
+                
+                await axios.post(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`, formData, {
+                  headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                
+                console.log('✅ [SUBMIT] Review submitted successfully!');
+                
+                // Reset form
+                setNewRating(null);
+                setNewComment("");
+                window.currentRating = null;
+                if (commentInput) commentInput.value = "";
+                if (imageInput) imageInput.value = "";
+                if (imagePreview) imagePreview.innerHTML = "";
+                
+                // Reset màu sao
+                for (let i = 1; i <= 5; i++) {
+                  const star = document.getElementById(`star-${i}`);
+                  if (star) star.style.color = "#ccc";
+                }
+                
+                // Reload reviews
+                const reviewsRes = await axios.get(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`);
+                const newReviewsList = reviewsRes.data.map(r => ({
+                  rating: r.Rating,
+                  comment: r.Comment,
+                  timestamp: new Date(r.CreatedAt).toLocaleDateString('vi-VN'),
+                  userName: r.user?.FullName || 'Ẩn danh'
+                }));
+                
+                setReviews(newReviewsList);
+                
+                console.log('✅ [SUBMIT] Reviews updated:', newReviewsList.length, 'total reviews');
+                
+                // Update reviews list in DOM immediately (with avatar + like button)
+                const reviewsList = document.getElementById('reviews-list');
+                if (reviewsList) {
+                  reviewsList.innerHTML = newReviewsList.length > 0 ? newReviewsList.map(r => `
+                    <div style="padding:12px;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:flex-start;">
+                      <img src="${r.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" />
+                      <div style="flex:1;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+                          <div>
+                            <div style="font-weight:600;color:#333">${r.userName || 'Ẩn danh'}</div>
+                            <div style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:8px">
+                            <button class="like-btn" data-feedback-id="${r.FeedbackID || ''}" style="background:transparent;border:none;cursor:pointer;color:#666;display:flex;align-items:center;gap:6px">👍 <span class="like-count">${r.likes}</span></button>
+                          </div>
+                        </div>
+                        <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
+                        ${r.images && r.images.length > 0 && r.imagesApproved ? `
+                          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                            ${r.images.map(img => `<img src="${img.startsWith('http')?img:`${BASE_URL}${img}`}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eee"/>`).join('')}
+                          </div>
+                        ` : ''}
+                        <div style="font-size:0.8rem;color:#888;margin-top:8px;">${r.timestamp}</div>
+                      </div>
+                    </div>
+                  `).join("") : '<p style="text-align:center;color:#999;padding:20px;">Chưa có đánh giá nào</p>';
+
+                  // Attach like button handlers
+                  const likeButtons = reviewsList.querySelectorAll('.like-btn');
+                  likeButtons.forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                      e.preventDefault();
+                      const fid = btn.getAttribute('data-feedback-id');
+                      if (!fid) return;
+                      const countSpan = btn.querySelector('.like-count');
+                      // Optimistic UI
+                      const current = parseInt(countSpan.textContent || '0', 10) || 0;
+                      countSpan.textContent = (current + 1).toString();
+                      try {
+                        await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback/${fid}/like`);
+                      } catch (err) {
+                        console.error('Like failed', err);
+                        countSpan.textContent = current.toString();
+                        alert('Không thể like, thử lại sau');
+                      }
+                    });
+                  });
+                }
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;';
+                successMsg.textContent = '✅ Đã gửi đánh giá thành công!';
+                document.body.appendChild(successMsg);
+                setTimeout(() => successMsg.remove(), 3000);
+              } catch (error) {
+                console.error("Error submitting review:", error);
+                alert(`Có lỗi khi gửi đánh giá: ${error.response?.data?.message || error.message}`);
+              }
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error updating review form:', err);
+      }
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [user?.userId, activeTab]);
+
+  // ✅ HANDLE isAuthLoading CHANGES - FIX "Đang kiểm tra đăng nhập..." STUCK
+  useEffect(() => {
+    console.log('🔍 [isAuthLoading useEffect] Triggered:', { isAuthLoading, activeTab, userEmail: user?.email });
+    
+    if (isAuthLoading) return; // Chỉ chạy khi isAuthLoading = false
+    if (!sidebarRef.current) return;
+    if (!currentPlace.current) return;
+    
+    const isVisible = sidebarRef.current.style && sidebarRef.current.style.display === 'block';
+    if (!isVisible) {
+      console.log('⚠️ [isAuthLoading=false] Sidebar not visible, skipping');
+      return;
+    }
+    
+    // Chỉ update nếu đang ở tab reviews
+    if (activeTab !== 'reviews') {
+      console.log('⚠️ [isAuthLoading=false] Not on reviews tab, skipping');
+      return;
+    }
+    
+    console.log('🔄 [isAuthLoading=false] Updating review form. User:', user?.email || 'null');
+    
+    // Delay để đảm bảo DOM đã ready
+    const timer = setTimeout(() => {
+      try {
+        // Tìm content area
+        const contentArea = sidebarRef.current.querySelector('#reviews-tab-content, [style*="display:flex;flex-direction:column"]');
+        if (!contentArea) return;
+        
+        // Kiểm tra xem có đang hiển thị "Đang kiểm tra đăng nhập..." không
+        // Spinner có text trong <p> tag
+        const loadingText = Array.from(contentArea.querySelectorAll('p')).find(p => 
+          p.textContent.includes('Đang kiểm tra đăng nhập')
+        );
+        if (!loadingText) {
+          console.log('✅ [isAuthLoading=false] No loading spinner found, DOM already updated');
+          return; // Không còn spinner
+        }
+        
+        // Tìm container div chứa spinner (parent of <p>)
+        const loadingSpinner = loadingText.closest('div[style*="text-align:center"]');
+        if (!loadingSpinner) {
+          console.log('⚠️ [isAuthLoading=false] Found loading text but no container div');
+          return;
+        }
+        
+        console.log('✅ [isAuthLoading=false] Removing loading spinner and showing form/login prompt');
+        
+        // Xác định nội dung thay thế dựa trên user state
+        let replacementHTML = '';
+        
+        if (user && user.userId) {
+          // User đã đăng nhập - hiển thị form đánh giá
+          const savedRating = window.currentRating ?? newRating ?? 0;
+          
+          replacementHTML = `
+            <div style="width:100%;margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span>Đánh giá của bạn: </span>
+                <div id="star-rating" style="display:flex;gap:2px;">
+                  ${[1, 2, 3, 4, 5].map(i => `<span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= savedRating ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>`).join("")}
+                </div>
+              </div>
+              <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
+              <div style="margin-bottom:8px;">
+                <label for="review-images" style="display:block;font-size:0.9rem;margin-bottom:4px;color:#555;">Thêm ảnh (tùy chọn, tối đa 5):</label>
+                <input type="file" id="review-images" accept="image/*" multiple style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" />
+                <div id="image-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+              </div>
+              <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
+            </div>
+          `;
+        } else {
+          // User chưa đăng nhập - hiển thị login prompt
+          replacementHTML = `
+            <div style="width:100%;background:#fff3cd;border-left:4px solid #ffc107;padding:12px;border-radius:4px;margin-bottom:12px;">
+              <p style="margin:0;font-size:0.9rem;color:#856404;">
+                Vui lòng <a href="#" id="login-to-review-link" style="color:#007bff;text-decoration:underline;cursor:pointer;">đăng nhập</a> để viết đánh giá.
+              </p>
+            </div>
+          `;
+        }
+        
+        // Replace loading spinner
+        const spinnerContainer = loadingSpinner.closest('div');
+        if (spinnerContainer && spinnerContainer.parentNode) {
+          spinnerContainer.outerHTML = replacementHTML;
+          
+          // ✅ RE-ATTACH EVENT LISTENERS
+          if (user && user.userId) {
+            // Restore window.currentRating
+            const savedRating = window.currentRating ?? newRating ?? 0;
+            if (savedRating > 0) {
+              window.currentRating = savedRating;
+              console.log('🔄 [isAuthLoading=false] Restored window.currentRating:', savedRating);
+            }
+            
+            // Re-attach event listeners for review form
+            const submitBtn = document.getElementById("submit-review-btn");
+            const imageInput = document.getElementById("review-images");
+            const imagePreview = document.getElementById("image-preview");
+            
+            if (imageInput) {
+              imageInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 5) {
+                  alert('⚠️ Chỉ được chọn tối đa 5 ảnh!');
+                  imageInput.value = '';
+                  return;
+                }
+                
+                // Show preview
+                if (imagePreview) {
+                  imagePreview.innerHTML = files.map((f, idx) => `
+                    <div style="position:relative;width:80px;height:80px;">
+                      <img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid #ccc" />
+                      <span style="position:absolute;top:-6px;right:-6px;background:#666;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer;" data-remove-idx="${idx}">✕</span>
+                    </div>
+                  `).join('');
+                  
+                  // Attach remove handlers
+                  imagePreview.querySelectorAll('[data-remove-idx]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                      const idx = parseInt(btn.getAttribute('data-remove-idx'));
+                      const dt = new DataTransfer();
+                      Array.from(imageInput.files).forEach((f, i) => {
+                        if (i !== idx) dt.items.add(f);
+                      });
+                      imageInput.files = dt.files;
+                      imageInput.dispatchEvent(new Event('change'));
+                    });
+                  });
+                }
+              });
+            }
+            
+            // Attach stars click handlers
+            for (let i = 1; i <= 5; i++) {
+              const star = document.getElementById(`star-${i}`);
+              if (star) {
+                star.addEventListener("click", () => {
+                  console.log('⭐ Star clicked:', i);
+                  window.setStarRating(i);
+                });
+              }
+            }
+            
+            // Attach submit handler (simplified - full logic already exists in original code)
+            if (submitBtn) {
+              submitBtn.addEventListener("click", async () => {
+                const commentInput = document.getElementById("comment-input");
+                const comment = commentInput?.value?.trim();
+                const currentRating = window.currentRating ?? newRating;
+                
+                if (!currentRating || currentRating < 1 || currentRating > 5) {
+                  alert("🌟 Vui lòng chọn số sao (1-5 sao) trước khi gửi đánh giá!");
+                  return;
+                }
+                if (!comment) {
+                  alert("💬 Vui lòng nhập bình luận!");
+                  return;
+                }
+                
+                // Handle image upload and submission
+                const files = imageInput ? Array.from(imageInput.files) : [];
+                const formData = new FormData();
+                formData.append('userId', user.userId);
+                formData.append('rating', currentRating);
+                formData.append('comment', comment);
+                files.forEach(file => formData.append('images', file));
+                
+                try {
+                  submitBtn.disabled = true;
+                  submitBtn.textContent = 'Đang gửi...';
+                  
+                  console.log('🚀 [SUBMIT] Submitting to:', {
+                    url: `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`,
+                    placeId: currentPlace.current.id,
+                    currentPlace: currentPlace.current
+                  });
+                  
+                  await axios.post(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    withCredentials: true
+                  });
+                  alert('✅ Đã gửi đánh giá thành công!');
+                  commentInput.value = '';
+                  if (imageInput) imageInput.value = '';
+                  if (imagePreview) imagePreview.innerHTML = '';
+                  window.currentRating = 0;
+                  setNewRating(0);
+                  // Refresh reviews
+                  const res = await axios.get(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`);
+                  showPlaceDetail(currentPlace.current, res.data || []);
+                } catch (err) {
+                  console.error('Error submitting review:', err);
+                  alert('❌ Lỗi khi gửi đánh giá: ' + (err.response?.data?.message || err.message));
+                } finally {
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = 'Gửi đánh giá';
+                }
+              });
+            }
+          } else {
+            // Attach login link handler
+            const loginLink = document.getElementById("login-to-review-link");
+            if (loginLink) {
+              loginLink.addEventListener("click", (e) => {
+                e.preventDefault();
+                console.log('🔗 Login link clicked');
+                // Trigger login modal or redirect
+                window.location.href = '/auth/login';
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('❌ [isAuthLoading=false] Error updating DOM:', err);
+      }
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [isAuthLoading, user?.userId, activeTab, newRating, newComment]);
 
   /* ---------- KHỞI TẠO MAP ---------- */
   useEffect(() => {
@@ -81,10 +625,14 @@ const MapPage = () => {
     mapInstance.current = map;
     map.fitBounds(DA_NANG_BOUNDS);
 
-    L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+    // ✅ TILE LAYER - sẽ được toggle bằng dark mode
+    const lightTile = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
       attribution: "&copy; Google Maps",
       maxZoom: 20,
-    }).addTo(map);
+    });
+    
+    tileLayerRef.current = lightTile;
+    lightTile.addTo(map);
 
     dispatch(fetchMapLocations());
 
@@ -97,6 +645,48 @@ const MapPage = () => {
       if (mapInstance.current) mapInstance.current.remove();
     };
   }, [dispatch]);
+
+  /* ---------- TOGGLE DARK/LIGHT MODE ---------- */
+  useEffect(() => {
+    if (!mapInstance.current || !tileLayerRef.current) return;
+
+    // Remove current tile layer
+    mapInstance.current.removeLayer(tileLayerRef.current);
+
+    // Add new tile layer based on mode
+    if (isDarkMode) {
+      // Dark mode - Google Maps dark style
+      tileLayerRef.current = L.tileLayer(
+        "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", // Hybrid dark
+        {
+          attribution: "&copy; Google Maps (Dark)",
+          maxZoom: 20,
+        }
+      );
+    } else {
+      // Light mode - Standard Google Maps
+      tileLayerRef.current = L.tileLayer(
+        "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+        {
+          attribution: "&copy; Google Maps",
+          maxZoom: 20,
+        }
+      );
+    }
+
+    tileLayerRef.current.addTo(mapInstance.current);
+    
+    // Save preference
+    localStorage.setItem("mapDarkMode", isDarkMode);
+  }, [isDarkMode]);
+
+  /* ---------- ÁP DỤNG DARK MODE CHO SIDEBAR ---------- */
+  useEffect(() => {
+    if (sidebarRef.current) {
+      sidebarRef.current.style.backgroundColor = isSidebarDark ? "#1a1a1a" : "#ffffff";
+      sidebarRef.current.style.color = isSidebarDark ? "#ffffff" : "#333333";
+    }
+  }, [isSidebarDark]);
 
   /* ---------- FIX BLACK SCREEN ---------- */
   useEffect(() => {
@@ -199,19 +789,38 @@ const MapPage = () => {
     leftPanel.style.cssText = `
       position:fixed;top:0;left:0;width:100px;height:100vh;
       background:#2d2d2d;z-index:10001;display:flex;flex-direction:column;
-      align-items:center;padding-top:24px;font-family:system-ui;
+      align-items:center;padding-top:24px;font-family:system-ui;gap:16px;
     `;
     const backBtn = L.DomUtil.create("div");
-    backBtn.innerHTML = `<div style="width:48px;height:48px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:24px;">
+    backBtn.innerHTML = `<div style="width:48px;height:48px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     </div>`;
     backBtn.onclick = () => (window.location.href = "/");
+    
     const savedBtn = L.DomUtil.create("div");
     savedBtn.innerHTML = `<div style="width:48px;height:48px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
     </div>`;
     savedBtn.onclick = () => showFavoritesSidebar();
-    leftPanel.append(backBtn, savedBtn);
+    
+    // ✅ NÚT DARK MODE CHO SIDEBAR
+    const darkModeBtn = L.DomUtil.create("div");
+    const updateDarkModeBtn = () => {
+      const isDark = localStorage.getItem("sidebarDarkMode") === "true";
+      darkModeBtn.innerHTML = `<div 
+        onmouseenter="this.style.transform='scale(1.1)'; this.style.background='#555';" 
+        onmouseleave="this.style.transform='scale(1)'; this.style.background='${isDark ? '#2d2d2d' : '#4a4a4a'}';"
+        style="width:48px;height:48px;background:${isDark ? '#2d2d2d' : '#4a4a4a'};border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s ease;">
+        <span style="font-size:20px;">${isDark ? '☀️' : '🌙'}</span>
+      </div>`;
+    };
+    updateDarkModeBtn();
+    darkModeBtn.onclick = () => {
+      setIsSidebarDark(prev => !prev);
+      setTimeout(updateDarkModeBtn, 50);
+    };
+    
+    leftPanel.append(backBtn, savedBtn, darkModeBtn);
     document.body.appendChild(leftPanel);
 
     // === TOP BAR ===
@@ -665,7 +1274,13 @@ const MapPage = () => {
 
   const hideHoverPopup = () => {
     if (hoverPopupRef.current) {
-      document.body.removeChild(hoverPopupRef.current);
+      try {
+        if (hoverPopupRef.current.parentNode) {
+          document.body.removeChild(hoverPopupRef.current);
+        }
+      } catch (err) {
+        console.warn('Failed to remove hover popup:', err);
+      }
       hoverPopupRef.current = null;
     }
   };
@@ -687,10 +1302,24 @@ const MapPage = () => {
     setTimeout(() => window.updateTopBarPosition(), 50);
 
     // ✅ GLOBAL FUNCTION ĐỂ SET RATING (TỪ onclick trong HTML string)
-    window.currentRating = 0;
+    // GIỮ NGUYÊN rating nếu đã có (không reset khi re-render)
+    if (typeof window.currentRating === 'undefined') {
+      window.currentRating = null; // ✅ ĐỔI 0 → null để validation chính xác
+      console.log('🔢 Initialized window.currentRating: null');
+    } else {
+      console.log('✅ Keeping existing window.currentRating:', window.currentRating);
+    }
+    
     window.setStarRating = (rating) => {
-      setNewRating(rating);
+      console.log('⭐ setStarRating CALLED:', rating);
+      
+      // ✅ LƯU VÀO WINDOW TRƯỚC (ƯU TIÊN CAO NHẤT)
       window.currentRating = rating;
+      
+      // ✅ SAU ĐÓ MỚI CẬP NHẬT STATE
+      setNewRating(rating);
+      
+      console.log('✅ Rating saved - window:', window.currentRating, 'state will update to:', rating);
       
       // ✅ CẬP NHẬT MÀU CÁC SAO NGAY LẬP TỨC
       for (let i = 1; i <= 5; i++) {
@@ -700,6 +1329,20 @@ const MapPage = () => {
         }
       }
     };
+    
+    // ✅ Restore màu sao nếu đã có rating
+    setTimeout(() => {
+      const savedRating = window.currentRating ?? newRating ?? 0;
+      if (savedRating > 0) {
+        console.log('🎨 Restoring star colors for rating:', savedRating);
+        for (let i = 1; i <= 5; i++) {
+          const star = document.getElementById(`star-${i}`);
+          if (star) {
+            star.style.color = i <= savedRating ? "#ffca28" : "#ccc";
+          }
+        }
+      }
+    }, 100);
 
     // Load reviews từ API
     try {
@@ -708,7 +1351,11 @@ const MapPage = () => {
         rating: r.Rating,
         comment: r.Comment,
         timestamp: new Date(r.CreatedAt).toLocaleDateString('vi-VN'),
-        userName: r.user?.FullName || 'Ẩn danh'
+        userName: r.user?.FullName || 'Ẩn danh',
+        avatar: r.user?.profile?.Avatar || '/img/default-avatar.png',
+        likes: r.Likes || 0,
+        images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
+        imagesApproved: !!r.ImagesApproved,
       })));
     } catch (error) {
       console.error("Error loading reviews:", error);
@@ -768,17 +1415,53 @@ const MapPage = () => {
                 </div>
               </div>
 
+              <!-- Histogram and Write review button -->
+              <div style="width:100%;display:flex;gap:12px;margin-bottom:16px;align-items:flex-start;">
+                <div style="flex:1;">
+                  ${(() => {
+                    const counts = [0,0,0,0,0];
+                    reviews.forEach(rv => { counts[5 - rv.rating] = (counts[5 - rv.rating] || 0) + 1; });
+                    const total = reviews.length || 1;
+                    return `
+                      <div style="display:flex;flex-direction:column;gap:6px;">
+                        ${[5,4,3,2,1].map((star, idx) => {
+                          const num = reviews.filter(r => r.rating === star).length;
+                          const pct = Math.round((num / Math.max(reviews.length,1)) * 100);
+                          return `
+                            <div style="display:flex;align-items:center;gap:8px;">
+                              <div style="width:36px">${star}★</div>
+                              <div style="flex:1;background:#eee;border-radius:6px;height:10px;overflow:hidden;">
+                                <div style="width:${pct}%;height:100%;background:#ffd54f;border-radius:6px"></div>
+                              </div>
+                              <div style="width:36px;text-align:right;color:#666">${pct}%</div>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    `;
+                  })()}
+                </div>
+                <div style="width:160px;">
+                  <button id="write-review-btn" style="width:100%;padding:12px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Viết đánh giá</button>
+                </div>
+              </div>
+
               ${user && user.userId ? `
               <div style="width:100%;margin-bottom:16px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                   <span>Đánh giá của bạn: </span>
                   <div id="star-rating" style="display:flex;gap:2px;">
                     ${[1, 2, 3, 4, 5].map(i => `
-                      <span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= newRating ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>
+                      <span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= (window.currentRating || newRating || 0) ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>
                     `).join("")}
                   </div>
                 </div>
                 <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
+                <div style="margin-bottom:8px;">
+                  <label for="review-images" style="display:block;font-size:0.9rem;margin-bottom:4px;color:#555;">Thêm ảnh (tùy chọn, tối đa 5):</label>
+                  <input type="file" id="review-images" accept="image/*" multiple style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" />
+                  <div id="image-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+                </div>
                 <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
               </div>
               ` : `
@@ -789,13 +1472,26 @@ const MapPage = () => {
 
               <div id="reviews-list" style="width:100%;max-height:300px;overflow-y:auto;">
                 ${reviews.length > 0 ? reviews.map(r => `
-                  <div style="padding:12px;border-bottom:1px solid #eee;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                      <span style="font-weight:600;color:#333;">${r.userName || 'Ẩn danh'}</span>
-                      <span style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</span>
+                  <div style="padding:12px;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:flex-start;">
+                    <img src="${r.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" />
+                    <div style="flex:1;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+                        <div>
+                          <div style="font-weight:600;color:#333">${r.userName || 'Ẩn danh'}</div>
+                          <div style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <button class="like-btn" data-feedback-id="${r.FeedbackID || ''}" style="background:transparent;border:none;cursor:pointer;color:#666;display:flex;align-items:center;gap:6px">👍 <span class="like-count">${r.likes}</span></button>
+                        </div>
+                      </div>
+                      <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
+                      ${r.images && r.images.length > 0 && r.imagesApproved ? `
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                          ${r.images.map(img => `<img src="${img.startsWith('http')?img:`${BASE_URL}${img}`}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eee"/>`).join('')}
+                        </div>
+                      ` : ''}
+                      <div style="font-size:0.8rem;color:#888;margin-top:8px;">${r.timestamp}</div>
                     </div>
-                    <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
-                    <span style="font-size:0.8rem;color:#888;">${r.timestamp}</span>
                   </div>
                 `).join("") : '<p style="text-align:center;color:#999;padding:20px;">Chưa có đánh giá nào</p>'}
               </div>
@@ -816,11 +1512,17 @@ const MapPage = () => {
 
     // Attach event listeners for tabs
     const switchTab = (newTab) => {
+      console.log('🔄 Switching tab to:', newTab);
+      
+      // ✅ UPDATE REACT STATE
       setActiveTab(newTab);
       
-      // Update tab buttons
+      // ✅ UPDATE DOM IMMEDIATELY (không đợi React re-render)
       const overviewBtn = document.getElementById("overview-tab");
       const reviewsBtn = document.getElementById("reviews-tab");
+      const contentArea = document.getElementById("content-area");
+      
+      if (!contentArea) return;
       
       if (overviewBtn && reviewsBtn) {
         if (newTab === "overview") {
@@ -840,10 +1542,7 @@ const MapPage = () => {
         }
       }
       
-      // Update content area
-      const contentArea = document.getElementById("content-area");
-      if (!contentArea) return;
-      
+      // Re-render content area
       if (newTab === "overview") {
         contentArea.innerHTML = `
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
@@ -889,24 +1588,44 @@ const MapPage = () => {
               </div>
             </div>
 
-            ${user && user.userId ? `
-            <div style="width:100%;margin-bottom:16px;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <span>Đánh giá của bạn: </span>
-                <div id="star-rating" style="display:flex;gap:2px;">
-                  ${[1, 2, 3, 4, 5].map(i => `
-                    <span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= newRating ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>
-                  `).join("")}
+            ${(() => {
+              // ✅ Đang loading auth → Hiển thị loading state
+              if (isAuthLoading) {
+                return `
+                  <div style="width:100%;margin-bottom:16px;padding:20px;text-align:center;">
+                    <div style="display:inline-block;width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#1a73e8;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                    <style>@keyframes spin { to { transform: rotate(360deg); }}</style>
+                    <p style="margin:8px 0 0 0;color:#666;font-size:0.9rem;">Đang kiểm tra đăng nhập...</p>
+                  </div>
+                `;
+              }
+              
+              // ✅ Đã có user → Hiển thị form đánh giá
+              if (user && user.userId) {
+                return `
+                  <div style="width:100%;margin-bottom:16px;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                      <span>Đánh giá của bạn: </span>
+                      <div id="star-rating" style="display:flex;gap:2px;">
+                        ${[1, 2, 3, 4, 5].map(i => {
+                          const currentRating = window.currentRating || 0;
+                          return `<span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= currentRating ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>`;
+                        }).join("")}
+                      </div>
+                    </div>
+                    <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
+                    <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
+                  </div>
+                `;
+              }
+              
+              // ✅ Chưa đăng nhập → Hiển thị prompt
+              return `
+                <div style="width:100%;margin-bottom:16px;padding:16px;background:#fff3cd;border-radius:8px;text-align:center;">
+                  <p style="margin:0;color:#856404;">Vui lòng <a href="#" id="login-to-review-link" style="color:#1a73e8;text-decoration:none;font-weight:600;">đăng nhập</a> để đánh giá địa điểm này</p>
                 </div>
-              </div>
-              <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
-              <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
-            </div>
-            ` : `
-            <div style="width:100%;margin-bottom:16px;padding:16px;background:#fff3cd;border-radius:8px;text-align:center;">
-              <p style="margin:0;color:#856404;">Vui lòng <a href="/login" style="color:#1a73e8;text-decoration:none;font-weight:600;">đăng nhập</a> để đánh giá địa điểm này</p>
-            </div>
-            `}
+              `;
+            })()}
 
             <div id="reviews-list" style="width:100%;max-height:300px;overflow-y:auto;">
               ${reviews.length > 0 ? reviews.map(r => `
@@ -923,47 +1642,221 @@ const MapPage = () => {
           </div>
         `;
         
+        // Re-attach login link (CHỈ KHI USER CHƯA ĐĂNG NHẬP)
+        if (!user || !user.userId) {
+          document.getElementById("login-to-review-link")?.addEventListener("click", (e) => {
+            e.preventDefault();
+            // Lưu thông tin địa điểm hiện tại vào localStorage để sau khi login quay lại
+            localStorage.setItem('returnToPlace', JSON.stringify({
+              placeId: place.id,
+              placeTitle: place.title,
+              openReviewTab: true,
+              timestamp: Date.now()
+            }));
+            window.location.href = '/login';
+          });
+        }
+        
         // Re-attach submit review button (CHỈ KHI USER ĐÃ ĐĂNG NHẬP)
-        if (user && user.userId) {
-          document.getElementById("submit-review-btn")?.addEventListener("click", async () => {
+        const submitBtn = document.getElementById("submit-review-btn");
+        const imageInput = document.getElementById("review-images");
+        const imagePreview = document.getElementById("image-preview");
+        
+        if (submitBtn && user && user.userId) {
+          // ✅ Image input preview handler
+          if (imageInput) {
+            imageInput.addEventListener('change', (e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length > 5) {
+                alert('⚠️ Chỉ được chọn tối đa 5 ảnh!');
+                imageInput.value = '';
+                return;
+              }
+              
+              // Show preview
+              if (imagePreview) {
+                imagePreview.innerHTML = files.map((f, idx) => `
+                  <div style="position:relative;width:80px;height:80px;">
+                    <img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid #ccc" />
+                    <span style="position:absolute;top:-6px;right:-6px;background:#666;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer;" data-remove-idx="${idx}">✕</span>
+                  </div>
+                `).join('');
+                
+                // Attach remove handlers
+                imagePreview.querySelectorAll('[data-remove-idx]').forEach(btn => {
+                  btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.getAttribute('data-remove-idx'));
+                    const dt = new DataTransfer();
+                    Array.from(imageInput.files).forEach((f, i) => {
+                      if (i !== idx) dt.items.add(f);
+                    });
+                    imageInput.files = dt.files;
+                    imageInput.dispatchEvent(new Event('change'));
+                  });
+                });
+              }
+            });
+          }
+          
+          // ✅ ATTACH STARS CLICK HANDLERS (quan trọng!)
+          for (let i = 1; i <= 5; i++) {
+            const star = document.getElementById(`star-${i}`);
+            if (star) {
+              star.addEventListener("click", () => {
+                console.log('⭐ Star clicked:', i);
+                window.setStarRating(i);
+              });
+            }
+          }
+          
+          submitBtn.addEventListener("click", async () => {
             const commentInput = document.getElementById("comment-input");
             const comment = commentInput?.value?.trim();
             
-            // ✅ LẤY RATING TỪ WINDOW.CURRENTRATING
-            const currentRating = window.currentRating || 0;
+            // ✅ ĐỌC RATING TỪ WINDOW.CURRENTRATING (ƯU TIÊN) hoặc newRating state
+            const currentRating = window.currentRating ?? newRating;
             
-            if (!currentRating || currentRating === 0) {
-              return alert("Vui lòng chọn số sao đánh giá!");
+            // ✅ DEBUG LOG CHI TIẾT
+            console.log('📊 [SUBMIT] Rating check:', {
+              'window.currentRating': window.currentRating,
+              'newRating state': newRating,
+              'final currentRating': currentRating,
+              'type': typeof currentRating,
+              'comment': comment?.substring(0, 30)
+            });
+            
+            // ✅ VALIDATION: rating phải là số từ 1-5 (KIỂM TRA CHÍNH XÁC)
+            if (currentRating === null || currentRating === undefined || currentRating < 1 || currentRating > 5) {
+              console.error('❌ Rating validation failed:', {
+                currentRating,
+                windowCurrentRating: window.currentRating,
+                newRatingState: newRating,
+                type: typeof currentRating,
+                isNull: currentRating === null,
+                isUndefined: currentRating === undefined
+              });
+              alert("🌟 Vui lòng chọn số sao (1-5 sao) trước khi gửi đánh giá!");
+              return;
             }
             if (!comment) {
-              return alert("Vui lòng nhập bình luận!");
+              alert("💬 Vui lòng nhập bình luận!");
+              return;
             }
             
             try {
-              // ✅ GỬI userId (LOWERCASE) THEO YÊU CẦU CỦA BACKEND
-              await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback`, {
+              console.log('🚀 [SUBMIT] Sending to API:', {
                 userId: user.userId,
                 rating: currentRating,
-                comment: comment
+                comment: comment,
+                endpoint: `${BASE_URL}/map-locations/${place.id}/feedback`
               });
               
+              // ✅ Build FormData to send images + data
+              const formData = new FormData();
+              formData.append('userId', user.userId);
+              formData.append('rating', currentRating);
+              formData.append('comment', comment);
+              
+              // Add images if selected
+              if (imageInput?.files) {
+                Array.from(imageInput.files).forEach(file => {
+                  formData.append('images', file);
+                });
+              }
+              
+              await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+              });
+              
+              console.log('✅ [SUBMIT] Review submitted successfully!');
+              
               // ✅ RESET FORM
-              setNewRating(0);
+              setNewRating(null); // ✅ Reset thành null
               setNewComment("");
-              window.currentRating = 0;
+              window.currentRating = null; // ✅ Reset thành null
               if (commentInput) commentInput.value = "";
+              if (imageInput) imageInput.value = "";
+              if (imagePreview) imagePreview.innerHTML = "";
+              
+              // ✅ RESET MÀU SAO VỀ MẶC ĐỊNH
+              for (let i = 1; i <= 5; i++) {
+                const star = document.getElementById(`star-${i}`);
+                if (star) {
+                  star.style.color = "#ccc";
+                }
+              }
               
               // ✅ RELOAD REVIEWS TỪ DATABASE
               const reviewsRes = await axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`);
-              setReviews(reviewsRes.data.map(r => ({
+              const newReviewsList = reviewsRes.data.map(r => ({
                 rating: r.Rating,
                 comment: r.Comment,
                 timestamp: new Date(r.CreatedAt).toLocaleDateString('vi-VN'),
-                userName: r.user?.FullName || 'Ẩn danh'
-              })));
+                userName: r.user?.FullName || 'Ẩn danh',
+                avatar: r.user?.profile?.Avatar || '/img/default-avatar.png',
+                likes: r.Likes || 0,
+                images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
+                imagesApproved: !!r.ImagesApproved,
+              }));
+
+              setReviews(newReviewsList);
               
-              alert("Đã gửi đánh giá thành công!");
-              switchTab("reviews"); // ✅ REFRESH TAB ĐỂ HIỂN THỊ REVIEW MỚI
+              console.log('✅ [SUBMIT] Reviews updated:', newReviewsList.length, 'total reviews');
+              
+              // ✅ UPDATE REVIEWS LIST IN DOM IMMEDIATELY (with avatar + like)
+              const reviewsList = document.getElementById('reviews-list');
+              if (reviewsList) {
+                reviewsList.innerHTML = newReviewsList.length > 0 ? newReviewsList.map(r => `
+                  <div style="padding:12px;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:flex-start;">
+                    <img src="${r.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" />
+                    <div style="flex:1;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+                        <div>
+                          <div style="font-weight:600;color:#333">${r.userName || 'Ẩn danh'}</div>
+                          <div style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <button class="like-btn" data-feedback-id="${r.FeedbackID || ''}" style="background:transparent;border:none;cursor:pointer;color:#666;display:flex;align-items:center;gap:6px">👍 <span class="like-count">${r.likes}</span></button>
+                        </div>
+                      </div>
+                      <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
+                      ${r.images && r.images.length > 0 && r.imagesApproved ? `
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                          ${r.images.map(img => `<img src="${img.startsWith('http')?img:`${BASE_URL}${img}`}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eee"/>`).join('')}
+                        </div>
+                      ` : ''}
+                      <div style="font-size:0.8rem;color:#888;margin-top:8px;">${r.timestamp}</div>
+                    </div>
+                  </div>
+                `).join("") : '<p style="text-align:center;color:#999;padding:20px;">Chưa có đánh giá nào</p>';
+
+                // attach like handlers
+                const likeButtons = reviewsList.querySelectorAll('.like-btn');
+                likeButtons.forEach(btn => {
+                  btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const fid = btn.getAttribute('data-feedback-id');
+                    if (!fid) return;
+                    const countSpan = btn.querySelector('.like-count');
+                    const current = parseInt(countSpan.textContent || '0', 10) || 0;
+                    countSpan.textContent = (current + 1).toString();
+                    try {
+                      await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback/${fid}/like`);
+                    } catch (err) {
+                      console.error('Like failed', err);
+                      countSpan.textContent = current.toString();
+                      alert('Không thể like, thử lại sau');
+                    }
+                  });
+                });
+              }
+              
+              // ✅ SHOW SUCCESS MESSAGE (tốt hơn alert)
+              const successMsg = document.createElement('div');
+              successMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;';
+              successMsg.textContent = '✅ Đã gửi đánh giá thành công!';
+              document.body.appendChild(successMsg);
+              setTimeout(() => successMsg.remove(), 3000);
             } catch (error) {
               console.error("Error submitting review:", error);
               alert(`Có lỗi khi gửi đánh giá: ${error.response?.data?.message || error.message}`);
@@ -978,7 +1871,73 @@ const MapPage = () => {
 
     document.getElementById("view-detail-btn")?.addEventListener("click", () => showDetailModal(place));
     
-    // Initialize with current tab
+    // ✅ TỰ ĐỘNG MỞ REVIEWS TAB NẾU USER ĐÃ LOGIN
+    if (user && user.userId && activeTab === "overview") {
+      console.log('📝 Auto-opening reviews tab for logged-in user');
+      switchTab("reviews"); // switchTab sẽ attach handlers trong nó
+    } else if (activeTab === "reviews" && user && user.userId) {
+      // ✅ NẾU ĐÃ RENDER REVIEWS TAB TỪ ĐẦU → ATTACH HANDLERS NGAY
+      console.log('📝 Initial reviews tab, attaching handlers');
+      setTimeout(() => {
+        // Attach stars
+        for (let i = 1; i <= 5; i++) {
+          const star = document.getElementById(`star-${i}`);
+          if (star) {
+            star.addEventListener("click", () => {
+              console.log('⭐ Star clicked (initial):', i);
+              window.setStarRating(i);
+            });
+          }
+        }
+        
+        // Attach submit button
+        const submitBtn = document.getElementById("submit-review-btn");
+        if (submitBtn) {
+          submitBtn.addEventListener("click", async () => {
+            const commentInput = document.getElementById("comment-input");
+            const comment = commentInput?.value?.trim();
+            const currentRating = window.currentRating ?? newRating;
+            
+            console.log('Gửi đi:', { rating: currentRating, comment });
+            
+            if (!currentRating || currentRating < 1 || currentRating > 5) {
+              console.error('❌ Rating validation failed');
+              return alert("🌟 Chọn sao đi! (1-5 sao)");
+            }
+            if (!comment) return alert("Vui lòng nhập bình luận!");
+            
+            try {
+              await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback`, {
+                userId: user.userId,
+                rating: currentRating,
+                comment: comment
+              });
+              
+              setNewRating(null);
+              setNewComment("");
+              window.currentRating = null;
+              if (commentInput) commentInput.value = "";
+              
+              const reviewsRes = await axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`);
+              setReviews(reviewsRes.data.map(r => ({
+                rating: r.Rating,
+                comment: r.Comment,
+                timestamp: new Date(r.CreatedAt).toLocaleDateString('vi-VN'),
+                userName: r.user?.FullName || 'Ẩn danh'
+              })));
+              
+              alert("Đã gửi đánh giá thành công!");
+              switchTab("reviews");
+            } catch (error) {
+              console.error("Error:", error);
+              alert(`Lỗi: ${error.response?.data?.message || error.message}`);
+            }
+          });
+        }
+      }, 100);
+    }
+    
+    // Initialize handlers based on current tab
     if (activeTab === "overview") {
       document.getElementById("get-directions-btn")?.addEventListener("click", () => {
         if (!userMarker.current) return alert("Vui lòng bật định vị!");
@@ -998,6 +1957,15 @@ const MapPage = () => {
       });
 
       document.getElementById("compare-btn")?.addEventListener("click", () => setComparePlace(place));
+
+      // Write review button
+      document.getElementById('write-review-btn')?.addEventListener('click', () => {
+        switchTab('reviews');
+        setTimeout(() => {
+          const commentInput = document.getElementById('comment-input');
+          if (commentInput) commentInput.focus();
+        }, 150);
+      });
     }
   };
 
@@ -1175,14 +2143,8 @@ const MapPage = () => {
     setTimeout(() => window.updateTopBarPosition(), 50);
   };
 
-  window.setStarRating = (rating) => {
-    setNewRating(rating);
-    const stars = document.querySelectorAll('[id^="star-"]');
-    stars.forEach((star) => {
-      const starValue = parseInt(star.id.split("-")[1]);
-      star.style.color = starValue <= rating ? "#ffca28" : "#ccc";
-    });
-  };
+  // ❌ REMOVED: Duplicate definition that was overriding the correct one in showPlaceDetail()
+  // The correct window.setStarRating is defined inside showPlaceDetail() with proper window.currentRating update
 
   /* ---------- ĐỊNH VỊ NGƯỜI DÙNG ---------- */
   useEffect(() => {
@@ -1231,6 +2193,38 @@ const MapPage = () => {
           zIndex: 9999,
         }}
       />
+
+      {/* ✅ NÚT VỆ TINH - ngay trên zoom controls */}
+      <button
+        onClick={() => setIsDarkMode(!isDarkMode)}
+        style={{
+          position: "fixed",
+          bottom: "145px", // Ngay trên zoom controls (3 nút + padding)
+          right: "16px",
+          zIndex: 10001,
+          width: "40px",
+          height: "40px",
+          borderRadius: "12px",
+          border: "2px solid rgba(0,0,0,0.2)",
+          backgroundColor: "#fff",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "20px",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+          transition: "all 0.2s ease",
+        }}
+        title={isDarkMode ? "Bản đồ thường" : "Chế độ vệ tinh"}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "#f0f0f0";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "#fff";
+        }}
+      >
+        🛰️
+      </button>
 
       {/* SO SÁNH ẢNH MODAL */}
       {comparePlace &&

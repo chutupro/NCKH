@@ -1,0 +1,19 @@
+﻿
+  // POST /map-locations/:locationId/feedback/:feedbackId/like
+  @Post(':locationId/feedback/:feedbackId/like')
+  async likeFeedback(
+    @Param('locationId', ParseIntPipe) locationId: number,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+  ) {
+    return this.mapLocationsService.likeFeedback(feedbackId);
+  }
+
+  // DELETE /map-locations/:locationId/feedback/:feedbackId/like
+  @Delete(':locationId/feedback/:feedbackId/like')
+  async unlikeFeedback(
+    @Param('locationId', ParseIntPipe) locationId: number,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+  ) {
+    return this.mapLocationsService.unlikeFeedback(feedbackId);
+  }
+

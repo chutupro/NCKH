@@ -52,8 +52,19 @@ const GoogleAuthSuccess = () => {
             autoClose: 2000,
           });
           
-          // Redirect về trang chủ
-          setTimeout(() => navigate('/'), 500);
+          // Kiểm tra xem có địa điểm cần quay lại không (từ map review)
+          const returnToPlaceData = localStorage.getItem('returnToPlace');
+          
+          // Redirect
+          setTimeout(() => {
+            if (returnToPlaceData) {
+              // Nếu có returnToPlace, redirect về map (không xóa localStorage, để MapPage xử lý)
+              navigate('/map');
+            } else {
+              // Nếu không, redirect về trang chủ
+              navigate('/');
+            }
+          }, 500);
         } else {
           throw new Error('No user data or token received');
         }

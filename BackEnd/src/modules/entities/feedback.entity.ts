@@ -24,6 +24,17 @@ export class Feedback {
   @Column({ type: 'int', nullable: true })
   Rating: number;
 
+  @Column({ type: 'int', nullable: false, default: 0 })
+  Likes: number; // number of likes for this feedback
+
+  @Column({ type: 'text', nullable: true })
+  ImageUrls: string; // JSON array of uploaded image paths (pending approval)
+
+  @Column({ type: 'boolean', nullable: false, default: false })
+  ImagesApproved: boolean; // whether uploaded images are approved by admin
+
+  // ...existing fields
+
   @Column({ type: 'datetime', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
   CreatedAt: Date;
 

@@ -21,6 +21,12 @@ export const useAuthRestore = () => {
     hasAttemptedRestore.current = true;
 
     const restoreSession = async () => {
+      // ✅ Timeout fallback: Nếu sau 5 giây vẫn chưa xong → force set loading = false
+      const timeoutId = setTimeout(() => {
+        console.log('[Auth Restore] ⏰ Timeout - forcing isAuthLoading = false');
+        setIsAuthLoading(false);
+      }, 5000);
+
       try {
         console.log('[Auth Restore] Attempting to restore session...');
 
@@ -30,6 +36,8 @@ export const useAuthRestore = () => {
         
         // Gọi refresh API - HttpOnly cookie tự động gửi
         const response = await authService.refreshToken();
+
+        clearTimeout(timeoutId); // ✅ Clear timeout on success
 
         if (!response?.accessToken) {
           console.log('[Auth Restore] No access token in response');
@@ -56,15 +64,18 @@ export const useAuthRestore = () => {
 
         console.log('[Auth Restore] ✅ Session restored successfully', normalizedUser);
       } catch (error) {
+        clearTimeout(timeoutId); // ✅ Clear timeout on error
         // ✅ 401 Unauthorized → Không có valid refresh token
         // → KHÔNG retry, chỉ log và return
-        if (error?.response?.status === 401) {
+        console.log('[Auth Restore] ❌ Error caught:', error);
+        if (error?.response?.status === 401 || error?.status === 401 || error?.statusCode === 401) {
           console.log('[Auth Restore] No valid session (no cookie or expired)');
         } else {
-          console.log('[Auth Restore] Failed to restore session:', error.message);
+          console.log('[Auth Restore] Failed to restore session:', error);
         }
         // Không làm gì - user vẫn ở trạng thái logout
       } finally {
+        console.log('[Auth Restore] ✅ Setting isAuthLoading = false');
         setIsAuthLoading(false); // ✅ Luôn set loading = false khi xong
       }
     };

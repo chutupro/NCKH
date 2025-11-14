@@ -78,6 +78,7 @@ const authService = {
    */
   refreshToken: async () => {
     try {
+      console.log('[authService] Calling /auth/refresh...');
       // ✅ Dùng axios.create() mới, KHÔNG interceptor
       const cleanAxios = axios.create({
         baseURL: 'http://localhost:3000',
@@ -85,12 +86,18 @@ const authService = {
       });
 
       const response = await cleanAxios.post('/auth/refresh');
+      console.log('[authService] Refresh success:', response.data);
 
       const { accessToken, user } = response.data;
 
       return { accessToken, user };
     } catch (error) {
-      throw error.response?.data || error.message;
+      console.log('[authService] Refresh failed:', error.response?.status, error.response?.data);
+      // ✅ Throw error mới với format chuẩn
+      const err = new Error(error.response?.data?.message || 'Refresh token failed');
+      err.response = error.response;
+      err.status = error.response?.status;
+      throw err;
     }
   },
 };

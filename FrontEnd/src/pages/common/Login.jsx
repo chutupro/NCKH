@@ -9,7 +9,7 @@ import '../../Styles/login-register/login.css'
 const Login = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { setUser, setIsAuthenticated, setAccessToken } = useContext(AppContext); // ✅ THÊM
+  const { setUser, setIsAuthenticated, setAccessToken } = useContext(AppContext); //  THÊM
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -67,7 +67,7 @@ const Login = () => {
         email: response?.user?.email ?? response?.user?.Email ?? email,
         fullName: response?.user?.fullName ?? response?.user?.FullName ?? '',
         roleId: response?.user?.roleId ?? response?.user?.RoleID ?? null,
-        Role: response?.user?.role ?? 'User', // ✅ THÊM ROLE NAME
+        Role: response?.user?.role ?? 'User', //  THÊM ROLE NAME
         avatar: response?.user?.profile?.avatar ?? response?.user?.avatar ?? '/img/default-avatar.png', // ✅ THÊM AVATAR
       };
 
@@ -84,9 +84,18 @@ const Login = () => {
       // Dispatch event để notify Header component
       window.dispatchEvent(new Event('userLoggedIn'))
       
-      // Redirect về trang chủ sau 500ms để user thấy toast
+      // Kiểm tra xem có địa điểm cần quay lại không (từ map review)
+      const returnToPlaceData = localStorage.getItem('returnToPlace');
+      
+      // Redirect sau 500ms để user thấy toast
       setTimeout(() => {
-        navigate('/')
+        if (returnToPlaceData) {
+          // Nếu có returnToPlace, redirect về map (không xóa localStorage, để MapPage xử lý)
+          navigate('/map');
+        } else {
+          // Nếu không, redirect về trang chủ
+          navigate('/');
+        }
       }, 500)
     } catch (err) {
       console.error('Login error:', err)
@@ -109,13 +118,23 @@ const Login = () => {
   }
 
   const onGoogle = () => {
-    // ✅ REDIRECT TO GOOGLE OAUTH
-    window.location.href = 'http://localhost:3000/auth/google';
+    // Generate random state for CSRF protection
+    const state = crypto.randomUUID ? crypto.randomUUID() : 
+                  Math.random().toString(36).substring(2) + Date.now().toString(36);
+    sessionStorage.setItem('oauth_state', state);
+    
+    // REDIRECT TO GOOGLE OAUTH
+    window.location.href = `http://localhost:3000/auth/google?state=${state}`;
   }
 
   const onFacebook = () => {
-    // ✅ REDIRECT TO FACEBOOK OAUTH
-    window.location.href = 'http://localhost:3000/auth/facebook';
+    // Generate random state for CSRF protection
+    const state = crypto.randomUUID ? crypto.randomUUID() : 
+                  Math.random().toString(36).substring(2) + Date.now().toString(36);
+    sessionStorage.setItem('oauth_state', state);
+    
+    // REDIRECT TO FACEBOOK OAUTH
+    window.location.href = `http://localhost:3000/auth/facebook?state=${state}`;
   }
 
   return (

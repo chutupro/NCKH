@@ -211,6 +211,32 @@ export class MapLocationsController {
 
   // POST /map-locations/:id/feedback
   @Post(':id/feedback')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [{ name: 'images', maxCount: 5 }],
+      {
+        storage: diskStorage({
+          destination: './uploads',
+          filename: (req, file, cb) => {
+            const randomName = Array(32)
+              .fill(null)
+              .map(() => Math.round(Math.random() * 16).toString(16))
+              .join('');
+            cb(null, `${randomName}${extname(file.originalname)}`);
+          },
+        }),
+        fileFilter: (req, file, cb) => {
+          const allowedTypes = /jpeg|jpg|png|gif|webp/;
+          const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(extname(file.originalname).toLowerCase());
+          if (isValid) {
+            cb(null, true);
+          } else {
+            cb(new BadRequestException(`File type không hợp lệ: ${file.originalname}`), false);
+          }
+        },
+      },
+    ),
+  )
   async addFeedback(
     @Param('id', ParseIntPipe) id: number,
     @Body()
@@ -219,14 +245,40 @@ export class MapLocationsController {
       comment: string;
       userId: number;
     },
+    @UploadedFiles()
+    files: {
+      images?: Express.Multer.File[];
+    },
   ) {
     if (!feedbackDto.userId || !feedbackDto.rating || !feedbackDto.comment) {
       throw new BadRequestException('userId, rating, comment là bắt buộc');
     }
 
+    // Build imageUrls array from uploaded files
+    const imageUrls = files?.images?.map(f => `/uploads/${f.filename}`) || [];
+
     return this.mapLocationsService.addFeedback(id, feedbackDto.userId, {
       rating: feedbackDto.rating,
       comment: feedbackDto.comment,
+      imageUrls,
     });
+  }
+
+  // POST /map-locations/:locationId/feedback/:feedbackId/like
+  @Post(':locationId/feedback/:feedbackId/like')
+  async likeFeedback(
+    @Param('locationId', ParseIntPipe) locationId: number,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+  ) {
+    return this.mapLocationsService.likeFeedback(feedbackId);
+  }
+
+  // DELETE /map-locations/:locationId/feedback/:feedbackId/like
+  @Delete(':locationId/feedback/:feedbackId/like')
+  async unlikeFeedback(
+    @Param('locationId', ParseIntPipe) locationId: number,
+    @Param('feedbackId', ParseIntPipe) feedbackId: number,
+  ) {
+    return this.mapLocationsService.unlikeFeedback(feedbackId);
   }
 }
