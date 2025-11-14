@@ -2,19 +2,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom';
 import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils';
 import '../../Styles/Contribute/contribute.css'
-
-// Centralized AI feature toggles so product can enable/disable behaviors quickly.
-// In future these can read from env vars or remote config instead of hard-coded values.
-const getAiFeatureConfig = () => ({
-  baseUrl: 'http://localhost:8000',
-  analyzeEndpoint: '/fast-analyze',
-  enableAnalyze: false,// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<false là tắt còn true là bật
-  gates: {
-    nsfw: true,
-    manipulation: true,
-    historical: true,
-  }
-})
+import getAiFeatureConfig, { getAiEndpointUrl } from '../../config/aiConfig'
 
 const Contribute = () => {
   // i18n removed: use Google Translate helper to detect language when needed
@@ -99,7 +87,8 @@ const Contribute = () => {
       return
     }
     const aiConfig = getAiFeatureConfig()
-    if (!aiConfig.enableAnalyze) {
+    const analyzeDisabled = aiConfig?.featureFlags?.analyze === false || aiConfig?.enableAnalyze === false
+    if (analyzeDisabled) {
       // Skip AI flow entirely; go straight to form
       navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult: null, file } })
       return
@@ -109,7 +98,7 @@ const Contribute = () => {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const endpoint = `${aiConfig.baseUrl}${aiConfig.analyzeEndpoint || '/fast-analyze'}`
+      const endpoint = getAiEndpointUrl('analyze') || `${aiConfig.baseUrl}${aiConfig.analyzeEndpoint || '/fast-analyze'}`
       const res = await fetch(endpoint, {
         method: 'POST',
         body: fd
