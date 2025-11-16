@@ -8,6 +8,7 @@ import CustomSelect from '../../Component/common/CustomSelect'
 import { createArticlePost } from '../../API/articlesPost'
 import { useEffect, useContext } from 'react'
 import AppContext from '../../context/context'
+import getAiFeatureConfig, { getAiEndpointUrl } from '../../config/aiConfig'
 const BACKEND_BASE = 'http://localhost:3000'
 
 // helper: convert dataURL -> Blob
@@ -59,6 +60,8 @@ const ContributeInformation = () => {
   const [email, setEmail] = useState('')
   const [alt, setAlt] = useState('')
   const [content, setContent] = useState('')
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState(null)
 
   // Prefill contributor info from logged-in user (AppContext)
   const appCtx = useContext(AppContext)
@@ -122,7 +125,7 @@ const ContributeInformation = () => {
 
   // helpers to get/set title based on language (use Google Translate language when available)
   const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'en'
-  const getTitle = () => (currentLang === 'vi' ? (ai.title_vi || ai.title_en) : (ai.title_en || ai.title_vi))
+  const getTitle = () => (currentLang === 'vi' ? (ai.title_vi ?? '') : (ai.title_en ?? ''))
   const setTitleForCurrentLang = (val) => {
     if (currentLang === 'vi') setAi(prev => ({ ...prev, title_vi: val }))
     else setAi(prev => ({ ...prev, title_en: val }))
@@ -135,6 +138,59 @@ const ContributeInformation = () => {
     const codeFromVi = getCodeFromName(ai.category_vi)
     if (codeFromVi && codeFromVi !== 'other') return codeFromVi
     return 'other'
+  }
+
+  // Handle AI analysis when user clicks the button
+  const handleAnalyzeAI = async () => {
+    setAnalyzeError(null)
+    const fileToAnalyze = loc.state?.file
+    if (!fileToAnalyze) {
+      setAnalyzeError('Không tìm thấy file ảnh')
+      return
+    }
+
+    const aiConfig = getAiFeatureConfig()
+    setAnalyzing(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', fileToAnalyze)
+      const endpoint = getAiEndpointUrl('analyze') || `${aiConfig.baseUrl}${aiConfig.analyzeEndpoint || '/fast-analyze'}`
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        body: fd
+      })
+      if (!res.ok) throw new Error(`Server returned ${res.status}`)
+      const json = await res.json()
+      
+      // Extract label and captions
+      const label = Array.isArray(json?.activeLabels) && json.activeLabels.length ? json.activeLabels[0] : null
+      const caption_en = json?.caption_en || ''
+      const caption_vi = json?.caption_vi || ''
+      
+      // Map AI labels to frontend categories
+      const mapAiToFeCategory = (aiLabel) => {
+        if (!aiLabel) return { category_en: null, category_vi: null }
+        const key = aiLabel.toLowerCase()
+        if (key.includes('nature') || key.includes('landscape') || key.includes('thiên nhiên')) return { category_en: 'Nature', category_vi: 'Thiên nhiên' }
+        if (key.includes('heritage') || key.includes('architecture') || key.includes('kiến trúc')) return { category_en: 'Architecture', category_vi: 'Kiến trúc' }
+        if (key.includes('culture') || key.includes('art') || key.includes('văn hóa')) return { category_en: 'Culture', category_vi: 'Văn hóa' }
+        if (key.includes('people') || key.includes('event') || key.includes('sự kiện')) return { category_en: 'People', category_vi: 'Du lịch' }
+        return { category_en: aiLabel, category_vi: aiLabel }
+      }
+      
+      const mappedCat = mapAiToFeCategory(label)
+      // Update AI state with analyzed data
+      setAi({
+        category_en: mappedCat.category_en || 'Tourism',
+        category_vi: mappedCat.category_vi || 'Du lịch',
+        title_en: caption_en || '',
+        title_vi: caption_vi || ''
+      })
+      setAnalyzing(false)
+    } catch (err) {
+      setAnalyzeError(err.message || 'Lỗi khi phân tích AI')
+      setAnalyzing(false)
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -195,7 +251,7 @@ const ContributeInformation = () => {
         <div className="info-top">
           <div className="info-icon">✈</div>
           <h2>{'Hoàn tất thông tin đóng góp'}</h2>
-          <p className="info-sub">{'AI đã phân tích và gợi ý danh mục, tiêu đề cho ảnh của bạn. Vui lòng bổ sung thông tin để hoàn tất đóng góp.'}</p>
+          <p className="info-sub">{'AI đã gợi ý danh mục cho ảnh. Bạn có thể dùng AI để phân tích tiêu đề, hoặc tự nhập. Vui lòng bổ sung thông tin để hoàn tất đóng góp.'}</p>
         </div>
 
         <form className="info-form" onSubmit={handleSubmit}>
@@ -211,21 +267,35 @@ const ContributeInformation = () => {
           <div className="ai-result">
           <div className="ai-row">
             <label>{'Danh mục (AI gợi ý)'}</label>
-            <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-              <CustomSelect
-                value={getCurrentCode() !== 'other' ? getCurrentCode() : KNOWN_CODES[0]}
-                options={KNOWN_CODES.map(code => ({ value: code, label: labelFor(code) }))}
-                onChange={(code) => {
-                  const enLabel = code ? (code.charAt(0).toUpperCase() + code.slice(1)) : ''
-                  const viLabel = CODE_TO_VN[code] || enLabel
-                  setAi(prev => ({ ...prev, category_en: enLabel, category_vi: viLabel }))
-                }}
-              />
-            </div>
+            <CustomSelect
+              value={getCurrentCode() !== 'other' ? getCurrentCode() : KNOWN_CODES[0]}
+              options={KNOWN_CODES.map(code => ({ value: code, label: labelFor(code) }))}
+              onChange={(code) => {
+                const enLabel = code ? (code.charAt(0).toUpperCase() + code.slice(1)) : ''
+                const viLabel = CODE_TO_VN[code] || enLabel
+                setAi(prev => ({ ...prev, category_en: enLabel, category_vi: viLabel }))
+              }}
+            />
           </div>
               <div className="ai-row">
-                <label>{'Tiêu đề (AI gợi ý)'}</label>
-                <input value={getTitle()} onChange={(e)=>setTitleForCurrentLang(e.target.value)} />
+                <label>{'Tiêu đề'}</label>
+                <div style={{display: 'flex', gap: '8px', alignItems: 'stretch'}}>
+                  <input 
+                    style={{flex: 1}}
+                    value={getTitle()} 
+                    onChange={(e)=>setTitleForCurrentLang(e.target.value)} 
+                    placeholder="Nhập tiêu đề hoặc dùng AI phân tích"
+                  />
+                  <button 
+                    type="button" 
+                    className="btn-analyze-ai"
+                    onClick={handleAnalyzeAI}
+                    disabled={analyzing}
+                  >
+                    {analyzing ? '⏳ Đang phân tích...' : '🤖 AI'}
+                  </button>
+                </div>
+                {analyzeError && <div style={{color: '#e74c3c', fontSize: '13px', marginTop: '4px'}}>{analyzeError}</div>}
               </div>
           </div>
 

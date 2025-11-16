@@ -233,9 +233,14 @@
 
 .post-footer {
   display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+.post-footer > div:first-child {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 12px;
+  margin-bottom: 8px;
 }
 .actions {
   display: flex;
@@ -277,6 +282,11 @@
   border-color: rgba(255, 255, 255, 0.12);
   color: #fff;
 }
+.comment-btn.active {
+  background: rgba(232, 215, 183, 0.1);
+  border-color: #e8d7b7;
+  color: #e8d7b7;
+}
 
 .share-container {
   position: relative;
@@ -284,7 +294,7 @@
 
 .share-menu {
   position: absolute;
-  bottom: 100%;
+  top: calc(100% + 8px);
   left: 0;
   background: rgba(30, 30, 30, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -293,23 +303,32 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 160px;
-  z-index: 10;
-  margin-bottom: 8px;
+  min-width: 200px;
+  z-index: 100;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
 }
 
-.share-menu button {
+.share-menu button,
+.share-option {
   background: transparent;
   border: none;
   color: #fff;
-  padding: 8px 12px;
+  padding: 10px 12px;
   text-align: left;
   cursor: pointer;
   border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.share-menu button:hover {
-  background: rgba(255, 255, 255, 0.1);
+.share-menu button:hover,
+.share-option:hover {
+  background: rgba(232, 215, 183, 0.1);
+  color: #e8d7b7;
+  transform: translateX(4px);
 }
 
 .comments-section {

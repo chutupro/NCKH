@@ -11,12 +11,21 @@ const Banner = () => {
   const [query, setQuery] = useState('');
 
   const bg = images?.[0] || '';
-  const currentLocation = locations?.[locIndex % locations.length] || null;
+  const safeLocLength = locations?.length || 1;
+  const currentLocation = locations?.[locIndex % safeLocLength] || null;
   const goldenBridgeImage = currentLocation?.image || '';
   const mapEmbedUrl = currentLocation?.mapEmbed || '';
 
   return (
-    <section className="banner-hero" style={{ '--bg-image': `url(${bg})`, padding: '40px' }}>
+    <section 
+      className="banner-hero" 
+      style={{ 
+        backgroundImage: bg ? `url(${bg})` : 'none',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        padding: '40px'
+      }}
+    >
       <div className="banner-inner">
         <div className="banner-left">
           <div className="kicker">Da Nang</div>
@@ -54,21 +63,34 @@ const Banner = () => {
               style={{ cursor: 'pointer' }}
               role="button"
               tabIndex={0}
-              onClick={() => setShowMap(s => !s)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Image clicked! Current showMap:', showMap, 'Will toggle to:', !showMap);
+                setShowMap(prev => {
+                  console.log('setShowMap called, prev:', prev, 'next:', !prev);
+                  return !prev;
+                });
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
                   setShowMap(s => !s);
                 }
               }}
             />
             <div className="pin">{currentLocation?.name || 'Location'}</div>
-            {showMap && mapEmbedUrl && (
+            {console.log('🗺️ Banner render - showMap:', showMap, 'mapEmbedUrl:', mapEmbedUrl ? 'EXISTS' : 'MISSING')}
+            {showMap && mapEmbedUrl ? (
               <MapPanel
                 location={currentLocation}
                 mapEmbedUrl={mapEmbedUrl}
-                onClose={() => setShowMap(false)}
+                onClose={() => {
+                  console.log('MapPanel close clicked');
+                  setShowMap(false);
+                }}
               />
-            )}
+            ) : null}
           </div>
         </div>
       </div>

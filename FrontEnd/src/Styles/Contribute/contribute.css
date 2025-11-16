@@ -72,9 +72,10 @@
 .confirm-btn.disabled { opacity:.56; cursor:not-allowed }
 .confirm-btn.loading { cursor:progress; opacity:.95 }
 
-.upload-message { margin-top:10px; background: linear-gradient(90deg,#ff6b6b,#ff4d67); padding:12px; border-radius:10px; display:flex; gap:12px; align-items:center; color:#fff }
+.upload-message { margin-top:10px; background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2)); border: 1px solid rgba(251, 191, 36, 0.3); padding:12px; border-radius:10px; display:flex; gap:12px; align-items:center; color:#fbbf24 }
 .upload-message-text { font-weight:700; flex:1 }
-.message-actions .btn-ok { background: rgba(255,255,255,0.06); color:#fff; border:none; padding:8px 12px; border-radius:8px }
+.message-actions .btn-ok { background: rgba(251, 191, 36, 0.1); color:#fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); padding:8px 12px; border-radius:8px; transition: all 0.2s ease }
+.message-actions .btn-ok:hover { background: rgba(251, 191, 36, 0.2); border-color: rgba(251, 191, 36, 0.4) }
 
 @keyframes spin { to { transform: rotate(360deg) } }
 .btn-spinner { width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,0.2); border-top-color: rgba(255,255,255,0.95); display:inline-block; margin-right:8px; animation: spin .9s linear infinite }

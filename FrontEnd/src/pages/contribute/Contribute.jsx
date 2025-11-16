@@ -76,13 +76,12 @@ const Contribute = () => {
 
   const navigate = useNavigate()
 
-  // analyze when user confirms (on purpose)
+  // Analyze image and category when user confirms, but not title
   const handleConfirm = async () => {
     setError(null)
     setMessage(null)
     setAnalysis(null)
     if (!file) {
-      // show a plain Vietnamese message instead of the translation key
       setError('Hãy bỏ ảnh')
       return
     }
@@ -153,15 +152,16 @@ const Contribute = () => {
         return { category_en: aiLabel, category_vi: aiLabel }
       }
       const mappedCat = mapAiToFeCategory(label)
+      // Only send category, NOT title (title will be analyzed separately in details page)
       const aiResult = {
         category_en: mappedCat.category_en || null,
         category_vi: mappedCat.category_vi || null,
-        title_en: json?.caption_en || null,
-        title_vi: json?.caption_vi || null
+        title_en: null,
+        title_vi: null
       }
-      setAnalysis({ label, caption_en: aiResult.title_en, caption_vi: aiResult.title_vi })
+      setAnalysis({ label })
       setLoading(false)
-      // navigate to details page; pass preview + file + AI result
+      // navigate to details page; pass preview + file + AI result (category only)
       navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult, file } })
     } catch (err) {
       setError(err.message)
@@ -176,7 +176,7 @@ const Contribute = () => {
               <div className="contribute-top">
             <div className="contribute-icon">✦</div>
               <h2>{'Đóng góp ảnh di sản văn hóa'}</h2>
-              <p className="contribute-sub">{'Tải lên hình ảnh lịch sử (xưa) về di sản văn hóa Đà Nẵng — hệ thống sẽ phân tích và gợi ý tiêu đề.'}</p>
+              <p className="contribute-sub">{'Tải lên hình ảnh lịch sử (xưa) về di sản văn hóa Đà Nẵng — AI sẽ phân tích ảnh và gợi ý danh mục.'}</p>
           </div>
 
           <div className="contribute-body">
@@ -202,20 +202,10 @@ const Contribute = () => {
                   <div className="upload-text">{'Nhấn để chọn ảnh hoặc kéo thả vào đây'}</div>
                   <div className="upload-hint">{'Hỗ trợ: JPG, PNG, WEBP (tối đa 10MB)'}</div>
                   {fileName && <div className="upload-file">{'Chọn'}: {fileName}</div>}
-                  {message && (
-                    <div className="upload-message">
-                      <div className="upload-message-text">{message}</div>
-                      <div className="message-actions">
-                        <button type="button" className="btn-ok" onClick={handleMessageOk}>{'OK'}</button>
-                      </div>
-                    </div>
-                  )}
                   {error && <div className="upload-error">{error}</div>}
                   {analysis && (
                     <div className="analysis-result">
-                      <div className="analysis-label">{'Phát hiện'}: {analysis.label || '-'}</div>
-                        <div className="analysis-caption">{currentLang === 'vi' ? (analysis.caption_vi || analysis.caption_en) : (analysis.caption_en || analysis.caption_vi)}</div>
-                      {/* language is controlled by header global switcher; no local buttons here */}
+                      <div className="analysis-label">{'Phát hiện danh mục'}: {analysis.label || '-'}</div>
                     </div>
                   )}
               </div>
@@ -233,8 +223,8 @@ const Contribute = () => {
           </div>
 
           <div className="contribute-footer">
-              <div className="contribute-footer-text">{'Sau khi phân tích, bạn sẽ được chuyển đến trang điền thông tin chi tiết'}</div>
-              {/* Confirm button triggers AI analyze then navigates with state */}
+              <div className="contribute-footer-text">{'AI sẽ phân tích ảnh và danh mục, sau đó chuyển đến trang điền thông tin'}</div>
+              {/* Confirm button triggers AI analyze (category only) then navigates */}
               <button
                 type="button"
                 className={`confirm-btn ${loading ? 'loading' : (analysis ? 'enabled' : 'primary')}`}
@@ -244,7 +234,7 @@ const Contribute = () => {
                 {loading ? (
                   <span className="btn-spinner" aria-hidden="true" />
                 ) : (
-                  <span>{'Xác nhận'}</span>
+                  <span>{'Tiếp tục'}</span>
                 )}
               </button>
           </div>

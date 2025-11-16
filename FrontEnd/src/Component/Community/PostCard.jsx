@@ -22,6 +22,9 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
   const [liked, setLiked] = useState(false)
   const [likes, setLikes] = useState(post?.likes || 0)
   const [loading, setLoading] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [commentText, setCommentText] = useState('')
 
   // short-lived override to prevent immediate GET from clobbering a recent toggle
   const overrideRef = useRef({})
@@ -155,19 +158,106 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
       </div>
 
       <footer className="post-footer">
-        <div className="actions">
-          <button
-            className={`like-btn${liked ? ' liked' : ''}`}
-            onClick={handleToggle}
-            disabled={loading}
-            aria-pressed={liked}
-          >
-            <FontAwesomeIcon icon={faHeart} /> {liked ? 'Đã thích' : 'Thích'}
-          </button>
-          <button className="comment-btn"><FontAwesomeIcon icon={faComment} /> Bình luận</button>
-          <button className="share-btn"><FontAwesomeIcon icon={faShareNodes} /> Chia sẻ</button>
+        <div>
+          <div className="actions">
+            <button
+              className={`like-btn${liked ? ' liked' : ''}`}
+              onClick={handleToggle}
+              disabled={loading}
+              aria-pressed={liked}
+            >
+              <FontAwesomeIcon icon={faHeart} /> {liked ? 'Đã thích' : 'Thích'}
+            </button>
+            <button 
+              className={`comment-btn${showComments ? ' active' : ''}`}
+              onClick={() => setShowComments(!showComments)}
+            >
+              <FontAwesomeIcon icon={faComment} /> Bình luận
+            </button>
+            <div style={{ position: 'relative' }}>
+              <button 
+                className="share-btn"
+                onClick={() => setShowShareMenu(!showShareMenu)}
+              >
+                <FontAwesomeIcon icon={faShareNodes} /> Chia sẻ
+              </button>
+              {/* Share Menu */}
+              {showShareMenu && (
+                <div className="share-menu">
+                  <button 
+                    className="share-option"
+                    onClick={async () => {
+                      try {
+                        const url = `${window.location.origin}/community?post=${post.id}`;
+                        await navigator.clipboard.writeText(url);
+                        toast.success('Đã sao chép link!');
+                        setShowShareMenu(false);
+                      } catch {
+                        // Fallback nếu clipboard API không hoạt động
+                        const textArea = document.createElement('textarea');
+                        textArea.value = `${window.location.origin}/community?post=${post.id}`;
+                        textArea.style.position = 'fixed';
+                        textArea.style.left = '-999999px';
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        try {
+                          document.execCommand('copy');
+                          toast.success('Đã sao chép link!');
+                        } catch {
+                          toast.error('Không thể sao chép link');
+                        }
+                        document.body.removeChild(textArea);
+                        setShowShareMenu(false);
+                      }
+                    }}
+                  >
+                    📋 Sao chép link
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="counts">{likes.toLocaleString()} lượt thích</div>
         </div>
-        <div className="counts">{likes.toLocaleString()} lượt thích</div>
+
+        {/* Comment Section */}
+        {showComments && (
+          <div className="comments-section">
+            <div className="comment-input-wrapper">
+              <input
+                type="text"
+                className="comment-input"
+                placeholder="Viết bình luận..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && commentText.trim()) {
+                    toast.info('Tính năng bình luận đang được phát triển');
+                    setCommentText('');
+                  }
+                }}
+              />
+              <button 
+                className="comment-submit"
+                onClick={() => {
+                  if (commentText.trim()) {
+                    toast.info('Tính năng bình luận đang được phát triển');
+                    setCommentText('');
+                  }
+                }}
+                disabled={!commentText.trim()}
+              >
+                Gửi
+              </button>
+            </div>
+            <div className="comments-list">
+              <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                Chưa có bình luận nào. Hãy là người đầu tiên!
+              </p>
+            </div>
+          </div>
+        )}
       </footer>
     </article>
   )
