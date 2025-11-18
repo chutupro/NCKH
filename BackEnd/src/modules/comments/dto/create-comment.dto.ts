@@ -38,6 +38,15 @@ export class CreateCommentDto {
   parentCommentId?: number;
 
   @ApiProperty({
+    example: 'Nguyễn Văn A',
+    required: false,
+    description: 'Tên người được trả lời',
+  })
+  @IsOptional()
+  @IsString()
+  replyToName?: string;
+
+  @ApiProperty({
     example: 'example@gmail.com',
     required: false,
     description: 'Email của người bình luận (nếu muốn hiển thị riêng)',

@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import useAppContext from '../../context/useAppContext'
 import { likeArticle, unlikeArticle, listLikes, getArticleLikesList } from '../../API/likes'
-import PostHeader from './PostHeader'
-import PostActions from './PostActions'
-import CommentsSection from './CommentsSection'
+import { getCommentsByArticle, createComment, deleteComment, createReply } from '../../API/comments'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHeart, faComment, faShareNodes, faTrash, faReply } from '@fortawesome/free-solid-svg-icons'
 import '../../Styles/community/Community.css'
 
 const PostCard = ({ post, onDelete, showDeleteButton = false }) => {

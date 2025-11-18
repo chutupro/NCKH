@@ -6,6 +6,20 @@ import { Users } from 'src/modules/entities/user.entity';
 import { Articles } from 'src/modules/entities/article.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
+export interface CommentData {
+  id: number;
+  content: string;
+  createdAt: Date;
+  parentCommentId: number | null;
+  replyToName?: string;
+  author: {
+    id: number;
+    fullName: string;
+    avatar: string;
+  };
+  replies: CommentData[];
+}
+
 @Injectable()
 export class CommentService {
   constructor(
@@ -28,12 +42,12 @@ export class CommentService {
     if (!user) throw new BadRequestException('User not found');
     if (!article) throw new BadRequestException('Article not found');
 
-    // ⚠️ Không cho phép reply → luôn gán ParentCommentID = null
+    // ✅ Cho phép reply comment
     const commentData: Partial<Comments> = {
       Content: dto.content,
       UserID: dto.userId,
       ArticleID: dto.articleId,
-      ParentCommentID: null as any, // 👈 ép null, không cho phép nested comment
+      ParentCommentID: dto.parentCommentId || undefined, // ✅ Cho phép reply
       user,
       article,
     };
@@ -45,6 +59,8 @@ export class CommentService {
       id: saved.CommentID,
       content: saved.Content,
       createdAt: saved.CreatedAt,
+      parentCommentId: saved.ParentCommentID,
+      replyToName: dto.replyToName,
       author: {
         id: user.UserID,
         fullName: user.FullName,
@@ -54,24 +70,50 @@ export class CommentService {
   }
 
   // ---- GET COMMENTS BY ARTICLE ----
-  async getCommentsByArticle(articleId: number) {
+  async getCommentsByArticle(articleId: number): Promise<CommentData[]> {
     const comments = await this.commentRepo.find({
       where: { ArticleID: articleId },
       relations: ['user', 'user.profile'], // ✅ Load cả profile để lấy avatar
       order: { CreatedAt: 'ASC' },
     });
 
-    // Vì không có reply, chỉ trả về danh sách phẳng với avatar
-    return comments.map((c) => ({
-      id: c.CommentID,
-      content: c.Content,
-      createdAt: c.CreatedAt,
-      author: {
-        id: c.user.UserID,
-        fullName: c.user.FullName,
-        avatar: c.user.profile?.Avatar || '/img/default-avatar.png', // ✅ Lấy avatar từ profile
-      },
-    }));
+    // ✅ Trả về cấu trúc nested với replies
+    const commentMap = new Map<number, CommentData>();
+    const rootComments: CommentData[] = [];
+
+    // Tạo map của tất cả comments
+    comments.forEach((c) => {
+      const commentData: CommentData = {
+        id: c.CommentID,
+        content: c.Content,
+        createdAt: c.CreatedAt,
+        parentCommentId: c.ParentCommentID,
+        replyToName: undefined, // Sẽ được set sau
+        author: {
+          id: c.user.UserID,
+          fullName: c.user.FullName,
+          avatar: c.user.profile?.Avatar || '/img/default-avatar.png',
+        },
+        replies: [],
+      };
+      commentMap.set(c.CommentID, commentData);
+    });
+
+    // Tổ chức comments thành cây và set replyToName
+    commentMap.forEach((comment) => {
+      if (comment.parentCommentId) {
+        const parent = commentMap.get(comment.parentCommentId);
+        if (parent) {
+          // Set tên người được trả lời
+          comment.replyToName = parent.author.fullName;
+          parent.replies.push(comment);
+        }
+      } else {
+        rootComments.push(comment);
+      }
+    });
+
+    return rootComments;
   }
 
   // ---- UPDATE COMMENT ----
@@ -114,6 +156,16 @@ export class CommentService {
       throw new BadRequestException('You can only delete your own comments');
     }
 
+    // Xóa tất cả replies trước (nếu có)
+    const replies = await this.commentRepo.find({
+      where: { ParentCommentID: commentId },
+    });
+    
+    if (replies.length > 0) {
+      await this.commentRepo.remove(replies);
+    }
+
+    // Xóa comment chính
     await this.commentRepo.remove(comment);
     return { message: 'Comment deleted successfully' };
   }

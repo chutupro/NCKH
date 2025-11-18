@@ -14,6 +14,22 @@ export const createComment = async (articleId, content) => {
   }
 }
 
+// Tạo reply cho comment
+export const createReply = async (articleId, parentCommentId, content, replyToName) => {
+  try {
+    const response = await apiClient.post('/comments', {
+      articleId: Number(articleId),
+      parentCommentId: Number(parentCommentId),
+      content,
+      replyToName,
+    })
+    return response.data
+  } catch (error) {
+    console.error('Error creating reply:', error)
+    throw error
+  }
+}
+
 // Lấy tất cả comment của một bài viết
 export const getCommentsByArticle = async (articleId) => {
   try {
