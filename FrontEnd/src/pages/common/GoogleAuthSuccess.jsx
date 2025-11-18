@@ -45,11 +45,6 @@ const GoogleAuthSuccess = () => {
           setUser(profileData);
           setIsAuthenticated(true);
           
-          toast.success(`Đăng nhập thành công! Chào mừng ${profileData.fullName || user.fullName}!`, {
-            position: "top-right",
-            autoClose: 2000,
-          });
-          
           // Kiểm tra xem có địa điểm cần quay lại không (từ map review)
           const returnToPlaceData = localStorage.getItem('returnToPlace');
           

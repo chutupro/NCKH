@@ -44,12 +44,6 @@ const FacebookAuthSuccess = () => {
           setUser(profileData);
           setIsAuthenticated(true);
           
-          // Hiển thị thông báo
-          toast.success(`Chào mừng ${profileData.fullName || userData.fullName}! Đăng nhập Facebook thành công.`, {
-            position: "top-right",
-            autoClose: 3000,
-          });
-          
           // Kiểm tra xem có địa điểm cần quay lại không (từ map review)
           const returnToPlaceData = localStorage.getItem('returnToPlace');
           

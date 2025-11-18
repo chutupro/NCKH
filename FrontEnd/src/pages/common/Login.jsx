@@ -74,12 +74,6 @@ const Login = () => {
       setUser(normalizedUser);
       setIsAuthenticated(true);
       
-      // Hiển thị thông báo thành công
-      toast.success(`Chào mừng trở lại, ${normalizedUser.fullName || normalizedUser.email}!`, {
-        position: 'top-right',
-        autoClose: 3000,
-      })
-      
       // Dispatch event để notify Header component
       window.dispatchEvent(new Event('userLoggedIn'))
       
