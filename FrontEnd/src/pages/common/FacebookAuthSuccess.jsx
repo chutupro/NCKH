@@ -60,6 +60,9 @@ const FacebookAuthSuccess = () => {
             if (returnToPlaceData) {
               // Nếu có returnToPlace, redirect về map (không xóa localStorage, để MapPage xử lý)
               navigate('/map');
+            } else if (profileData.Role === 'Admin') {
+              // Nếu là Admin, redirect về trang admin
+              navigate('/admin');
             } else {
               // Nếu không, redirect về trang chủ
               navigate('/');

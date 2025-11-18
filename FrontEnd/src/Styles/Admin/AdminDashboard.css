@@ -916,6 +916,27 @@
   gap: 0.5rem;
 }
 
+/* Stats Text Display */
+.admin-stats-text {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.stats-text-item {
+  font-size: 0.875rem;
+  color: var(--admin-gray);
+}
+
+.stats-text-item strong {
+  font-size: 1.25rem;
+  color: var(--admin-dark);
+  font-weight: 700;
+  margin-left: 0.5rem;
+}
+
 /* Pulse animation cho badge */
 @keyframes pulse {
   0%, 100% {

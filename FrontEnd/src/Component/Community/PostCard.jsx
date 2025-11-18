@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import useAppContext from '../../context/useAppContext'
 import { likeArticle, unlikeArticle, listLikes, getArticleLikesList } from '../../API/likes'
+import { getCommentsByArticle, createComment, deleteComment } from '../../API/comments'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHeart, faComment, faShareNodes } from '@fortawesome/free-solid-svg-icons'
+import { faHeart, faComment, faShareNodes, faTrash } from '@fortawesome/free-solid-svg-icons'
 import '../../Styles/community/Community.css'
 
 // Minimal, robust PostCard component rewritten from scratch.
@@ -21,10 +22,13 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
 
   const [liked, setLiked] = useState(false)
   const [likes, setLikes] = useState(post?.likes || 0)
+  const [commentCount, setCommentCount] = useState(post?.commentCount || 0)
   const [loading, setLoading] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [commentText, setCommentText] = useState('')
+  const [comments, setComments] = useState([])
+  const [loadingComments, setLoadingComments] = useState(false)
 
   // short-lived override to prevent immediate GET from clobbering a recent toggle
   const overrideRef = useRef({})
@@ -74,6 +78,59 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
     return () => { mounted = false }
     // intentionally include accessToken and user so we re-run when they change
   }, [post?.id, post?.likes, isAuthLoading, isAuthenticated, accessToken, user])
+
+  // Load comments khi mở phần comment
+  useEffect(() => {
+    if (showComments && comments.length === 0) {
+      loadComments()
+    }
+  }, [showComments])
+
+  const loadComments = async () => {
+    setLoadingComments(true)
+    try {
+      const data = await getCommentsByArticle(post.id)
+      setComments(data || [])
+    } catch (err) {
+      console.error('Error loading comments:', err)
+    } finally {
+      setLoadingComments(false)
+    }
+  }
+
+  const handleAddComment = async () => {
+    if (!isAuthenticated) {
+      if (window.confirm('Bạn cần đăng nhập để bình luận. Đến trang đăng nhập?')) {
+        navigate('/login')
+      }
+      return
+    }
+
+    if (!commentText.trim()) return
+
+    try {
+      const newComment = await createComment(post.id, commentText.trim())
+      setComments([...comments, newComment])
+      setCommentCount(prev => prev + 1)
+      setCommentText('')
+      toast.success('Đã thêm bình luận!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Không thể thêm bình luận')
+    }
+  }
+
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Bạn có chắc muốn xóa bình luận này?')) return
+
+    try {
+      await deleteComment(commentId)
+      setComments(comments.filter(c => c.id !== commentId))
+      setCommentCount(prev => Math.max(0, prev - 1))
+      toast.success('Đã xóa bình luận!')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Không thể xóa bình luận')
+    }
+  }
 
   const handleToggle = async () => {
     if (!isAuthenticated) {
@@ -218,13 +275,27 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
               )}
             </div>
           </div>
-          <div className="counts">{likes.toLocaleString()} lượt thích</div>
+          <div className="counts">
+            <span>{likes.toLocaleString()} lượt thích</span>
+            <span style={{ margin: '0 8px', color: 'var(--muted)' }}>•</span>
+            <span>{commentCount} bình luận</span>
+          </div>
         </div>
 
         {/* Comment Section */}
         {showComments && (
           <div className="comments-section">
             <div className="comment-input-wrapper">
+              <div 
+                className="comment-avatar"
+                style={{
+                  backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                {!user?.avatar && (user?.fullName || 'U').slice(0,2).toUpperCase()}
+              </div>
               <input
                 type="text"
                 className="comment-input"
@@ -233,28 +304,61 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
                 onChange={(e) => setCommentText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && commentText.trim()) {
-                    toast.info('Tính năng bình luận đang được phát triển');
-                    setCommentText('');
+                    handleAddComment();
                   }
                 }}
               />
               <button 
                 className="comment-submit"
-                onClick={() => {
-                  if (commentText.trim()) {
-                    toast.info('Tính năng bình luận đang được phát triển');
-                    setCommentText('');
-                  }
-                }}
+                onClick={handleAddComment}
                 disabled={!commentText.trim()}
               >
                 Gửi
               </button>
             </div>
             <div className="comments-list">
-              <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
-                Chưa có bình luận nào. Hãy là người đầu tiên!
-              </p>
+              {loadingComments ? (
+                <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                  Đang tải bình luận...
+                </p>
+              ) : comments.length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                  Chưa có bình luận nào. Hãy là người đầu tiên!
+                </p>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="comment-item">
+                    <div 
+                      className="comment-avatar"
+                      style={{
+                        backgroundImage: comment.author?.avatar ? `url(${comment.author.avatar})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}
+                    >
+                      {!comment.author?.avatar && (comment.author?.fullName || 'U').slice(0,2).toUpperCase()}
+                    </div>
+                    <div className="comment-content">
+                      <div className="comment-header">
+                        <span className="comment-author">{comment.author?.fullName || 'Người dùng'}</span>
+                        <span className="comment-time">
+                          {new Date(comment.createdAt).toLocaleString('vi-VN')}
+                        </span>
+                        {user?.userId === comment.author?.id && (
+                          <button 
+                            className="comment-delete"
+                            onClick={() => handleDeleteComment(comment.id)}
+                            title="Xóa bình luận"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        )}
+                      </div>
+                      <p className="comment-text">{comment.content}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

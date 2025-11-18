@@ -1,15 +1,22 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
 import { CommentService } from './comment.service'; 
 import { CreateCommentDto } from './dto/create-comment.dto'; 
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   @Post()
-  async create(@Body() dto: CreateCommentDto) {
-    const comment = await this.commentService.createComment(dto);
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() dto: CreateCommentDto, @Request() req) {
+    // Lấy userId từ JWT token thay vì từ request body
+    const userId = req.user?.userId || req.user?.UserID;
+    const comment = await this.commentService.createComment({
+      ...dto,
+      userId,
+    });
     return comment;
   }
 
@@ -20,14 +27,18 @@ export class CommentController {
   }
 
   // ---- UPDATE COMMENT ----
- @Put(':id')
-  async update(@Param('id') id: number, @Body() dto: UpdateCommentDto) {
-  return this.commentService.updateComment(id, dto.content);
-}
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  async update(@Param('id') id: number, @Body() dto: UpdateCommentDto, @Request() req) {
+    const userId = req.user?.userId || req.user?.UserID;
+    return this.commentService.updateComment(id, dto.content, userId);
+  }
 
   // ---- DELETE COMMENT ----
   @Delete(':id')
-  async delete(@Param('id') id: number) {
-    return this.commentService.deleteComment(id);
+  @UseGuards(JwtAuthGuard)
+  async delete(@Param('id') id: number, @Request() req) {
+    const userId = req.user?.userId || req.user?.UserID;
+    return this.commentService.deleteComment(id, userId);
   }
 }

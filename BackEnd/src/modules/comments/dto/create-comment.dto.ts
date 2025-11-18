@@ -1,22 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateCommentDto {
   @ApiProperty({
     example: 1,
     description: 'ID của bài viết mà bình luận thuộc về',
   })
+  @IsNotEmpty()
+  @IsNumber()
   articleId: number;
 
   @ApiProperty({
     example: 2,
-    description: 'ID của người dùng đang đăng bình luận (UserID phải tồn tại trong DB)',
+    description: 'ID của người dùng đang đăng bình luận (sẽ được lấy tự động từ JWT token)',
+    required: false,
   })
-  userId: number;
+  @IsOptional()
+  @IsNumber()
+  userId?: number;
 
   @ApiProperty({
     example: 'Bài viết này thật sự rất thú vị và nhiều thông tin bổ ích!',
     description: 'Nội dung bình luận của người dùng',
   })
+  @IsNotEmpty()
+  @IsString()
   content: string;
 
   @ApiProperty({
@@ -25,6 +33,8 @@ export class CreateCommentDto {
     nullable: true,
     description: 'ID của bình luận cha (nếu đây là phản hồi, nếu không thì bỏ trống)',
   })
+  @IsOptional()
+  @IsNumber()
   parentCommentId?: number;
 
   @ApiProperty({
@@ -32,6 +42,8 @@ export class CreateCommentDto {
     required: false,
     description: 'Email của người bình luận (nếu muốn hiển thị riêng)',
   })
+  @IsOptional()
+  @IsString()
   email?: string;
 
   @ApiProperty({
@@ -39,6 +51,8 @@ export class CreateCommentDto {
     required: false,
     description: 'Tên hiển thị của người bình luận (nếu cần hiển thị khác User.FullName)',
   })
+  @IsOptional()
+  @IsString()
   displayName?: string;
 
   @ApiProperty({
@@ -46,5 +60,7 @@ export class CreateCommentDto {
     required: false,
     description: 'Đường dẫn ảnh đại diện của người bình luận',
   })
+  @IsOptional()
+  @IsString()
   avatarPath?: string;
 }

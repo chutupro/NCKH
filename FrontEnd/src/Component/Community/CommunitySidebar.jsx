@@ -95,8 +95,9 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
     posts.forEach(p => {
       const author = p.author || {}
       const id = author.id || p.authorId || p.userId || 'anon'
-      const name = author.fullName || author.FullName || 'Người dùng'
-      if (!counts[id]) counts[id] = { id, name, posts: 0 }
+      const name = author.fullName || author.FullName || p.author || 'Người dùng'
+      const avatar = author.avatar || p.authorAvatar || null
+      if (!counts[id]) counts[id] = { id, name, avatar, posts: 0 }
       counts[id].posts += 1
     })
     return Object.values(counts).sort((a, b) => b.posts - a.posts).slice(0, 5)
@@ -194,7 +195,16 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
           {topContributors.map((user, index) => (
             <div key={index} className="contributor-item">
               <div className="contributor-rank">{index + 1}</div>
-              <div className="contributor-avatar">{user.avatar}</div>
+              <div 
+                className="contributor-avatar"
+                style={{
+                  backgroundImage: user.avatar ? `url(${user.avatar})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                {!user.avatar && user.name.charAt(0).toUpperCase()}
+              </div>
               <div className="contributor-info">
                 <p className="contributor-name">{user.name}</p>
                   <span className="contributor-posts">{user.posts} {t('sidebar.photos')}</span>

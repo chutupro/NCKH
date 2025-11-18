@@ -46,6 +46,7 @@ export class ArticleService {
       .leftJoinAndSelect('article.images', 'images')
       .leftJoinAndSelect('article.analytics', 'analytics')
       .loadRelationCountAndMap('article.likeCount', 'article.likes')
+      .loadRelationCountAndMap('article.commentCount', 'article.comments')
       .orderBy('article.CreatedAt', 'DESC')
       .getMany();
 
@@ -63,6 +64,7 @@ export class ArticleService {
       image: a.images?.length ? a.images[0].FilePath : null,
       viewCount: a.analytics?.[0]?.ViewCount || 0,
       likeCount: (a as any).likeCount || 0,
+      commentCount: (a as any).commentCount || 0,
     }));
   }
 

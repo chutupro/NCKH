@@ -90,13 +90,17 @@ const Headers = () => {
                     </svg>
                     Trang cá nhân
                   </Link>
-                  <Link to="/settings" className="dropdown-item" onClick={() => setShowDropdown(false)}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M12 1v6m0 6v6m7.071-13.071l-4.243 4.243m-5.656 5.656l-4.243 4.243m16.97-.001l-4.243-4.243m-5.656-5.656L1.929 1.93"></path>
-                    </svg>
-                    Cài đặt
-                  </Link>
+                  {user.Role === 'Admin' && (
+                    <Link to="/admin/dashboard" className="dropdown-item" onClick={() => setShowDropdown(false)}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                      </svg>
+                      Quản trị
+                    </Link>
+                  )}
                   <div className="dropdown-divider"></div>
                   <button className="dropdown-item logout-btn" onClick={handleLogout}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

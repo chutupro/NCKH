@@ -36,12 +36,13 @@ const LikedPosts = () => {
         const mapped = likedArticles.map(a => ({
           id: a.id,
           author: a.author?.fullName || 'Người dùng',
-          authorAvatar: a.author?.avatar || '/img/default-avatar.png', // ✅ Thêm avatar
+          authorAvatar: a.author?.avatar || '/img/default-avatar.png',
           when: a.createdAt ? new Date(a.createdAt).toLocaleString('vi-VN') : '',
           category: a.category || '',
           text: a.title || a.content || '',
           image: a.image || '',
           likes: a.likeCount || 0,
+          commentCount: a.commentCount || 0,
         }));
         
         setPosts(mapped);

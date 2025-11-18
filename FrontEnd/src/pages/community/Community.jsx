@@ -81,15 +81,23 @@ const Community = () => {
             if (!image.startsWith('/')) image = '/' + image
             image = `${BACKEND_BASE}${image}`
           }
+          // normalize avatar URL
+          let authorAvatar = a.author?.avatar || null
+          if (authorAvatar && !/^https?:\/\//i.test(authorAvatar)) {
+            if (!authorAvatar.startsWith('/')) authorAvatar = '/' + authorAvatar
+            authorAvatar = `${BACKEND_BASE}${authorAvatar}`
+          }
           return {
             id: a.id,
             author: a.author?.fullName || a.author?.FullName || 'Người dùng',
-            authorAvatar: a.author?.avatar || '/img/default-avatar.png', // ✅ Thêm avatar
+            authorId: a.author?.id,
+            authorAvatar: authorAvatar,
             when: a.createdAt ? new Date(a.createdAt).toLocaleString() : '',
             category: a.category || '',
             text: a.title || a.content || '',
             image,
             likes: a.likeCount || 0,
+            commentCount: a.commentCount || 0,
           }
         })
         setPosts(mapped)

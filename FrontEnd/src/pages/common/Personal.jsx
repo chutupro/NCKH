@@ -240,21 +240,38 @@ const Personal = () => {
 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-              Avatar URL
+              Avatar
             </label>
-            <input
-              type="text"
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              placeholder="https://example.com/avatar.jpg"
-              style={{
-                width: '100%',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '15px'
-              }}
-            />
+            <div style={{ marginBottom: '10px' }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    try {
+                      toast.info('Đang tải ảnh lên...', { autoClose: 2000 });
+                      const { uploadAvatar } = await import('../../services/mediaService');
+                      const url = await uploadAvatar(file);
+                      setAvatar(url);
+                      toast.success('Tải ảnh lên thành công!');
+                    } catch (error) {
+                      console.error('Error uploading avatar:', error);
+                      toast.error('Không thể tải ảnh lên');
+                    }
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  fontSize: '15px',
+                  backgroundColor: 'white',
+                  color: '#000'
+                }}
+              />
+            </div>
             {avatar && (
               <img 
                 src={avatar} 

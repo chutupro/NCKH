@@ -108,11 +108,11 @@ const UserManagement = () => {
         <h1>Quản Lý Người Dùng</h1>
         <button className="admin-btn admin-btn-primary" onClick={() => setShowAddModal(true)}>Thêm</button>
       </div>
-      <div className="admin-stats-grid">
-        <div className="stats-card"><div className="stats-icon stats-icon-primary"></div><div className="stats-info"><h3>Tổng</h3><p className="stats-value">{stats.total}</p></div></div>
-        <div className="stats-card"><div className="stats-icon stats-icon-success"></div><div className="stats-info"><h3>Active</h3><p className="stats-value">{stats.active}</p></div></div>
-        <div className="stats-card"><div className="stats-icon stats-icon-warning"></div><div className="stats-info"><h3>Locked</h3><p className="stats-value">{stats.inactive}</p></div></div>
-        <div className="stats-card"><div className="stats-icon stats-icon-danger"></div><div className="stats-info"><h3>Editor</h3><p className="stats-value">{stats.editors}</p></div></div>
+      <div className="admin-stats-text">
+        <span className="stats-text-item">Tổng: <strong>{stats.total}</strong></span>
+        <span className="stats-text-item">Active: <strong>{stats.active}</strong></span>
+        <span className="stats-text-item">Locked: <strong>{stats.inactive}</strong></span>
+        <span className="stats-text-item">Editor: <strong>{stats.editors}</strong></span>
       </div>
       <div className="admin-filters">
         <input type="text" className="admin-search" placeholder="Tìm..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPagination(prev => ({ ...prev, page: 1 })); }} />
