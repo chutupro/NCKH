@@ -18,8 +18,6 @@ const FacebookAuthSuccess = () => {
           const userData = JSON.parse(decodeURIComponent(userParam));
           const token = decodeURIComponent(tokenParam);
           
-          console.log('📱 [FacebookAuth] Token received, length:', token.length);
-          
           // Lưu token vào context (giống như đăng nhập thường)
           setAccessToken(token);
           

@@ -121,7 +121,7 @@ const About = () => {
         <section className="about-section">
           <h2>Liên hệ</h2>
           <p>Nếu bạn muốn hợp tác hoặc có câu hỏi, hãy gửi mail cho chúng tôi hoặc sử dụng form dưới đây.</p>
-          <form className="contact-form" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.target); console.log('Contact form', Object.fromEntries(fd)); alert('Cảm ơn! Chúng tôi sẽ liên hệ lại sớm.'); e.target.reset(); }}>
+          <form className="contact-form" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.target); alert('Cảm ơn! Chúng tôi sẽ liên hệ lại sớm.'); e.target.reset(); }}>
             <div className="form-row">
               <input name="name" placeholder="Họ và tên" required />
               <input name="email" type="email" placeholder="Email" required />

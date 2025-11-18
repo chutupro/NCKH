@@ -85,7 +85,6 @@ apiClient.interceptors.response.use(
         const publicPaths = ['/', '/login', '/register', '/about', '/forgot-password'];
         
         if (!publicPaths.includes(currentPath)) {
-          console.log('[API] Refresh failed, redirecting to login...');
           window.location.href = '/login';
         }
         

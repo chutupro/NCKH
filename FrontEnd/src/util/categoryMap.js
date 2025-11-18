@@ -53,6 +53,9 @@ export function labelFor(code /*, t - kept for compatibility */) {
 }
 
 export function displayCategoryName(vnName /*, t - legacy param */) {
+  if (!vnName) return 'Chưa phân loại';
   const code = getCodeFromName(vnName);
+  // Nếu không phải các category đã biết, trả về category gốc thay vì "Khác"
+  if (code === 'other') return vnName;
   return labelFor(code);
 }

@@ -10,13 +10,11 @@ const BANNER_IMAGES = [
 const LOCATIONS = [
   {
     name: "Cầu Vàng",
-    image: "https://www.kkday.com/vi/blog/wp-content/uploads/B%C3%A0-N%C3%A0-2.jpg",
-    mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3792.597!2d107.9914583!3d15.996842988!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3142197153536e11%3A0x6cfe8dc6379f6e9!2sGolden%20Bridge!5e0!3m2!1svi!2s!4v1699999999999!5m2!1svi!2s"
+    image: "https://www.kkday.com/vi/blog/wp-content/uploads/B%C3%A0-N%C3%A0-2.jpg"
   },
   {
     name: "Cầu Rồng",
-    image: "https://danangfantasticity.com/wp-content/uploads/2018/10/cau-rong-top-20-cay-cau-ky-quai-nhat-the-gioi-theo-boredom-therapy.jpg",
-    mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3834.28571!2d108.2235971!3d16.0596824!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314219c792252a83%3A0xfc14e3a044436af!2sDragon%20Bridge!5e0!3m2!1svi!2s!4v1699999999999!5m2!1svi!2s"
+    image: "https://danangfantasticity.com/wp-content/uploads/2018/10/cau-rong-top-20-cay-cau-ky-quai-nhat-the-gioi-theo-boredom-therapy.jpg"
   }
 ];
 
@@ -31,7 +29,6 @@ export const AppProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null); // ✅ LƯU ACCESS_TOKEN TRONG MEMORY
   const [isAuthLoading, setIsAuthLoading] = useState(true); // ✅ THÊM: Trạng thái loading auth
   const [locIndex, setLocIndex] = useState(0);
-  const [showMap, setShowMap] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const locations = useMemo(() => LOCATIONS, []);
 
@@ -43,12 +40,12 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!locations || locations.length <= 1 || showMap) return undefined;
+    if (!locations || locations.length <= 1) return undefined;
     const id = setInterval(() => {
       setLocIndex((i) => (i + 1) % locations.length);
     }, 2000);
     return () => clearInterval(id);
-  }, [locations, showMap]);
+  }, [locations]);
 
   // --- CompareCard global drag registry & global listeners ---
   const compareHandlersRef = useRef({}); // id -> { onMove, onUp }
@@ -131,14 +128,12 @@ export const AppProvider = ({ children }) => {
     locations,
     locIndex,
     setLocIndex,
-    showMap,
     registerCompare,
     unregisterCompare,
     startCompareDrag,
     stopCompareDrag,
     isSidebarOpen,
     setIsSidebarOpen,
-    setShowMap,
   };
 
   // Wire api client token getters so axios will attach Authorization header

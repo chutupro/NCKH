@@ -4,7 +4,9 @@ const BASE = 'http://localhost:3000'
 
 export async function getUserById(id) {
   try {
-    const res = await axios.get(`${BASE}/users/${id}`)
+    const res = await axios.get(`${BASE}/users/profile/${id}`, {
+      withCredentials: true
+    })
     return res.data
   } catch (err) {
     const server = err?.response?.data || err?.response

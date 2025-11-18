@@ -113,7 +113,6 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
       setComments([...comments, newComment])
       setCommentCount(prev => prev + 1)
       setCommentText('')
-      toast.success('Đã thêm bình luận!')
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể thêm bình luận')
     }
@@ -126,7 +125,6 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
       await deleteComment(commentId)
       setComments(comments.filter(c => c.id !== commentId))
       setCommentCount(prev => Math.max(0, prev - 1))
-      toast.success('Đã xóa bình luận!')
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể xóa bình luận')
     }
@@ -184,12 +182,46 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
             backgroundImage: post.authorAvatar ? `url(${post.authorAvatar})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            cursor: post.authorId ? 'pointer' : 'default',
           }}
+          onClick={() => {
+            if (post.authorId) {
+              const currentUserId = user?.userId || user?.UserID || user?.sub;
+              const authorId = parseInt(post.authorId);
+              const currentId = parseInt(currentUserId);
+              
+              if (currentId && authorId === currentId) {
+                navigate('/Personal');
+              } else {
+                navigate(`/user/${post.authorId}`);
+              }
+            }
+          }}
+          title={post.authorId ? `Xem trang cá nhân của ${post.author}` : ''}
         >
           {!post.authorAvatar && (post.author || 'U').slice(0,2).toUpperCase()}
         </div>
         <div className="meta">
-          <div className="name">{post.author}</div>
+          <div 
+            className="name"
+            style={{ cursor: post.authorId ? 'pointer' : 'default' }}
+            onClick={() => {
+              if (post.authorId) {
+                const currentUserId = user?.userId || user?.UserID || user?.sub;
+                const authorId = parseInt(post.authorId);
+                const currentId = parseInt(currentUserId);
+                
+                if (currentId && authorId === currentId) {
+                  navigate('/Personal');
+                } else {
+                  navigate(`/user/${post.authorId}`);
+                }
+              }
+            }}
+            title={post.authorId ? `Xem trang cá nhân của ${post.author}` : ''}
+          >
+            {post.author}
+          </div>
           <div className="sub">{post.when} · {post.category}</div>
         </div>
         <div className="spacer" />

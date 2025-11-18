@@ -250,11 +250,9 @@ const Personal = () => {
                   const file = e.target.files[0];
                   if (file) {
                     try {
-                      toast.info('Đang tải ảnh lên...', { autoClose: 2000 });
                       const { uploadAvatar } = await import('../../services/mediaService');
                       const url = await uploadAvatar(file);
                       setAvatar(url);
-                      toast.success('Tải ảnh lên thành công!');
                     } catch (error) {
                       console.error('Error uploading avatar:', error);
                       toast.error('Không thể tải ảnh lên');
@@ -398,9 +396,9 @@ const Personal = () => {
 
           {/* Tab Content */}
           <div style={{ minHeight: '200px' }}>
-            {activeTab === 'my-posts' && <UserPosts onStatsUpdate={(posts, likes) => {
-              setTotalPosts(posts);
-              setTotalLikes(likes);
+            {activeTab === 'my-posts' && <UserPosts onStatsUpdate={(stats) => {
+              setTotalPosts(stats.totalPosts);
+              setTotalLikes(stats.totalLikes);
             }} />}
             {activeTab === 'liked-posts' && <LikedPosts />}
           </div>

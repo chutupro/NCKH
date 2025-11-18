@@ -24,12 +24,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     }}>Đang kiểm tra phiên đăng nhập...</div>;
   }
 
-  // Debug log
-  console.log('[ProtectedRoute] User:', user, 'IsAuth:', isAuthenticated, 'AllowedRoles:', allowedRoles);
-
   // Nếu chưa đăng nhập → redirect về /login
   if (!isAuthenticated) {
-    console.log('[ProtectedRoute] Not authenticated, redirecting to /login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -41,17 +37,14 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     'User'
   );
   
-  console.log('[ProtectedRoute] User Role:', userRole);
 
   // Nếu đã đăng nhập nhưng không có quyền → redirect về trang chủ với thông báo
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    console.log('[ProtectedRoute] Access denied! User role:', userRole, 'Required:', allowedRoles);
     // Hiển thị thông báo lỗi
     alert('⛔ Bạn không có quyền truy cập trang này!');
     return <Navigate to="/" replace />;
   }
 
-  console.log('[ProtectedRoute] Access granted!');
   // Nếu có quyền → render component
   return children;
 };

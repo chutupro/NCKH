@@ -19,8 +19,6 @@ const GoogleAuthSuccess = () => {
           const user = JSON.parse(decodeURIComponent(userParam));
           const token = decodeURIComponent(tokenParam);
           
-          console.log('📱 [GoogleAuth] Token received, length:', token.length);
-          
           // Lưu token vào context (giống như đăng nhập thường)
           setAccessToken(token);
           

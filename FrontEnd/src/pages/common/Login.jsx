@@ -59,7 +59,6 @@ const Login = () => {
 
     try {
       const response = await authService.login(email, password)
-      console.log('Login successful:', response)
       
       // Normalize user data
       const normalizedUser = {
@@ -101,8 +100,6 @@ const Login = () => {
         }
       }, 500)
     } catch (err) {
-      console.error('Login error:', err)
-      
       // Xử lý error message từ backend
       const errorMessage = err?.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.'
       

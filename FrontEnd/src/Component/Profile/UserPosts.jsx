@@ -4,30 +4,38 @@ import { useAppContext } from '../../context/useAppContext';
 import PostCard from '../Community/PostCard';
 import { getArticlesPosts } from '../../API/articlesPost';
 
-const UserPosts = ({ onStatsUpdate }) => {
+const BACKEND_BASE = 'http://localhost:3000';
+
+const UserPosts = ({ onStatsUpdate, userId }) => {
   const { user } = useAppContext();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0); // ✅ Để trigger re-fetch
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchUserPosts = async () => {
       try {
-        // Lấy tất cả bài viết từ API
         const data = await getArticlesPosts();
         
-        // Filter bài viết của user hiện tại
+        const targetUserId = userId || user?.userId || user?.UserID || user?.sub;
+        
         const userPosts = data.filter(article => {
-          return article.author?.id === user?.userId || 
-                 article.author?.id === user?.UserID ||
-                 article.author?.id === user?.sub;
+          return parseInt(article.author?.id) === parseInt(targetUserId);
         });
 
-        // Map sang format của PostCard
+        // Normalize avatar URL
+        const normalizeUrl = (url) => {
+          if (!url) return '/img/default-avatar.png';
+          if (url.startsWith('http://') || url.startsWith('https://')) return url;
+          if (url.startsWith('/')) return `${BACKEND_BASE}${url}`;
+          return `${BACKEND_BASE}/${url}`;
+        };
+
         const mapped = userPosts.map(a => ({
           id: a.id,
-          author: a.author?.fullName || 'Người dùng',
-          authorAvatar: a.author?.avatar || user?.avatar || '/img/default-avatar.png',
+          author: a.author?.fullName || a.author?.username || 'Người dùng',
+          authorId: a.author?.id,
+          authorAvatar: normalizeUrl(a.author?.avatar),
           when: a.createdAt ? new Date(a.createdAt).toLocaleString('vi-VN') : '',
           category: a.category || '',
           text: a.title || a.content || '',
@@ -42,7 +50,7 @@ const UserPosts = ({ onStatsUpdate }) => {
         if (onStatsUpdate) {
           const totalPosts = mapped.length;
           const totalLikes = mapped.reduce((sum, post) => sum + (post.likes || 0), 0);
-          onStatsUpdate(totalPosts, totalLikes);
+          onStatsUpdate({ totalPosts, totalLikes });
         }
       } catch (error) {
         console.error('Error fetching user posts:', error);
@@ -52,10 +60,10 @@ const UserPosts = ({ onStatsUpdate }) => {
       }
     };
 
-    if (user) {
+    if (userId || user) {
       fetchUserPosts();
     }
-  }, [user, onStatsUpdate, refreshKey]); // ✅ Thêm refreshKey để re-fetch khi cần
+  }, [user, userId, onStatsUpdate, refreshKey]); // ✅ Thêm userId vào dependencies
 
   // ✅ Listen for profile update event
   useEffect(() => {
@@ -85,7 +93,7 @@ const UserPosts = ({ onStatsUpdate }) => {
         const newPosts = posts.filter(p => p.id !== id);
         const totalPosts = newPosts.length;
         const totalLikes = newPosts.reduce((sum, post) => sum + (post.likes || 0), 0);
-        onStatsUpdate(totalPosts, totalLikes);
+        onStatsUpdate({ totalPosts, totalLikes });
       }
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -121,14 +129,18 @@ const UserPosts = ({ onStatsUpdate }) => {
     );
   }
 
+  // Kiểm tra xem có phải trang cá nhân của chính mình không
+  const currentUserId = user?.userId || user?.UserID || user?.sub;
+  const isOwnProfile = !userId || parseInt(userId) === parseInt(currentUserId);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {posts.map(post => (
         <PostCard 
           key={post.id} 
           post={post} 
-          onDelete={handleDelete}
-          showDeleteButton={true}
+          onDelete={isOwnProfile ? handleDelete : undefined}
+          showDeleteButton={isOwnProfile}
         />
       ))}
     </div>

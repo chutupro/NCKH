@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import '../../Styles/Home/RecentPosts.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faHeart } from '@fortawesome/free-solid-svg-icons'
 import { displayCategoryName } from '../../util/categoryMap'
 import useDragScroll from '../../hooks/useDragScroll'
 import { getArticlesPosts } from '../../API/articlesPost'
@@ -47,14 +48,23 @@ const RecentPosts = () => {
 
           const author = a.author?.fullName || a.author?.FullName || a.author?.name || a.author || ''
           const when = a.createdAt || a.CreatedAt ? new Date(a.createdAt || a.CreatedAt).toLocaleString() : (a.when || '')
+          
+          // Normalize avatar URL
+          let avatar = a.author?.avatar || null
+          if (avatar && !/^https?:\/\//i.test(avatar)) {
+            if (!avatar.startsWith('/')) avatar = '/' + avatar
+            avatar = `${BACKEND_BASE}${avatar}`
+          }
 
           return {
             id: a.id || a.ArticleID || a.ArticleId || a.ArticleID,
             author,
+            avatar,
             when,
             category: a.category || a.categoryName || '',
             text: a.title || a.content || a.Text || '',
             image,
+            likes: a.likeCount || 0,
           }
         })
 
@@ -124,14 +134,31 @@ const RecentPosts = () => {
                         className="recent-post-image"
                         draggable="false"
                       />
-                      <div className="recent-post-overlay">
-                        <span className="recent-post-category">{displayCategoryName(post.category, t)}</span>
-                      </div>
                     </div>
                     <div className="recent-post-content">
-                      <h3 className="recent-post-author">{authorName || String(post.author || '')}</h3>
+                      <div className="recent-post-header">
+                        <div 
+                          className="recent-post-avatar"
+                          style={{
+                            backgroundImage: post.avatar ? `url(${post.avatar})` : 'none',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          }}
+                        >
+                          {!post.avatar && (authorName || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="recent-post-author-info">
+                          <h3 className="recent-post-author">{authorName || String(post.author || '')}</h3>
+                          <div className="recent-post-meta">
+                            <span className="recent-post-category">{displayCategoryName(post.category, t)}</span>
+                            <span className="recent-post-likes">
+                              <FontAwesomeIcon icon={faHeart} className="heart-icon" />
+                              {post.likes}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                       <p className="recent-post-text">{post.text}</p>
-                      <span className="recent-post-time">{post.when}</span>
                     </div>
                   </Link>
                 )

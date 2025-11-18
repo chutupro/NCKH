@@ -112,8 +112,6 @@ const Register = () => {
     setLoading(true)
 
     try {
-      console.log('📤 Sending OTP to:', email)
-      
       const response = await fetch('http://localhost:3000/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,10 +124,8 @@ const Register = () => {
         throw new Error(data.message || 'Không thể gửi OTP')
       }
 
-      console.log('✅ OTP sent')
       setStep('otp')
     } catch (err) {
-      console.error('❌ Error:', err)
       setError(err.message || 'Đăng ký thất bại')
     } finally {
       setLoading(false)
