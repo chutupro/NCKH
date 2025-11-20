@@ -61,6 +61,36 @@ export class RedisService implements OnModuleDestroy {
     return result === 1;
   }
 
+  // ========== ACCESS TOKEN JTI MANAGEMENT ==========
+  
+  /**
+   * Lưu JTI của access token hiện tại cho user
+   * Key: access_jti:{userId} → Value: jti
+   * TTL: 15 phút (900 giây) - khớp với access token expiry
+   */
+  async setAccessJti(userId: number, jti: string): Promise<void> {
+    const key = `access_jti:${userId}`;
+    await this.client.set(key, jti, 'EX', 900); // 15 minutes = 900 seconds
+  }
+
+  /**
+   * Lấy JTI hiện tại của user
+   * Return null nếu không tồn tại hoặc đã expired
+   */
+  async getAccessJti(userId: number): Promise<string | null> {
+    const key = `access_jti:${userId}`;
+    return await this.client.get(key);
+  }
+
+  /**
+   * Xóa JTI của user (logout)
+   * → Revoke tất cả access tokens hiện tại ngay lập tức
+   */
+  async deleteAccessJti(userId: number): Promise<number> {
+    const key = `access_jti:${userId}`;
+    return await this.client.del(key);
+  }
+
   onModuleDestroy() {
     this.client.disconnect();
   }

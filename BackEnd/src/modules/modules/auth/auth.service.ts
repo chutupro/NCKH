@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { randomUUID } from 'crypto';
 import { UserService } from '../user/user.service';
 import { EmailService } from './email.service';
 import { Users } from '../../entities/user.entity';
@@ -215,10 +216,14 @@ export class AuthService {
 
     const roleName = userWithRole?.role?.RoleName || 'User';
 
+    // 🔐 TẠO JTI (JWT ID) - UUID v4 NGẪU NHIÊN
+    const jti = randomUUID();
+
     const payload = {
       sub: user.UserID,
       email: user.Email,
-      role: roleName, // ✅ ĐỔI: Dùng role name thay vì RoleID
+      role: roleName,
+      jti, // ✅ THÊM JTI VÀO ACCESS TOKEN
     };
 
     const accessToken = await this.jwtService.signAsync(payload, {
@@ -226,12 +231,25 @@ export class AuthService {
       expiresIn: '15m',
     });
 
-    const refreshToken = await this.jwtService.signAsync(payload, {
+    // Refresh token KHÔNG CẦN JTI (vì đã có hash-based revocation)
+    const refreshPayload = {
+      sub: user.UserID,
+      email: user.Email,
+      role: roleName,
+    };
+
+    const refreshToken = await this.jwtService.signAsync(refreshPayload, {
       secret: this.config.get<string>('REFRESH_TOKEN_SECRET') ?? 'refresh_secret',
       expiresIn: '7d',
     });
 
-    return { access_token: accessToken, refresh_token: refreshToken };
+    // 🔥 LƯU JTI VÀO REDIS - TTL 15 phút (900 giây)
+    // Key: access_jti:{userId} → Value: jti
+    await this.redis.setAccessJti(user.UserID, jti);
+
+    console.log(`✅ [AuthService] Created access token with JTI: ${jti} for user ${user.UserID}`);
+
+    return { access_token: accessToken, refresh_token: refreshToken, jti };
   }
 
   async login(email: string, password: string, deviceInfo?: string) {
@@ -329,7 +347,11 @@ export class AuthService {
   }
 
   async logout(userId: number, refreshToken?: string) {
-    // 🔥 REDIS DEL - TỨC THÌ
+    // 🔥 XÓA ACCESS JTI - REVOKE TẤT CẢ ACCESS TOKENS NGAY LẬP TỨC
+    await this.redis.deleteAccessJti(userId);
+    console.log(`✅ [AuthService] Revoked all access tokens for user ${userId}`);
+
+    // 🔥 XÓA REFRESH TOKEN
     if (refreshToken) {
       const refreshTokenHash = this.hashRefreshToken(refreshToken);
       const redisKey = `rt:${refreshTokenHash}`;

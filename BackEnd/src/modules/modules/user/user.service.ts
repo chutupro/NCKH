@@ -14,6 +14,19 @@ export class UserService {
     private readonly profileRepo: Repository<UserProfiles>,
   ) {}
 
+  /**
+   * 🔐 BẢO MẬT: Loại bỏ các trường nhạy cảm trước khi trả về client
+   * TỤYỆT ĐỐI KHÔNG ĐƯỢC TRẢ PasswordHash về frontend!
+   */
+  private sanitizeUser(user: Users | null): any {
+    if (!user) return null;
+
+    // ✅ Dùng destructuring để loại bỏ PasswordHash
+    const { PasswordHash, ...safeUser } = user;
+
+    return safeUser;
+  }
+
   async createUser(email: string, password: string, fullName?: string, role?: string) {
     const existing = await this.userRepo.findOne({ where: { Email: email } });
     if (existing) throw new Error('Email đã được sử dụng.');
@@ -46,7 +59,10 @@ export class UserService {
   }
 
   async findById(id: number) {
-    return this.userRepo.findOne({ where: { UserID: id } });
+    const user = await this.userRepo.findOne({ where: { UserID: id } });
+    
+    // 🔐 BẢO MẬT: Loại bỏ PasswordHash trước khi return
+    return this.sanitizeUser(user);
   }
 
   // ✅ Lấy thông tin User Profile đầy đủ

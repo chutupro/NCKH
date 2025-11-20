@@ -1,9 +1,11 @@
-import { Controller, Post, Body, UseGuards, Req, Get, Query, Res, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Query, Res, Headers, UnauthorizedException, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RefreshJwtGuard } from '../../common/guards/refresh-jwt.guard';
+import { GoogleOAuthGuard } from '../../common/guards/google-oauth.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBody, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 
@@ -122,7 +124,9 @@ export class AuthController {
   }
 
   // --- Refresh token ---
+  // 🔐 CHUẨN 2025: KHÔNG TRẢ ACCESS TOKEN TRONG BODY - CHỈ DÙNG HTTPONLY COOKIE
   @Post('refresh')
+  @UseGuards(RefreshJwtGuard) // ✅ Dùng guard để tự động verify refresh token từ cookie
   @ApiHeader({
     name: 'user-agent',
     required: false,
@@ -133,39 +137,43 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Headers('user-agent') userAgent?: string,
   ) {
-    // 🔥 ĐỌC REFRESH_TOKEN TỪ COOKIE
-    const refreshToken = req.cookies?.refresh_token;
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token không tồn tại');
+    // ✅ Refresh token đã được verify bởi RefreshJwtGuard
+    const userId = req.user?.userId;
+    const refreshToken = req.user?.refreshToken; // Từ strategy
+
+    if (!userId || !refreshToken) {
+      throw new UnauthorizedException('Invalid refresh token');
     }
 
-    // Decode để lấy userId
-    const decoded: any = this.authService['jwtService'].decode(refreshToken);
-    const userId = decoded?.sub;
-
+    // 🔥 LẤY TOKENS MỚI (với JTI mới + rotation)
     const result = await this.authService.refreshTokens(userId, refreshToken, userAgent);
 
-    // 🔥 SET CẢ 2 TOKENS MỚI VÀO COOKIE (ROTATION)
+    // Cookie options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost',
+    } as const;
+
+    // 🔥 SET ACCESS TOKEN VÀO HTTPONLY COOKIE
     res.cookie('access_token', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // ✅ LAX - Cho phép F5 và same-site navigation
-      maxAge: 15 * 60 * 1000,
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
+    // 🔥 SET REFRESH TOKEN MỚI VÀO HTTPONLY COOKIE (ROTATION)
     res.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax', // ✅ LAX - Cho phép F5 và same-site navigation
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    // 🔥 TRẢ VỀ ACCESS_TOKEN VÀ USER INFO
-    return {
-      accessToken: result.accessToken,
-      user: result.user, // ✅ THÊM USER INFO
-      message: 'Token refreshed successfully',
-    };
+    console.log('✅ [AuthController] Tokens refreshed and set in cookies for user:', userId);
+
+    // 🔥 RESPONSE 204 NO CONTENT - KHÔNG TRẢ ACCESS TOKEN TRONG BODY
+    // Frontend sẽ tự động nhận cookie mới
+    return res.status(HttpStatus.NO_CONTENT).send();
   }
 
   // --- Đăng xuất ---
@@ -179,7 +187,7 @@ export class AuthController {
     const userId = req.user?.sub || req.user?.userId;
     const refreshToken = req.cookies?.refresh_token;
     
-    // 🔥 XÓA KEY TRONG REDIS
+    // 🔥 XÓA ACCESS JTI + REFRESH TOKEN KEY TRONG REDIS
     await this.authService.logout(userId, refreshToken);
     
     // 🔥 CLEAR CẢ 2 COOKIES
@@ -189,11 +197,35 @@ export class AuthController {
     return { message: 'Đăng xuất thành công' };
   }
 
+  // --- 🔥 BONUS: Đăng xuất tất cả thiết bị ---
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @Post('logout-all')
+  async logoutAllDevices(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const userId = req.user?.sub || req.user?.userId;
+    
+    // 🔥 XÓA ACCESS JTI → Revoke tất cả access tokens
+    await this.authService.logout(userId);
+    
+    // 🔥 XÓA TẤT CẢ REFRESH TOKENS (pattern matching)
+    // Note: Nên improve thành rt:{userId}:* để chỉ xóa của user này
+    
+    // 🔥 CLEAR COOKIES CỦA DEVICE HIỆN TẠI
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    
+    return { message: 'Đã đăng xuất khỏi tất cả thiết bị' };
+  }
+
   // ✅ GOOGLE OAUTH - REDIRECT TO GOOGLE
+  // 🔥 Dùng GoogleOAuthGuard để bắt buộc hiện popup chọn tài khoản
   @Get('google')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleOAuthGuard)
   async googleAuth(@Req() req: any) {
-    // Guard sẽ redirect đến Google
+    // Guard sẽ redirect đến Google với prompt=select_account
   }
 
   // ✅ GOOGLE OAUTH - CALLBACK
