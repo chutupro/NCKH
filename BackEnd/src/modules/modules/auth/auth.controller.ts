@@ -5,7 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBody, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -65,6 +65,11 @@ export class AuthController {
 
   // --- Đăng nhập ---
   @Post('login')
+  @ApiHeader({
+    name: 'user-agent',
+    required: false,
+    description: 'User agent string (optional)',
+  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -77,7 +82,7 @@ export class AuthController {
   async login(
     @Body() body: LoginDto,
     @Res({ passthrough: true }) res: Response,
-    @Headers('user-agent') userAgent: string,
+    @Headers('user-agent') userAgent?: string,
   ) {
     const { email, password } = body;
     const result = await this.authService.login(email, password, userAgent);
@@ -118,10 +123,15 @@ export class AuthController {
 
   // --- Refresh token ---
   @Post('refresh')
+  @ApiHeader({
+    name: 'user-agent',
+    required: false,
+    description: 'User agent string (optional)',
+  })
   async refresh(
     @Req() req: any,
     @Res({ passthrough: true }) res: Response,
-    @Headers('user-agent') userAgent: string,
+    @Headers('user-agent') userAgent?: string,
   ) {
     // 🔥 ĐỌC REFRESH_TOKEN TỪ COOKIE
     const refreshToken = req.cookies?.refresh_token;

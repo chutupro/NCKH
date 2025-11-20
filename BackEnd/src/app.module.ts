@@ -28,7 +28,6 @@ import { ImageComparisonsModule } from './modules/image-comparisons/image-compar
     DatabaseModule,
     TimelineModule,
     MapLocationsModule,
-    // AuthModule,
     AuthModule, // ✅ UNCOMMENT - Auth routes
     ArticleModule,
     CommentModule,
