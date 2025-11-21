@@ -20,6 +20,12 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import type { Express } from 'express';
 
+const normalizeYearInput = (val?: string | number) => {
+  if (val === undefined || val === null || val === '') return undefined;
+  const parsed = typeof val === 'number' ? val : parseInt(val, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
 @Controller('map-locations')
 export class MapLocationsController {
   private readonly logger = new Logger(MapLocationsController.name);
@@ -95,6 +101,10 @@ export class MapLocationsController {
       }
     }
 
+    // === XỬ LÝ NĂM ẢNH ===
+    const imageYear = normalizeYearInput(body.imageYear ?? body.ImageYear);
+    const oldImageYear = normalizeYearInput(body.oldImageYear ?? body.OldImageYear);
+
     // === XỬ LÝ ẢNH ===
     const imageUrl =
       files?.image?.[0] ? `/uploads/${files.image[0].filename}` : body.image || null;
@@ -113,6 +123,8 @@ export class MapLocationsController {
       desc: body.desc?.trim() || null,
       fullDesc: body.fullDesc?.trim() || null,
       categoryId,
+      imageYear,
+      oldImageYear,
       rating: 0,
       reviews: 0,
     };
@@ -171,6 +183,9 @@ export class MapLocationsController {
       categoryId = !isNaN(parsed) && parsed > 0 ? parsed : null;
     }
 
+    const imageYear = normalizeYearInput(body.imageYear ?? body.ImageYear);
+    const oldImageYear = normalizeYearInput(body.oldImageYear ?? body.OldImageYear);
+
     const dto = {
       title: body.title,
       latitude: body.latitude ? parseFloat(body.latitude) : undefined,
@@ -181,6 +196,8 @@ export class MapLocationsController {
       desc: body.desc,
       fullDesc: body.fullDesc,
       categoryId,
+      imageYear,
+      oldImageYear,
       rating: body.rating ? parseFloat(body.rating) : undefined,
       reviews: body.reviews ? parseInt(body.reviews, 10) : undefined,
     };

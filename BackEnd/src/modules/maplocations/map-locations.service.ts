@@ -27,7 +27,9 @@ export class MapLocationsService {
       'loc.Longitude',
       'loc.Address',
       'loc.Image',
+      'loc.ImageYear',
       'loc.OldImage',
+      'loc.OldImageYear',
       'loc.ArticleID',
       'loc.TimelineID',
       'loc.CategoryID',
@@ -46,7 +48,9 @@ export class MapLocationsService {
     Longitude: parseFloat(loc.loc_Longitude) || null,
     Address: loc.loc_Address,
     Image: loc.loc_Image,
+    ImageYear: loc.loc_ImageYear ? parseInt(loc.loc_ImageYear, 10) : null,
     OldImage: loc.loc_OldImage,
+    OldImageYear: loc.loc_OldImageYear ? parseInt(loc.loc_OldImageYear, 10) : null,
     description: loc.description,              // ← Alias từ addSelect
     fullDescription: loc.fullDescription,      // ← Alias từ addSelect
     CategoryID: loc.loc_CategoryID,
@@ -76,7 +80,9 @@ export class MapLocationsService {
       Reviews: createLocationDto.reviews ?? 0,
       Address: createLocationDto.address,
       Image: createLocationDto.image || null,
+      ImageYear: createLocationDto.imageYear ?? null,
       OldImage: createLocationDto.oldImage || null,
+      OldImageYear: createLocationDto.oldImageYear ?? null,
       description: createLocationDto.desc || null,           // ĐÃ ĐỔI
       fullDescription: createLocationDto.fullDesc || null,   // ĐÃ ĐỔI
       ArticleID: createLocationDto.articleId ?? null,
@@ -104,7 +110,9 @@ export class MapLocationsService {
       Longitude: updateLocationDto.longitude ?? location.Longitude,
       Address: updateLocationDto.address || location.Address,
       Image: updateLocationDto.image || location.Image,
+      ImageYear: updateLocationDto.imageYear ?? location.ImageYear,
       OldImage: updateLocationDto.oldImage || location.OldImage,
+      OldImageYear: updateLocationDto.oldImageYear ?? location.OldImageYear,
       description: updateLocationDto.desc || location.description,           // ĐÃ ĐỔI
       fullDescription: updateLocationDto.fullDesc || location.fullDescription, // ĐÃ ĐỔI
       ArticleID: updateLocationDto.articleId ?? location.ArticleID,

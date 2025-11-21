@@ -11,6 +11,8 @@ import { useAppContext } from "../../context/useAppContext";
 import { useAuthRestore } from "../../hooks/useAuthRestore";
 
 const BASE_URL = "http://localhost:3000";
+const FAVORITE_PHOTOS_KEY = "favoritePhotosByUser";
+const FAVORITE_PLACES_KEY = "favoritePlacesByUser";
 
 /* ---------- FIX MARKER ICON (CHUẨN 100%) ---------- */
 delete L.Icon.Default.prototype._getIconUrl;
@@ -47,6 +49,8 @@ const MapPage = () => {
   const sidebarRef = useRef(null);
   const modalRef = useRef(null);
   const overlayRef = useRef(null);
+  const uploadModalRef = useRef(null);
+  const uploadOverlayRef = useRef(null);
   const currentPlace = useRef(null);
   const currentRouteLayer = useRef(null);
   const hoverPopupRef = useRef(null);
@@ -54,6 +58,7 @@ const MapPage = () => {
   const favoritesSidebarRef = useRef(null);
   const allMarkersRef = useRef(new Map());
   const tileLayerRef = useRef(null); // ✅ Ref cho tile layer
+  const communityPhotosRef = useRef(new Map());
 
   /* ---------- STATE ---------- */
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,11 +81,55 @@ const MapPage = () => {
     const saved = localStorage.getItem("sidebarDarkMode");
     return saved === "true";
   });
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem("favorites");
-    return saved ? JSON.parse(saved) : [];
+  const [favoritePlacesByUser, setFavoritePlacesByUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITE_PLACES_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch (err) {
+      console.error("Không thể đọc favorite places:", err);
+      return {};
+    }
+  });
+  const [favoritePhotosByUser, setFavoritePhotosByUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITE_PHOTOS_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch (err) {
+      console.error("Không thể đọc favorite photos:", err);
+      return {};
+    }
   });
   const [comparePlace, setComparePlace] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITE_PLACES_KEY, JSON.stringify(favoritePlacesByUser));
+  }, [favoritePlacesByUser]);
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITE_PHOTOS_KEY, JSON.stringify(favoritePhotosByUser));
+  }, [favoritePhotosByUser]);
+
+  const escapeHtml = (value = '') =>
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITE_PLACES_KEY, JSON.stringify(favoritePlacesByUser));
+  }, [favoritePlacesByUser]);
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITE_PHOTOS_KEY, JSON.stringify(favoritePhotosByUser));
+  }, [favoritePhotosByUser]);
+
+  useEffect(() => {
+    if (currentPlace.current) {
+      updateCommunityPhotoGrid(currentPlace.current.id, currentPlace.current);
+    }
+  }, [favoritePhotosByUser]);
 
   /* ---------- KIỂM TRA REDIRECT SAU KHI LOGIN ---------- */
   useEffect(() => {
@@ -1224,7 +1273,7 @@ const MapPage = () => {
       z-index:10003;pointer-events:auto;user-select:none;
     `;
 
-    const isSaved = favorites.some((f) => f.id === place.id);
+    let isSaved = getCurrentUserPlaceFavorites().some((f) => f.id === place.id);
 
     popup.innerHTML = `
       <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/260x120?text=Chưa+có+hình"}" style="width:100%;height:120px;object-fit:cover;" />
@@ -1235,6 +1284,7 @@ const MapPage = () => {
           ${"★".repeat(Math.floor(place.rating || 0))}${"☆".repeat(5 - Math.floor(place.rating || 0))}
           <span style="color:#aaa;">(${place.reviews || 0})</span>
         </div>
+
         <p style="margin:0 0 8px;font-size:0.8rem;color:#ccc;line-height:1.4;">${place.desc || "Mô tả chưa có"}</p>
         <div style="display:flex;justify-content:flex-end;">
           <button id="hover-save-btn" style="width:32px;height:32px;background:${isSaved ? "#d32f2f" : "#333"};color:white;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;">
@@ -1254,15 +1304,23 @@ const MapPage = () => {
     const saveBtn = document.getElementById("hover-save-btn");
     saveBtn.onclick = (e) => {
       e.stopPropagation();
+      if (!user || !user.userId) {
+        alert("Vui lòng đăng nhập để lưu địa điểm.");
+        return;
+      }
       const fullPlace = places.find((p) => p.id === place.id) || place;
-      if (!favorites.some((fav) => fav.id === fullPlace.id)) {
-        const updated = [...favorites, fullPlace];
-        setFavorites(updated);
-        localStorage.setItem("favorites", JSON.stringify(updated));
-        alert("Đã lưu vào mục yêu thích!");
-        showHoverPopup(place, latlng);
+      if (isSaved) {
+        removePlaceFromFavorites(fullPlace.id);
+        isSaved = false;
       } else {
-        alert("Đã có trong mục yêu thích!");
+        addPlaceToFavorites(fullPlace);
+        isSaved = true;
+        alert("Đã lưu vào mục yêu thích!");
+      }
+      saveBtn.style.background = isSaved ? "#d32f2f" : "#333";
+      const icon = saveBtn.querySelector("svg");
+      if (icon) {
+        icon.setAttribute("fill", isSaved ? "white" : "none");
       }
     };
 
@@ -1289,6 +1347,255 @@ const MapPage = () => {
     if (currentRouteLayer.current) {
       mapInstance.current.removeLayer(currentRouteLayer.current);
       currentRouteLayer.current = null;
+    }
+  };
+
+  const getCurrentUserPlaceFavorites = () => {
+    if (!user?.userId) return [];
+    return favoritePlacesByUser[user.userId] || [];
+  };
+
+  const getCurrentUserPhotoFavorites = () => {
+    if (!user?.userId) return [];
+    return favoritePhotosByUser[user.userId] || [];
+  };
+
+  const addPlaceToFavorites = (place) => {
+    if (!user || !user.userId) {
+      alert("Vui lòng đăng nhập để lưu địa điểm.");
+      return false;
+    }
+    setFavoritePlacesByUser((prev) => {
+      const current = Array.isArray(prev[user.userId]) ? prev[user.userId] : [];
+      if (current.some((item) => item.id === place.id)) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [user.userId]: [...current, place],
+      };
+    });
+    return true;
+  };
+
+  const removePlaceFromFavorites = (id) => {
+    if (!user || !user.userId) return;
+    setFavoritePlacesByUser((prev) => {
+      const current = Array.isArray(prev[user.userId]) ? prev[user.userId] : [];
+      const filtered = current.filter((item) => item.id !== id);
+      if (filtered.length === current.length) return prev;
+      return {
+        ...prev,
+        [user.userId]: filtered,
+      };
+    });
+  };
+
+  const handleToggleFavoritePlace = (place) => {
+    if (!place) return;
+    if (!user || !user.userId) {
+      alert("Vui lòng đăng nhập để lưu địa điểm.");
+      return;
+    }
+    setFavoritePlacesByUser((prev) => {
+      const next = { ...prev };
+      const list = Array.isArray(next[user.userId]) ? [...next[user.userId]] : [];
+      const exists = list.findIndex((item) => item.id === place.id);
+      if (exists >= 0) {
+        list.splice(exists, 1);
+      } else {
+        list.push({
+          id: place.id,
+          title: place.title,
+          address: place.address,
+          rating: place.rating,
+          reviews: place.reviews,
+          desc: place.desc,
+          image: place.image,
+        });
+      }
+      next[user.userId] = list;
+      return next;
+    });
+  };
+
+  const handleToggleFavoritePhoto = (photo, placeInfo) => {
+    if (!photo) return;
+    if (!user || !user.userId) {
+      alert("Vui lòng đăng nhập để lưu ảnh vào mục yêu thích.");
+      return;
+    }
+
+    setFavoritePhotosByUser((prev) => {
+      const next = { ...prev };
+      const list = Array.isArray(next[user.userId]) ? [...next[user.userId]] : [];
+      const rawId = photo.SubmissionID ?? photo.submissionId;
+      const submissionId = rawId ? String(rawId) : `${Date.now()}-${Math.random()}`;
+      const existingIndex = list.findIndex((item) => item.submissionId === submissionId);
+
+      if (existingIndex >= 0) {
+        list.splice(existingIndex, 1);
+      } else {
+        list.push({
+          submissionId,
+          ImagePath: photo.ImagePath || photo.imagePath || "",
+          Year: photo.Year || photo.year || "Chưa rõ năm",
+          submittedBy: photo.submittedBy || photo.userName || "Ẩn danh",
+          locationId: placeInfo?.id ?? placeInfo?.LocationID ?? photo.LocationID ?? null,
+          locationTitle: placeInfo?.title || placeInfo?.Name || placeInfo?.locationTitle || "Không rõ địa điểm",
+          savedAt: Date.now(),
+        });
+      }
+
+      next[user.userId] = list;
+      return next;
+    });
+  };
+
+  const updateCommunityPhotoGrid = (locationId, placeMeta = null) => {
+    if (!sidebarRef.current) return;
+    const container = sidebarRef.current.querySelector(
+      `#community-photo-carousel[data-location-id="${locationId}"]`,
+    );
+    if (!container) return;
+
+    const photos = communityPhotosRef.current.get(locationId) || [];
+    if (!photos.length) {
+      container.innerHTML =
+        '<p style="margin:0;color:#777;font-size:0.9rem;">Chưa có ảnh nào được duyệt.</p>';
+      return;
+    }
+
+    const placeInfo =
+      placeMeta ||
+      (currentPlace.current && currentPlace.current.id === locationId ? currentPlace.current : null) ||
+      places.find((p) => p.id === locationId);
+    const userPhotoFavorites = getCurrentUserPhotoFavorites();
+    const savedPhotoIds = new Set(userPhotoFavorites.map((item) => item.submissionId));
+
+    const slides = photos
+      .map((photo, idx) => {
+        const src = photo.ImagePath?.startsWith('http')
+          ? photo.ImagePath
+          : `${BASE_URL}${photo.ImagePath || ''}`;
+        const yearLabel = photo.Year || 'Chưa rõ';
+        const submittedBy = photo.submittedBy ? escapeHtml(photo.submittedBy) : 'Ẩn danh';
+        const submissionId = String(photo.SubmissionID ?? photo.submissionId ?? idx);
+        const isSaved = savedPhotoIds.has(submissionId);
+        return `
+          <div class="carousel-slide" data-index="${idx}" data-photo-id="${submissionId}" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:${idx === 0 ? 1 : 0};transition:opacity 0.4s ease;">
+            <img
+              src="${src}"
+              alt="Ảnh cộng đồng"
+              style="width:100%;height:100%;object-fit:cover;border-radius:16px;cursor:pointer;"
+              data-full="${src}"
+              data-year="${yearLabel}"
+              data-user="${submittedBy}"
+              loading="lazy"
+            />
+            <button class="save-photo-btn" data-photo-id="${submissionId}" style="position:absolute;top:12px;right:12px;border:none;border-radius:999px;padding:6px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;z-index:6;background:${
+              isSaved ? '#1a73e8' : 'rgba(15,23,42,0.85)'
+            };color:${isSaved ? '#fff' : '#f1f5f9'};">
+              ${isSaved ? '★ Đã lưu' : '☆ Lưu ảnh'}
+            </button>
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.85),transparent 55%);border-radius:16px;pointer-events:none;"></div>
+            <div style="position:absolute;left:12px;right:12px;bottom:12px;color:#e5e7eb;font-size:0.8rem;display:flex;flex-direction:column;gap:4px;pointer-events:none;">
+              <span style="font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;opacity:0.9;">📷 Ảnh cộng đồng</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">👤 ${submittedBy}</span>
+                <span style="padding:4px 10px;border-radius:999px;background:rgba(15,23,42,0.9);color:#facc15;font-weight:600;">📅 ${yearLabel}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    container.innerHTML = `
+      <div class="carousel-wrapper" style="position:relative;width:100%;height:220px;border-radius:18px;overflow:hidden;background:#020617;">
+        ${slides}
+        <button class="carousel-nav prev" style="position:absolute;top:50%;left:12px;transform:translateY(-50%);width:34px;height:34px;border:none;border-radius:50%;background:rgba(15,23,42,0.7);color:white;font-size:1.2rem;cursor:pointer;">‹</button>
+        <button class="carousel-nav next" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);width:34px;height:34px;border:none;border-radius:50%;background:rgba(15,23,42,0.7);color:white;font-size:1.2rem;cursor:pointer;">›</button>
+        <div class="carousel-dots" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;"></div>
+      </div>
+    `;
+
+    const slidesEls = container.querySelectorAll('.carousel-slide');
+    const dotsContainer = container.querySelector('.carousel-dots');
+    let current = 0;
+
+    dotsContainer.innerHTML = photos
+      .map(
+        (_, idx) =>
+          `<span data-idx="${idx}" style="width:8px;height:8px;border-radius:50%;background:${
+            idx === 0 ? '#1a73e8' : '#cbd5f5'
+          };display:inline-block;"></span>`,
+      )
+      .join('');
+
+    const dots = dotsContainer.querySelectorAll('span');
+
+    const updateActiveSlide = (next) => {
+      if (next < 0) next = slidesEls.length - 1;
+      if (next >= slidesEls.length) next = 0;
+      slidesEls[current].style.opacity = 0;
+      slidesEls[current].style.pointerEvents = 'none';
+      slidesEls[next].style.opacity = 1;
+      slidesEls[next].style.pointerEvents = 'auto';
+      dots[current].style.background = '#cbd5f5';
+      dots[next].style.background = '#1a73e8';
+      current = next;
+    };
+
+    container.querySelector('.prev')?.addEventListener('click', () => updateActiveSlide(current - 1));
+    container.querySelector('.next')?.addEventListener('click', () => updateActiveSlide(current + 1));
+    dots.forEach((dot, idx) => dot.addEventListener('click', () => updateActiveSlide(idx)));
+
+    // Thiết lập pointer events ban đầu & gắn sự kiện click
+    slidesEls.forEach((slide, idx) => {
+      slide.style.cursor = 'pointer';
+      slide.style.pointerEvents = idx === 0 ? 'auto' : 'none';
+      slide.addEventListener('click', () => {
+        openPhotoPreview({ photos, startIndex: idx });
+      });
+    });
+
+    container.querySelectorAll('.save-photo-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const submissionId = btn.getAttribute('data-photo-id');
+        const targetPhoto = photos.find(
+          (p) => String(p.SubmissionID ?? p.submissionId ?? "") === submissionId,
+        );
+        handleToggleFavoritePhoto(targetPhoto, placeInfo);
+        setTimeout(() => updateCommunityPhotoGrid(locationId, placeInfo), 50);
+      });
+    });
+  };
+
+  const refreshCommunityPhotos = async (locationId, placeMeta = null) => {
+    try {
+      const res = await axios.get(`${BASE_URL}/location-images/location/${locationId}`);
+      communityPhotosRef.current.set(locationId, res.data || []);
+    } catch (err) {
+      console.error('Không tải được ảnh cộng đồng', err);
+      communityPhotosRef.current.set(locationId, []);
+    } finally {
+      const meta =
+        placeMeta ||
+        (currentPlace.current && currentPlace.current.id === locationId ? currentPlace.current : null) ||
+        places.find((p) => p.id === locationId);
+      updateCommunityPhotoGrid(locationId, meta);
+    }
+  };
+
+  const attachCommunityPhotoSection = (place) => {
+    if (!sidebarRef.current) return;
+    updateCommunityPhotoGrid(place.id, place);
+
+    const uploadBtn = sidebarRef.current.querySelector('#open-photo-modal');
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', () => openPhotoUploadModal(place));
     }
   };
 
@@ -1344,9 +1651,13 @@ const MapPage = () => {
       }
     }, 100);
 
-    // Load reviews từ API
+    let communityPhotos = [];
+    // Load reviews và ảnh cộng đồng
     try {
-      const reviewsRes = await axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`);
+      const [reviewsRes, photosRes] = await Promise.all([
+        axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`),
+        axios.get(`${BASE_URL}/location-images/location/${place.id}`),
+      ]);
       setReviews(reviewsRes.data.map(r => ({
         rating: r.Rating,
         comment: r.Comment,
@@ -1357,10 +1668,13 @@ const MapPage = () => {
         images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
         imagesApproved: !!r.ImagesApproved,
       })));
+      communityPhotos = photosRes.data || [];
     } catch (error) {
-      console.error("Error loading reviews:", error);
+      console.error("Error loading reviews/photos:", error);
       setReviews([]);
+      communityPhotos = [];
     }
+    communityPhotosRef.current.set(place.id, communityPhotos);
 
     const categoryName = place.categoryName || "Chưa phân loại";
 
@@ -1403,6 +1717,17 @@ const MapPage = () => {
               <button id="compare-btn" style="padding:10px;border:1px solid #dadce0;border-radius:8px;background:#f8f9fa;color:#333;cursor:pointer;font-size:0.85rem;text-align:center">So sánh</button>
             </div>
             <div id="route-details" style="display:none;font-size:0.9rem;color:#555;margin:16px 0;line-height:1.6"></div>
+            <div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <h4 style="margin:0;font-size:1rem;color:#1a1c2b;">Ảnh cộng đồng</h4>
+                <button id="open-photo-modal" style="padding:8px 14px;border:1px solid #1a73e8;background:#fff;color:#1a73e8;border-radius:999px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                  <span>➕</span> Thêm ảnh
+                </button>
+              </div>
+              <div id="community-photo-carousel" data-location-id="${place.id}" style="width:100%;height:220px;">
+                ${communityPhotos.length ? '<!-- sẽ được cập nhật sau -->' : '<p style="margin:0;color:#777;font-size:0.9rem;">Chưa có ảnh nào được duyệt.</p>'}
+              </div>
+            </div>
           ` : `
             <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
               <div style="background:#f1f1f1;padding:16px;border-radius:8px;width:100%;margin-bottom:16px;text-align:center;">
@@ -1499,16 +1824,20 @@ const MapPage = () => {
           `}
         </div>
 
-        ${activeTab === "overview" ? `
-          <button id="view-detail-btn" style="width:100%;padding:14px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem">
-            Xem chi tiết
-          </button>
-          <div style="font-size:0.9rem;color:#555;margin:16px 0;line-height:1.6">
-            <div>Location: ${place.address || "Địa chỉ chưa có"}</div>
+        <div id="view-detail-section" style="${activeTab === "overview" ? "" : "display:none;"}margin-top:20px;">
+          <div style="border:1px solid #e5e7eb;border-radius:12px;padding:18px;">
+            <button id="view-detail-btn" style="width:100%;padding:14px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem;margin-bottom:12px;">
+              Xem chi tiết
+            </button>
+            <div style="font-size:0.9rem;color:#555;line-height:1.6">
+              <div>Location: ${place.address || "Địa chỉ chưa có"}</div>
+            </div>
           </div>
-        ` : ""}
+        </div>
       </div>
     `;
+
+    attachCommunityPhotoSection(place);
 
     // Attach event listeners for tabs
     const switchTab = (newTab) => {
@@ -1521,8 +1850,12 @@ const MapPage = () => {
       const overviewBtn = document.getElementById("overview-tab");
       const reviewsBtn = document.getElementById("reviews-tab");
       const contentArea = document.getElementById("content-area");
+      const detailSection = document.getElementById("view-detail-section");
       
       if (!contentArea) return;
+      if (detailSection) {
+        detailSection.style.display = newTab === "overview" ? "block" : "none";
+      }
       
       if (overviewBtn && reviewsBtn) {
         if (newTab === "overview") {
@@ -1544,6 +1877,7 @@ const MapPage = () => {
       
       // Re-render content area
       if (newTab === "overview") {
+        const latestPhotos = communityPhotosRef.current.get(place.id) || [];
         contentArea.innerHTML = `
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
             <button id="get-directions-btn" style="padding:10px;border:1px solid #dadce0;border-radius:8px;background:#f8f9fa;color:#333;cursor:pointer;font-size:0.85rem;text-align:center">Đường đi</button>
@@ -1552,7 +1886,19 @@ const MapPage = () => {
             <button id="compare-btn" style="padding:10px;border:1px solid #dadce0;border-radius:8px;background:#f8f9fa;color:#333;cursor:pointer;font-size:0.85rem;text-align:center">So sánh</button>
           </div>
           <div id="route-details" style="display:none;font-size:0.9rem;color:#555;margin:16px 0;line-height:1.6"></div>
+          <div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <h4 style="margin:0;font-size:1rem;color:#1a1c2b;">Ảnh cộng đồng</h4>
+              <button id="open-photo-modal" style="padding:8px 14px;border:1px solid #1a73e8;background:#fff;color:#1a73e8;border-radius:999px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <span>➕</span> Thêm ảnh
+              </button>
+            </div>
+            <div id="community-photo-carousel" data-location-id="${place.id}" style="width:100%;height:220px;">
+              ${latestPhotos.length ? '<!-- sẽ được cập nhật sau -->' : '<p style="margin:0;color:#777;font-size:0.9rem;">Chưa có ảnh nào được duyệt.</p>'}
+            </div>
+          </div>
         `;
+        attachCommunityPhotoSection(place);
         
         // Re-attach overview buttons
         document.getElementById("get-directions-btn")?.addEventListener("click", () => {
@@ -1561,15 +1907,18 @@ const MapPage = () => {
         });
         
         document.getElementById("save-btn")?.addEventListener("click", () => {
-          const fullPlace = places.find(p => p.id === place.id) || place;
-          if (!favorites.some(f => f.id === fullPlace.id)) {
-            const updated = [...favorites, fullPlace];
-            setFavorites(updated);
-            localStorage.setItem("favorites", JSON.stringify(updated));
-            alert("Đã lưu!");
-          } else {
-            alert("Đã có trong yêu thích!");
+          if (!user || !user.userId) {
+            alert("Vui lòng đăng nhập để lưu địa điểm.");
+            return;
           }
+          const fullPlace = places.find(p => p.id === place.id) || place;
+          const alreadySaved = getCurrentUserPlaceFavorites().some((f) => f.id === fullPlace.id);
+          if (alreadySaved) {
+            alert("Đã có trong yêu thích!");
+            return;
+          }
+          addPlaceToFavorites(fullPlace);
+          alert("Đã lưu!");
         });
         
         document.getElementById("compare-btn")?.addEventListener("click", () => setComparePlace(place));
@@ -1945,15 +2294,18 @@ const MapPage = () => {
       });
 
       document.getElementById("save-btn")?.addEventListener("click", () => {
-        const fullPlace = places.find(p => p.id === place.id) || place;
-        if (!favorites.some(f => f.id === fullPlace.id)) {
-          const updated = [...favorites, fullPlace];
-          setFavorites(updated);
-          localStorage.setItem("favorites", JSON.stringify(updated));
-          alert("Đã lưu!");
-        } else {
-          alert("Đã có trong yêu thích!");
+        if (!user || !user.userId) {
+          alert("Vui lòng đăng nhập để lưu địa điểm.");
+          return;
         }
+        const fullPlace = places.find(p => p.id === place.id) || place;
+        const alreadySaved = getCurrentUserPlaceFavorites().some((f) => f.id === fullPlace.id);
+        if (alreadySaved) {
+          alert("Đã có trong yêu thích!");
+          return;
+        }
+        addPlaceToFavorites(fullPlace);
+        alert("Đã lưu!");
       });
 
       document.getElementById("compare-btn")?.addEventListener("click", () => setComparePlace(place));
@@ -2017,6 +2369,260 @@ const MapPage = () => {
     overlayRef.current = null;
   };
 
+  const closePhotoUploadModal = () => {
+    if (uploadModalRef.current) {
+      document.body.removeChild(uploadModalRef.current);
+      uploadModalRef.current = null;
+    }
+    if (uploadOverlayRef.current) {
+      document.body.removeChild(uploadOverlayRef.current);
+      uploadOverlayRef.current = null;
+    }
+  };
+
+  const openPhotoUploadModal = (place) => {
+    closePhotoUploadModal();
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closePhotoUploadModal();
+    });
+    document.body.appendChild(overlay);
+    uploadOverlayRef.current = overlay;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:420px;background:white;border-radius:20px;padding:24px;box-shadow:0 24px 60px rgba(15,23,42,0.25);z-index:10002;';
+    modal.innerHTML = `
+      <button id="close-photo-modal" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:1.1rem;cursor:pointer;">×</button>
+      <h2 style="margin:0 0 8px;font-size:1.4rem;color:#1f2937;">Thêm ảnh cộng đồng</h2>
+      <p style="margin:0 0 16px;color:#64748b;font-size:0.95rem;">Chia sẻ khoảnh khắc của bạn tại <strong>${place.title}</strong>. Ảnh sẽ được kiểm duyệt trước khi hiển thị.</p>
+      ${
+        user && user.userId
+          ? `
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;color:#1f2937;">Chọn ảnh *</label>
+            <input type="file" id="photo-modal-file" accept="image/*" style="width:100%;padding:10px;border:1px solid #d0d7e2;border-radius:10px;" />
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:6px;color:#1f2937;">Năm chụp (tùy chọn)</label>
+            <input type="number" id="photo-modal-year" placeholder="Ví dụ: 1998" min="1800" max="${new Date().getFullYear() + 1}" style="width:100%;padding:10px;border:1px solid #d0d7e2;border-radius:10px;" />
+          </div>
+          <div style="border:1px dashed #cbd5f5;border-radius:12px;height:150px;display:flex;align-items:center;justify-content:center;color:#94a3b8;text-align:center;" id="photo-modal-preview">Chưa chọn ảnh</div>
+          <button id="photo-modal-submit" style="width:100%;padding:12px;border:none;border-radius:999px;background:#1a73e8;color:white;font-weight:600;font-size:1rem;cursor:pointer;">Gửi ảnh</button>
+          <p id="photo-modal-status" style="margin:0;color:#475569;font-size:0.9rem;"></p>
+        </div>
+      `
+          : `
+        <div style="padding:16px;border:1px solid #fee2e2;border-radius:12px;background:#fff1f2;text-align:center;color:#b91c1c;">
+          Bạn cần <a href="/login" id="photo-modal-login" style="color:#1a73e8;font-weight:600;">đăng nhập</a> để gửi ảnh.
+        </div>
+      `
+      }
+    `;
+    document.body.appendChild(modal);
+    uploadModalRef.current = modal;
+
+    modal.querySelector('#close-photo-modal')?.addEventListener('click', closePhotoUploadModal);
+
+    if (!user || !user.userId) {
+      modal.querySelector('#photo-modal-login')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/login';
+      });
+      return;
+    }
+
+    const fileInput = modal.querySelector('#photo-modal-file');
+    const previewBox = modal.querySelector('#photo-modal-preview');
+    const yearInput = modal.querySelector('#photo-modal-year');
+    const submitBtn = modal.querySelector('#photo-modal-submit');
+    const statusEl = modal.querySelector('#photo-modal-status');
+
+    fileInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) {
+        previewBox.textContent = 'Chưa chọn ảnh';
+        return;
+      }
+      const previewUrl = URL.createObjectURL(file);
+      previewBox.innerHTML = `<img src="${previewUrl}" alt="Preview" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" />`;
+    });
+
+    submitBtn?.addEventListener('click', async () => {
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert('Vui lòng chọn ảnh trước khi gửi.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('locationId', place.id);
+      formData.append('userId', user.userId);
+      if (yearInput?.value) {
+        formData.append('year', yearInput.value);
+      }
+      formData.append('image', fileInput.files[0]);
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Đang gửi...';
+      if (statusEl) statusEl.textContent = '';
+
+      try {
+        await axios.post(`${BASE_URL}/location-images`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        if (statusEl) statusEl.textContent = '✅ Ảnh đã được gửi, chờ duyệt.';
+        fileInput.value = '';
+        if (previewBox) previewBox.textContent = 'Chưa chọn ảnh';
+        if (yearInput) yearInput.value = '';
+        await refreshCommunityPhotos(place.id, place);
+        setTimeout(() => {
+          closePhotoUploadModal();
+        }, 800);
+      } catch (err) {
+        console.error('Gửi ảnh thất bại', err);
+        const msg = err?.response?.data?.message || 'Gửi ảnh thất bại, vui lòng thử lại.';
+        if (statusEl) statusEl.textContent = `❌ ${msg}`;
+        else alert(msg);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi ảnh';
+      }
+    });
+  };
+
+  const openPhotoPreview = ({ photos = [], startIndex = 0 } = {}) => {
+    if (!Array.isArray(photos) || !photos.length) return;
+    let currentIndex = Math.min(Math.max(startIndex, 0), photos.length - 1);
+
+    const buildPhotoData = (idx) => {
+      const p = photos[idx] || {};
+      const rawSrc = p.ImagePath || p.imagePath || p.src || '';
+      const src = rawSrc?.startsWith('http') ? rawSrc : `${BASE_URL}${rawSrc}`;
+      return {
+        src: src || '',
+        year: p.Year || p.year || 'Chưa rõ năm',
+        userName: p.submittedBy || p.userName || 'Ẩn danh',
+      };
+    };
+
+    const getCurrentData = () => buildPhotoData(currentIndex);
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);backdrop-filter:blur(3px);z-index:10050;display:flex;align-items:center;justify-content:center;padding:24px;';
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) document.body.removeChild(overlay);
+    });
+
+    overlay.innerHTML = `
+      <div style="position:relative;width:100%;max-width:960px;max-height:92vh;background:#020617;border-radius:20px;padding:20px 20px 16px;box-shadow:0 30px 80px rgba(0,0,0,0.55);display:flex;flex-direction:column;gap:14px;font-family:system-ui;">
+        <button id="preview-close" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border:none;border-radius:50%;background:rgba(15,23,42,0.9);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div style="display:flex;gap:10px;">
+            <button id="preview-prev" style="padding:8px 14px;border:none;border-radius:999px;background:#1e293b;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">‹ Ảnh trước</button>
+            <button id="preview-next" style="padding:8px 14px;border:none;border-radius:999px;background:#1a73e8;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">Ảnh tiếp ›</button>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button id="preview-zoom-out" style="padding:8px 14px;border:none;border-radius:999px;background:#1e293b;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">−</button>
+            <button id="preview-zoom-in" style="padding:8px 14px;border:none;border-radius:999px;background:#1a73e8;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">+</button>
+            <button id="preview-reset" style="padding:8px 14px;border:none;border-radius:999px;background:#334155;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">Reset</button>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:14px;background:#020617;position:relative;">
+          <img id="preview-image" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:14px;transition:transform 0.2s ease;" />
+        </div>
+        <div style="margin-top:4px;padding:10px 4px 0;border-top:1px solid rgba(148,163,184,0.4);display:flex;justify-content:space-between;align-items:center;gap:12px;color:#e5e7eb;font-size:0.9rem;">
+          <div style="display:flex;flex-direction:column;gap:2px;max-width:70%;">
+            <span style="font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;">Ảnh cộng đồng</span>
+            <span id="preview-user" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="preview-year" style="padding:6px 12px;border-radius:999px;background:#0f172a;color:#facc15;font-weight:600;font-size:0.85rem;white-space:nowrap;">📅 </span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const img = overlay.querySelector('#preview-image');
+    const userLabel = overlay.querySelector('#preview-user');
+    const yearLabel = overlay.querySelector('#preview-year');
+    const zoomInBtn = overlay.querySelector('#preview-zoom-in');
+    const zoomOutBtn = overlay.querySelector('#preview-zoom-out');
+    const resetBtn = overlay.querySelector('#preview-reset');
+    const closeBtn = overlay.querySelector('#preview-close');
+    const prevBtn = overlay.querySelector('#preview-prev');
+    const nextBtn = overlay.querySelector('#preview-next');
+    let scale = 1;
+
+    const applyScale = () => {
+      img.style.transform = `scale(${scale})`;
+      img.style.cursor = scale > 1 ? 'grab' : 'default';
+    };
+
+    const renderPhoto = () => {
+      const data = getCurrentData();
+      if (!data.src) return;
+      img.src = data.src;
+      userLabel.textContent = `👤 ${data.userName || 'Ẩn danh'}`;
+      yearLabel.textContent = `📅 ${data.year || 'Chưa rõ năm'}`;
+      scale = 1;
+      applyScale();
+    };
+
+    renderPhoto();
+
+    zoomInBtn?.addEventListener('click', () => {
+      scale = Math.min(scale + 0.2, 3);
+      applyScale();
+    });
+
+    zoomOutBtn?.addEventListener('click', () => {
+      scale = Math.max(scale - 0.2, 0.5);
+      applyScale();
+    });
+
+    resetBtn?.addEventListener('click', () => {
+      scale = 1;
+      applyScale();
+    });
+
+    closeBtn?.addEventListener('click', () => {
+      document.body.removeChild(overlay);
+    });
+
+    const gotoPhoto = (nextIndex) => {
+      currentIndex = nextIndex;
+      if (currentIndex < 0) currentIndex = photos.length - 1;
+      if (currentIndex >= photos.length) currentIndex = 0;
+      renderPhoto();
+    };
+
+    prevBtn?.addEventListener('click', () => gotoPhoto(currentIndex - 1));
+    nextBtn?.addEventListener('click', () => gotoPhoto(currentIndex + 1));
+
+    if (photos.length <= 1) {
+      prevBtn?.setAttribute('disabled', 'true');
+      prevBtn.style.opacity = 0.4;
+      nextBtn?.setAttribute('disabled', 'true');
+      nextBtn.style.opacity = 0.4;
+    }
+
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        gotoPhoto(currentIndex + 1);
+      } else if (e.key === 'ArrowLeft') {
+        gotoPhoto(currentIndex - 1);
+      } else if (e.key === 'Escape') {
+        document.body.removeChild(overlay);
+      }
+    });
+    overlay.setAttribute('tabindex', '-1');
+    overlay.focus();
+  };
+
   /* ---------- TÍNH ĐƯỜNG ĐI ---------- */
   const calculateRoute = async (from, to, map) => {
     const url = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${from.lng},${from.lat};${to[1]},${to[0]}?overview=full&geometries=geojson`;
@@ -2053,6 +2659,8 @@ const MapPage = () => {
 
   /* ---------- YÊU THÍCH ---------- */
   const showFavoritesSidebar = () => {
+    const userPhotoFavorites = getCurrentUserPhotoFavorites();
+    const userPlaceFavorites = getCurrentUserPlaceFavorites();
     favoritesSidebarRef.current.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h3 style="margin:0;font-size:1.4rem;font-weight:600;color:white;">Mục yêu thích</h3>
@@ -2060,17 +2668,51 @@ const MapPage = () => {
           <span style="font-size:1.6rem;color:#aaa;">×</span>
         </div>
       </div>
+      <div style="margin-bottom:12px;font-size:0.9rem;color:#aaa;">
+        Ảnh đã lưu: <span class="photo-fav-count" style="color:#0ff;">${userPhotoFavorites.length}</span>
+      </div>
+      <div id="favorite-photos-container" style="margin-bottom:16px;color:white;"></div>
+      <div style="margin:16px 0;border-top:1px solid #333;"></div>
       <div style="margin-bottom:16px;font-size:0.9rem;color:#aaa;">
-        <span style="margin-right:8px;">Lock</span> Riêng tư · <span class="fav-count">${favorites.length}</span> địa điểm
+        Địa điểm đã lưu: <span class="fav-count" style="color:#0ff;">${userPlaceFavorites.length}</span>
       </div>
       <div id="favorites-list" style="color:white;"></div>
     `;
 
+    const photoContainer = document.getElementById("favorite-photos-container");
+    if (!user || !user.userId) {
+      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Đăng nhập để lưu và xem ảnh yêu thích.</div>`;
+    } else if (!userPhotoFavorites.length) {
+      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Chưa có ảnh nào được lưu.</div>`;
+    } else {
+      photoContainer.innerHTML = userPhotoFavorites
+        .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
+        .map((photo) => {
+          const src = photo.ImagePath?.startsWith('http')
+            ? photo.ImagePath
+            : `${BASE_URL}${photo.ImagePath || ''}`;
+          return `
+            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #333;position:relative;cursor:pointer;" onclick="window.openFavoritePhoto('${photo.submissionId}')">
+              <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;" alt="Ảnh yêu thích" />
+              <div style="flex:1;">
+                <div style="font-weight:600;font-size:0.95rem;color:white;margin-bottom:4px;">${photo.locationTitle || 'Ảnh cộng đồng'}</div>
+                <div style="font-size:0.85rem;color:#cbd5f5;margin-bottom:2px;">👤 ${photo.submittedBy || 'Ẩn danh'}</div>
+                <div style="font-size:0.85rem;color:#facc15;">📅 ${photo.Year || 'Chưa rõ năm'}</div>
+              </div>
+              <div onclick="event.stopPropagation(); window.removeFavoritePhoto('${photo.submissionId}')" style="position:absolute;top:8px;right:0;width:28px;height:28px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
     const list = document.getElementById("favorites-list");
-    if (favorites.length === 0) {
+    if (userPlaceFavorites.length === 0) {
       list.innerHTML = `<div style="color:#aaa;text-align:center;padding:20px;">Chưa có địa điểm nào được lưu.</div>`;
     } else {
-      list.innerHTML = favorites
+      list.innerHTML = userPlaceFavorites
         .map((fav) => {
           const place = places.find((p) => p.id === fav.id) || fav;
           return `
@@ -2115,14 +2757,35 @@ const MapPage = () => {
   };
 
   window.removeFromFavorites = (id) => {
-    const updated = favorites.filter((f) => f.id !== id);
-    setFavorites(updated);
-    localStorage.setItem("favorites", JSON.stringify(updated));
-    showFavoritesSidebar();
+    removePlaceFromFavorites(id);
+    setTimeout(showFavoritesSidebar, 0);
+  };
+
+  window.removeFavoritePhoto = (submissionId) => {
+    if (!user || !user.userId) return;
+    const normalizedId = String(submissionId);
+    setFavoritePhotosByUser((prev) => {
+      const next = { ...prev };
+      const list = Array.isArray(next[user.userId])
+        ? next[user.userId].filter((item) => item.submissionId !== normalizedId)
+        : [];
+      next[user.userId] = list;
+      return next;
+    });
+    setTimeout(showFavoritesSidebar, 0);
+  };
+
+  window.openFavoritePhoto = (submissionId) => {
+    const list = getCurrentUserPhotoFavorites();
+    const index = list.findIndex((item) => item.submissionId === String(submissionId));
+    if (index !== -1) {
+      openPhotoPreview({ photos: list, startIndex: index });
+    }
   };
 
   window.showPlaceFromFav = (id) => {
-    const place = places.find((p) => p.id === id) || favorites.find((f) => f.id === id);
+    const userPlaceFavorites = getCurrentUserPlaceFavorites();
+    const place = places.find((p) => p.id === id) || userPlaceFavorites.find((f) => f.id === id);
     if (place) {
       currentPlace.current = place;
       clearCurrentRoute();

@@ -16,6 +16,7 @@ import { CrawlerModule } from './modules/crawler/crawler.module';
 import { AdminModule } from './modules/modules/admin/admin.module';
 import { CollectionsModule } from './modules/collections/collections.module';
 import { ImageComparisonsModule } from './modules/image-comparisons/image-comparisons.module';
+import { LocationImagesModule } from './modules/location-images/location-images.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ImageComparisonsModule } from './modules/image-comparisons/image-compar
     CrawlerModule,
   CollectionsModule,
     ImageComparisonsModule,
+    LocationImagesModule,
     CategoriesModule,
     AdminModule, // ✅ ADMIN MODULE
   ],
