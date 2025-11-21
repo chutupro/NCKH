@@ -6,15 +6,14 @@ import '../../Styles/Admin/AdminDashboard.css';
 
 const AdminNavbar = ({ sidebarCollapsed, title = 'Dashboard' }) => {
   const navigate = useNavigate();
-  const { user, setUser, setAccessToken, setIsAuthenticated } = useAppContext();
+  const { user, setUser, setIsAuthenticated } = useAppContext();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleLogout = async () => {
     try {
       await authService.logout();
-      // ✅ CLEAR CONTEXT
+      // ✅ CLEAR CONTEXT (cookie đã clear ở backend)
       setUser(null);
-      setAccessToken(null);
       setIsAuthenticated(false);
       navigate('/login');
     } catch (error) {

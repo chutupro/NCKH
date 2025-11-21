@@ -74,7 +74,7 @@ const GoogleAuthSuccess = () => {
     };
 
     handleGoogleAuth();
-  }, [searchParams, setUser, setIsAuthenticated, setAccessToken, navigate]);
+  }, [searchParams, setUser, setIsAuthenticated, navigate]);
 
   return (
     <div style={{

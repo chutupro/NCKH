@@ -9,7 +9,7 @@ import '../../Styles/login-register/login.css'
 const Login = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { setUser, setIsAuthenticated, setAccessToken } = useContext(AppContext); //  THÊM
+  const { setUser, setIsAuthenticated } = useContext(AppContext);
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [rememberMe, setRememberMe] = useState(false)
@@ -58,7 +58,7 @@ const Login = () => {
     setLoading(true)
 
     try {
-      const response = await authService.login(email, password)
+      const response = await authService.login(email, password, rememberMe)
       
       // Normalize user data
       const normalizedUser = {
@@ -66,11 +66,11 @@ const Login = () => {
         email: response?.user?.email ?? response?.user?.Email ?? email,
         fullName: response?.user?.fullName ?? response?.user?.FullName ?? '',
         roleId: response?.user?.roleId ?? response?.user?.RoleID ?? null,
-        Role: response?.user?.role ?? 'User', //  THÊM ROLE NAME
-        avatar: response?.user?.profile?.avatar ?? response?.user?.avatar ?? '/img/default-avatar.png', // ✅ THÊM AVATAR
+        Role: response?.user?.role ?? 'User',
+        avatar: response?.user?.profile?.avatar ?? response?.user?.avatar ?? '/img/default-avatar.png',
       };
 
-      setAccessToken(response.accessToken);
+      // 🔥 KHÔNG set accessToken nữa - dùng HttpOnly cookie
       setUser(normalizedUser);
       setIsAuthenticated(true);
       

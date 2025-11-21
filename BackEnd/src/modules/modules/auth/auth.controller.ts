@@ -1,5 +1,6 @@
 import { Controller, Post, Body, UseGuards, Req, Get, Query, Res, Headers, UnauthorizedException, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
+import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -12,7 +13,10 @@ import { ApiTags, ApiBody, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService, // ← THÊM ĐỂ DECODE JWT
+  ) {}
 
   // --- Bước 1: Gửi OTP để đăng ký ---
   @Post('send-otp')
@@ -78,6 +82,7 @@ export class AuthController {
       properties: {
         email: { type: 'string', example: 'test@gmail.com' },
         password: { type: 'string', example: '123456' },
+        rememberMe: { type: 'boolean', example: true, description: 'Ghi nhớ đăng nhập (30 ngày nếu true, 7 ngày nếu false)' },
       },
     },
   })
@@ -86,8 +91,20 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Headers('user-agent') userAgent?: string,
   ) {
-    const { email, password } = body;
-    const result = await this.authService.login(email, password, userAgent);
+    const { email, password, rememberMe } = body;
+    
+    // 🐞 DEBUG: kiểm tra giá trị rememberMe từ frontend
+    console.log('🔐 [AuthController] Login request:', { email, rememberMe });
+    
+    // ← Truyền rememberMe xuống service
+    const result = await this.authService.login(email, password, userAgent, rememberMe);
+
+    // 🔐 GHI NHỚ ĐĂNG NHẬP (chuẩn Facebook/Shopee)
+    // - Tick "Ghi nhớ" → 30 ngày
+    // - Không tick → 7 ngày
+    const refreshTokenMaxAge = rememberMe 
+      ? 30 * 24 * 60 * 60 * 1000  // 30 ngày
+      : 7 * 24 * 60 * 60 * 1000;  // 7 ngày (default)
 
     // Cookie options với domain localhost cho dev
     const cookieOptions = {
@@ -106,13 +123,16 @@ export class AuthController {
 
     res.cookie('refresh_token', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: refreshTokenMaxAge, // ← ĐỔI THEO rememberMe
     });
 
-    console.log('✅ [AuthController] Cookies set for login:', {
+    console.log('✅ [AuthController] Cookies set successfully:', {
       email,
+      rememberMe,
+      refreshTokenMaxAge: rememberMe ? '30 days' : '7 days',
+      cookieMaxAge: `${refreshTokenMaxAge}ms`,
+      secure: cookieOptions.secure,
       domain: cookieOptions.domain,
-      sameSite: cookieOptions.sameSite,
     });
 
     // 🔥 KHÔNG TRẢ TOKENS VỀ BODY - CHỈ TRẢ USER INFO
@@ -134,7 +154,7 @@ export class AuthController {
   })
   async refresh(
     @Req() req: any,
-    @Res({ passthrough: true }) res: Response,
+    @Res() res: Response,
     @Headers('user-agent') userAgent?: string,
   ) {
     // ✅ Refresh token đã được verify bởi RefreshJwtGuard
@@ -145,8 +165,29 @@ export class AuthController {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    // 🔥 LẤY TOKENS MỚI (với JTI mới + rotation)
-    const result = await this.authService.refreshTokens(userId, refreshToken, userAgent);
+    // 🔐 TỰ ĐỘNG PHÁT HIỆN rememberMe từ refresh token hiện tại
+    // Decode JWT để lấy exp (không verify vì đã verify ở guard)
+    const payload = this.jwtService.decode(refreshToken) as any;
+    const currentTime = Math.floor(Date.now() / 1000);
+    const remainingTime = payload.exp - currentTime;
+    
+    // Nếu token còn > 14 ngày → rememberMe = true (30d token)
+    // Nếu token còn <= 14 ngày → rememberMe = false (7d token)
+    const rememberMe = remainingTime > 14 * 24 * 60 * 60;
+    
+    console.log('🔐 [AuthController] Refresh token analysis:', {
+      userId,
+      remainingTime: `${Math.floor(remainingTime / 86400)} days`,
+      rememberMe,
+    });
+
+    // 🔥 LẤY TOKENS MỚI (với JTI mới + rotation) - TRUYỀN rememberMe
+    const result = await this.authService.refreshTokens(userId, refreshToken, userAgent, rememberMe);
+
+    // 🔐 GHI NHỚ ĐĂNG NHẬP: maxAge khớp với rememberMe
+    const refreshTokenMaxAge = rememberMe 
+      ? 30 * 24 * 60 * 60 * 1000  // 30 ngày
+      : 7 * 24 * 60 * 60 * 1000;  // 7 ngày
 
     // Cookie options
     const cookieOptions = {
@@ -166,10 +207,14 @@ export class AuthController {
     // 🔥 SET REFRESH TOKEN MỚI VÀO HTTPONLY COOKIE (ROTATION)
     res.cookie('refresh_token', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: refreshTokenMaxAge, // ← ĐỔI THEO rememberMe
     });
 
-    console.log('✅ [AuthController] Tokens refreshed and set in cookies for user:', userId);
+    console.log('✅ [AuthController] Tokens refreshed and cookies set:', {
+      userId,
+      rememberMe,
+      refreshTokenMaxAge: rememberMe ? '30 days' : '7 days',
+    });
 
     // 🔥 RESPONSE 204 NO CONTENT - KHÔNG TRẢ ACCESS TOKEN TRONG BODY
     // Frontend sẽ tự động nhận cookie mới
@@ -253,10 +298,10 @@ export class AuthController {
 
     res.cookie('refresh_token', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days - Google OAuth mặc định rememberMe=true
     });
 
-    console.log('✅ [AuthController] Cookies set for Google login:', {
+    console.log('✅ [AuthController] Cookies set for Google login (30-day session):', {
       accessTokenLength: result.accessToken.length,
       domain: cookieOptions.domain,
       sameSite: cookieOptions.sameSite,
@@ -302,10 +347,10 @@ export class AuthController {
 
     res.cookie('refresh_token', result.refreshToken, {
       ...cookieOptions,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days - Facebook OAuth mặc định rememberMe=true
     });
 
-    console.log('✅ [AuthController] Cookies set for Facebook login:', {
+    console.log('✅ [AuthController] Cookies set for Facebook login (30-day session):', {
       accessTokenLength: result.accessToken.length,
       domain: cookieOptions.domain,
       sameSite: cookieOptions.sameSite,

@@ -76,7 +76,7 @@ const FacebookAuthSuccess = () => {
     };
 
     handleFacebookAuth();
-  }, [searchParams, navigate, setUser, setIsAuthenticated, setAccessToken]);
+  }, [searchParams, navigate, setUser, setIsAuthenticated]);
 
   return (
     <div style={{ 

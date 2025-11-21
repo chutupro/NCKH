@@ -54,25 +54,26 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // ✅ KHÔNG retry nếu request là /users/me (tránh loop khi get user info)
+    if (originalRequest.url?.includes('/users/me')) {
+      return Promise.reject(error);
+    }
+
     // Nếu token hết hạn (401) và chưa retry
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // ✅ GỌI REFRESH - Cookie tự động gửi
-        const { data } = await axios.post(
+        // 🔥 GỌI REFRESH - Backend trả 204 No Content, chỉ set cookie
+        // KHÔNG cần đọc response body vì access_token đã trong cookie
+        await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
 
-        // ✅ LƯU ACCESS_TOKEN MỚI VÀO STATE
-        if (setAccessToken && data.accessToken) {
-          setAccessToken(data.accessToken);
-        }
-
-        // Retry request với token mới
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        // 🔥 SAU KHI REFRESH THÀNH CÔNG, retry request gốc
+        // Access token mới đã được browser tự động gửi trong cookie
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Nếu refresh thất bại → clear state (KHÔNG redirect để tránh loop)

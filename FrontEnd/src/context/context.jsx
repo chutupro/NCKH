@@ -137,27 +137,15 @@ export const AppProvider = ({ children }) => {
   };
 
   // Wire api client token getters so axios will attach Authorization header
+  // ⚠️ DEPRECATED: Giờ dùng HttpOnly cookie, không cần accessToken state nữa
+  // Giữ lại để backward compatible
   useEffect(() => {
-    // setupTokenGetters is safe to call; if it throws we don't need to handle it further
     try {
       setupTokenGetters(() => accessToken, setAccessToken)
     } catch (e) {
       void e
     }
   }, [accessToken, setAccessToken])
-
-  // DEBUG: log accessToken/user changes to help diagnose auth timing
-  useEffect(() => {
-    try {
-      console.debug('[AppContext] accessToken changed', { accessToken })
-    } catch (e) { void e }
-  }, [accessToken])
-
-  useEffect(() => {
-    try {
-      console.debug('[AppContext] user changed', { user })
-    } catch (e) { void e }
-  }, [user])
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

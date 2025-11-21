@@ -207,7 +207,7 @@ export class AuthService {
     return userWithRole || user;
   }
 
-  async getTokens(user: any) {
+  async getTokens(user: any, rememberMe: boolean = false) {
     // 🔥 LẤY ROLE NAME TỪ DATABASE
     const userWithRole = await this.userRepo.findOne({
       where: { UserID: user.UserID },
@@ -231,6 +231,9 @@ export class AuthService {
       expiresIn: '15m',
     });
 
+    // 🔐 GHI NHỚ ĐĂNG NHẬP: Refresh token EXPIRES IN theo rememberMe
+    const refreshTokenExpiry = rememberMe ? '30d' : '7d';
+    
     // Refresh token KHÔNG CẦN JTI (vì đã có hash-based revocation)
     const refreshPayload = {
       sub: user.UserID,
@@ -240,28 +243,42 @@ export class AuthService {
 
     const refreshToken = await this.jwtService.signAsync(refreshPayload, {
       secret: this.config.get<string>('REFRESH_TOKEN_SECRET') ?? 'refresh_secret',
-      expiresIn: '7d',
+      expiresIn: refreshTokenExpiry, // ← ĐỔI THEO rememberMe
     });
 
     // 🔥 LƯU JTI VÀO REDIS - TTL 15 phút (900 giây)
     // Key: access_jti:{userId} → Value: jti
     await this.redis.setAccessJti(user.UserID, jti);
 
-    console.log(`✅ [AuthService] Created access token with JTI: ${jti} for user ${user.UserID}`);
+    console.log(`✅ [AuthService] Created tokens for user ${user.UserID}:`, {
+      jti,
+      accessExpiry: '15m',
+      refreshExpiry: refreshTokenExpiry,
+      rememberMe,
+    });
 
-    return { access_token: accessToken, refresh_token: refreshToken, jti };
+    return { access_token: accessToken, refresh_token: refreshToken, jti, refreshTokenExpiry };
   }
 
-  async login(email: string, password: string, deviceInfo?: string) {
+  async login(email: string, password: string, deviceInfo?: string, rememberMe: boolean = false) {
     const user = await this.validateUser(email, password);
-    const tokens = await this.getTokens(user);
+    const tokens = await this.getTokens(user, rememberMe); // ← Truyền rememberMe
     
-    // � HMAC-SHA256 (deterministic + secure with secret)
+    // 🔐 GHI NHỚ ĐĂNG NHẬP: Redis TTL khớp với JWT expiresIn
+    const redisTTL = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60; // 30 ngày hoặc 7 ngày (seconds)
+    
+    // 🔐 HMAC-SHA256 (deterministic + secure with secret)
     const refreshTokenHash = this.hashRefreshToken(tokens.refresh_token);
     const redisKey = `rt:${refreshTokenHash}`;
     
-    // 🔥 redis.set('rt:hash', userId, 'EX', 7 ngày = 604800 seconds)
-    await this.redis.set(redisKey, user.UserID.toString(), 604800);
+    // 🔥 redis.set('rt:hash', userId, 'EX', TTL theo rememberMe)
+    await this.redis.set(redisKey, user.UserID.toString(), redisTTL);
+    
+    console.log(`✅ [AuthService] Login successful for user ${user.UserID}:`, {
+      rememberMe,
+      refreshTokenExpiry: tokens.refreshTokenExpiry,
+      redisTTL: `${redisTTL}s (${rememberMe ? '30d' : '7d'})`,
+    });
     
     // ✅ Load user profile để lấy avatar
     const userWithProfile = await this.userRepo.findOne({
@@ -286,7 +303,7 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: number, refreshToken: string, deviceInfo?: string) {
+  async refreshTokens(userId: number, refreshToken: string, deviceInfo?: string, rememberMe: boolean = false) {
     // Verify refresh token signature first
     let payload: any;
     try {
@@ -322,12 +339,19 @@ export class AuthService {
     // 🔥 TOKEN ROTATION: XÓA KEY CŨ, TẠO TOKEN MỚI
     await this.redis.del(redisKey);
 
-    const newTokens = await this.getTokens(userWithRole || user);
+    const newTokens = await this.getTokens(userWithRole || user, rememberMe); // ← Truyền rememberMe
     const newHash = this.hashRefreshToken(newTokens.refresh_token);
     const newRedisKey = `rt:${newHash}`;
     
-    // Lưu token mới vào Redis - 7 ngày
-    await this.redis.set(newRedisKey, user.UserID.toString(), 604800);
+    // 🔐 GHI NHỚ ĐĂNG NHẬP: LƯu token mới với TTL theo rememberMe
+    const redisTTL = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60; // seconds
+    await this.redis.set(newRedisKey, user.UserID.toString(), redisTTL);
+    
+    console.log(`✅ [AuthService] Tokens refreshed for user ${userId}:`, {
+      rememberMe,
+      refreshTokenExpiry: newTokens.refreshTokenExpiry,
+      redisTTL: `${redisTTL}s (${rememberMe ? '30d' : '7d'})`,
+    });
 
     // userWithRole đã được query ở trên
     return { 
@@ -390,12 +414,14 @@ export class AuthService {
       console.log('✅ [AuthService] Existing user found');
     }
 
-    // Generate tokens
-    const tokens = await this.getTokens(user);
+    // Generate tokens - Mặc định rememberMe=true cho Google OAuth (30 ngày)
+    const tokens = await this.getTokens(user, true);
 
-    // Lưu refresh token vào Redis (HMAC-SHA256 - Google OAuth)
+    // Lưu refresh token vào Redis (HMAC-SHA256 - Google OAuth) - 30 ngày
     const refreshTokenHash = this.hashRefreshToken(tokens.refresh_token);
-    await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
+    await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 30 * 24 * 60 * 60); // 30 days
+    
+    console.log(`✅ [AuthService] Google login successful for user ${user.UserID} with 30-day session`);
 
     return {
       accessToken: tokens.access_token,
@@ -437,12 +463,14 @@ export class AuthService {
       console.log('✅ [AuthService] Existing user found');
     }
 
-    // Generate tokens
-    const tokens = await this.getTokens(user);
+    // Generate tokens - Mặc định rememberMe=true cho Facebook OAuth (30 ngày)
+    const tokens = await this.getTokens(user, true);
 
-    // Lưu refresh token vào Redis (HMAC-SHA256 - Facebook OAuth)
+    // Lưu refresh token vào Redis (HMAC-SHA256 - Facebook OAuth) - 30 ngày
     const refreshTokenHash = this.hashRefreshToken(tokens.refresh_token);
-    await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 604800); // 7 days
+    await this.redis.set(`rt:${refreshTokenHash}`, user.UserID.toString(), 30 * 24 * 60 * 60); // 30 days
+    
+    console.log(`✅ [AuthService] Facebook login successful for user ${user.UserID} with 30-day session`);
 
     return {
       accessToken: tokens.access_token,

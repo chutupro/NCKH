@@ -30,13 +30,15 @@ const authService = {
    * Đăng nhập
    * @param {string} email - Email người dùng
    * @param {string} password - Mật khẩu
+   * @param {boolean} rememberMe - Ghi nhớ đăng nhập (30 ngày nếu true, 7 ngày nếu false)
    * @returns {Promise} Response với accessToken và user info
    */
-  login: async (email, password) => {
+  login: async (email, password, rememberMe = false) => {
     try {
       const response = await apiClient.post('/auth/login', {
         email,
         password,
+        rememberMe, // 🔥 GỬi rememberMe lên backend
       });
 
       const { accessToken, user } = response.data;
@@ -73,22 +75,27 @@ const authService = {
 
   /**
    * Refresh access token
-   * ⚠️ QUAN TRỌNG: Dùng axios trực tiếp, KHÔNG dùng apiClient để tránh interceptor loop
-   * @returns {Promise} Response với accessToken và user info mới
+   * ⚠️ QUAN TRỌNG: Backend trả 204 No Content, chỉ set HttpOnly cookie
+   * Frontend phải gọi /users/me để lấy user info
+   * @returns {Promise} Response với user info (access_token trong cookie)
    */
   refreshToken: async () => {
     try {
-      // ✅ Dùng axios.create() mới, KHÔNG interceptor
+      // 🔥 BƯỚC 1: Gọi /auth/refresh - Backend trả 204, set cookie mới
       const cleanAxios = axios.create({
         baseURL: 'http://localhost:3000',
         withCredentials: true, // Gửi HttpOnly cookie
       });
 
-      const response = await cleanAxios.post('/auth/refresh');
+      await cleanAxios.post('/auth/refresh'); // 204 No Content
 
-      const { accessToken, user } = response.data;
+      // 🔥 BƯỚC 2: Gọi /users/me để lấy user info (cookie mới đã được set)
+      const userResponse = await cleanAxios.get('/users/me');
 
-      return { accessToken, user };
+      const user = userResponse.data;
+
+      // Trả về user info (access_token đã trong cookie, không cần trả về)
+      return { user };
     } catch (error) {
       // ✅ Throw error mới với format chuẩn
       const err = new Error(error.response?.data?.message || 'Refresh token failed');

@@ -7,12 +7,13 @@ import authService from '../services/authService';
  * 
  * Flow:
  * 1. App mount → Kiểm tra HttpOnly cookie (refresh_token)
- * 2. Gọi /auth/refresh để lấy accessToken + user info mới
- * 3. Nếu thành công → restore user session
- * 4. Nếu thất bại → giữ trạng thái logout (KHÔNG retry)
+ * 2. Gọi /auth/refresh để lấy cookie mới
+ * 3. Gọi /users/me để lấy user info
+ * 4. Nếu thành công → restore user session
+ * 5. Nếu thất bại → giữ trạng thái logout (KHÔNG retry)
  */
 export const useAuthRestore = () => {
-  const { setUser, setIsAuthenticated, setAccessToken, setIsAuthLoading } = useContext(AppContext);
+  const { setUser, setIsAuthenticated, setIsAuthLoading } = useContext(AppContext);
   const hasAttemptedRestore = useRef(false); // Chỉ chạy 1 lần
 
   useEffect(() => {
@@ -26,16 +27,17 @@ export const useAuthRestore = () => {
       }, 5000);
 
       try {
+        // 🔥 GỌI /auth/refresh + /users/me
         const response = await authService.refreshToken();
 
         clearTimeout(timeoutId);
 
-        if (!response?.accessToken) {
+        if (!response?.user) {
           setIsAuthLoading(false);
           return;
         }
 
-        const { accessToken, user } = response;
+        const { user } = response;
         
         const normalizedUser = {
           userId: user?.userId || user?.UserID || null,
@@ -46,8 +48,9 @@ export const useAuthRestore = () => {
           avatar: user?.profile?.avatar || user?.avatar || '/img/default-avatar.png',
         };
 
-        setAccessToken(accessToken);
+        // 🔥 KHÔNG set accessToken vì đã trong cookie
         setUser(normalizedUser);
+        setIsAuthenticated(true);
         setIsAuthenticated(true);
       } catch (error) {
         clearTimeout(timeoutId);
@@ -57,6 +60,6 @@ export const useAuthRestore = () => {
     };
 
     restoreSession();
-  }, [setUser, setIsAuthenticated, setAccessToken, setIsAuthLoading]);
+  }, [setUser, setIsAuthenticated, setIsAuthLoading]);
 };
 
