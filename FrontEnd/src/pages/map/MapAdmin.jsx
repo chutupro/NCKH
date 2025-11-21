@@ -29,8 +29,10 @@ const MapAdmin = () => {
     address: "",
     image: null,
     imagePreview: "",
+    imageYear: "",
     oldImage: null,
     oldImagePreview: "",
+    oldImageYear: "",
     desc: "",
     fullDesc: "",
     categoryId: "",
@@ -230,6 +232,8 @@ const MapAdmin = () => {
               ...place,
               imagePreview: place.image ? `${BASE_URL}${place.image}` : "",
               oldImagePreview: place.oldImage ? `${BASE_URL}${place.oldImage}` : "",
+              imageYear: place.imageYear || "",
+              oldImageYear: place.oldImageYear || "",
               categoryId: place.categoryId || "",
             });
             setSearchQuery(place.address || "");
@@ -276,6 +280,12 @@ const MapAdmin = () => {
     formData.append("desc", form.desc || "");
     formData.append("fullDesc", form.fullDesc || "");
     formData.append("CategoryID", form.categoryId || "");
+    if (form.imageYear) {
+      formData.append("imageYear", form.imageYear);
+    }
+    if (form.oldImageYear) {
+      formData.append("oldImageYear", form.oldImageYear);
+    }
 
     if (form.image instanceof File) {
       formData.append("image", form.image);
@@ -297,8 +307,10 @@ const MapAdmin = () => {
         address: "",
         image: null,
         imagePreview: "",
+        imageYear: "",
         oldImage: null,
         oldImagePreview: "",
+        oldImageYear: "",
         desc: "",
         fullDesc: "",
         categoryId: "",
@@ -394,6 +406,18 @@ const MapAdmin = () => {
                 </button>
                 {form.image && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.image.name}</div>}
               </div>
+              <div style={{ marginTop: "12px" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>Năm ảnh hiện đại (không bắt buộc)</label>
+                <input
+                  type="number"
+                  min="1800"
+                  max={new Date().getFullYear() + 1}
+                  value={form.imageYear}
+                  onChange={e => setForm(prev => ({ ...prev, imageYear: e.target.value }))}
+                  placeholder="VD: 2024"
+                  style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "8px" }}
+                />
+              </div>
             </div>
 
             {/* ẢNH XƯA */}
@@ -415,6 +439,18 @@ const MapAdmin = () => {
                   )}
                 </button>
                 {form.oldImage && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.oldImage.name}</div>}
+              </div>
+              <div style={{ marginTop: "12px" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>Năm ảnh xưa (không bắt buộc)</label>
+                <input
+                  type="number"
+                  min="1800"
+                  max={new Date().getFullYear() + 1}
+                  value={form.oldImageYear}
+                  onChange={e => setForm(prev => ({ ...prev, oldImageYear: e.target.value }))}
+                  placeholder="VD: 1975"
+                  style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "8px" }}
+                />
               </div>
             </div>
 

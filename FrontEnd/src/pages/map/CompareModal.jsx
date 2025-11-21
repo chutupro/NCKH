@@ -14,6 +14,9 @@ const CompareModal = ({ place, onClose }) => {
     ? `http://localhost:3000${place.image}`
     : "https://via.placeholder.com/600x400?text=Chưa+có+hình+hiện+tại";
 
+  const oldYearLabel = place.oldImageYear || "Chưa rõ";
+  const newYearLabel = place.imageYear || "Chưa rõ";
+
   // Xử lý kéo chuột / cảm ứng
   useEffect(() => {
     const container = containerRef.current;
@@ -240,7 +243,7 @@ const CompareModal = ({ place, onClose }) => {
                 zIndex: 5,
               }}
             >
-              Hình xưa: 1990
+              Hình xưa: {oldYearLabel}
             </div>
             <div
               style={{
@@ -257,7 +260,7 @@ const CompareModal = ({ place, onClose }) => {
                 zIndex: 5,
               }}
             >
-              Hình nay: 2025
+              Hình nay: {newYearLabel}
             </div>
           </div>
 
@@ -272,10 +275,10 @@ const CompareModal = ({ place, onClose }) => {
             }}
           >
             <p>
-              <strong>Hình xưa:</strong> {place.oldImage ? "1990" : "Chưa có"}
+              <strong>Hình xưa:</strong> {place.oldImage ? oldYearLabel : "Chưa có"}
             </p>
             <p>
-              <strong>Hình nay:</strong> {place.image ? "2025" : "Chưa có"}
+              <strong>Hình nay:</strong> {place.image ? newYearLabel : "Chưa có"}
             </p>
           </div>
         </div>

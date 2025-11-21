@@ -2,9 +2,9 @@ const defaultAiConfig = {
   baseUrls: ['http://localhost:8000'],
 //   baseUrls: ['http://192.168.1.87:8000'],
   featureFlags: {
-    analyze: true,
+    analyze: false,
     moderateComment: false,
-    generateTitle: true,
+    generateTitle: false,
   },
   endpoints: {
     analyze: '/fast-analyze',

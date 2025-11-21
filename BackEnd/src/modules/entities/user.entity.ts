@@ -18,6 +18,7 @@ import { Notifications } from './notification.entity';
 import { UserProfiles } from './user-profile.entity'; 
 import { VersionHistory } from './version-history.entity'; 
 import { Roles } from './role.entity';
+import { LocationImage } from './location-image.entity';
 
 @Entity('Users')
 export class Users {
@@ -74,4 +75,7 @@ export class Users {
   @ManyToOne(() => Roles, (role) => role.users)
   @JoinColumn({ name: 'RoleID' })
   role: Roles;
+
+  @OneToMany(() => LocationImage, (image) => image.user)
+  locationImages: LocationImage[];
 }

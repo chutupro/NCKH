@@ -20,6 +20,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
       items: [
         { path: '/admin/users', icon: '👥', label: 'Người dùng', badge: '12' },
         { path: '/admin/content', icon: '📰', label: 'Nội dung', badge: '5' },
+        { path: '/admin/photos', icon: '🖼️', label: 'Ảnh người dùng', badge: null },
         { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: '8' },
         { path: '/admin/comments', icon: '💬', label: 'Bình luận', badge: '3' },
       ],

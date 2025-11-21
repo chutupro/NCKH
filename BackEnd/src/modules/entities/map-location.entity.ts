@@ -11,6 +11,7 @@ import { Articles } from './article.entity';
 import { Timelines } from './timeline.entity';
 import { Feedback } from './feedback.entity';
 import { Categories } from './category.entity';
+import { LocationImage } from './location-image.entity';
 
 @Entity('MapLocations')
 export class MapLocations {
@@ -32,8 +33,14 @@ export class MapLocations {
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   Image: string;
 
+  @Column({ type: 'int', nullable: true })
+  ImageYear: number;
+
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   OldImage: string;
+
+  @Column({ type: 'int', nullable: true })
+  OldImageYear: number;
 
   @Column({ name: 'Desc', type: 'nvarchar', length: 500 })
   description: string;
@@ -76,4 +83,7 @@ export class MapLocations {
 
   @OneToMany(() => Feedback, (feedback) => feedback.location)
   feedbacks: Feedback[];
+
+  @OneToMany(() => LocationImage, (image) => image.location)
+  communityImages: LocationImage[];
 }

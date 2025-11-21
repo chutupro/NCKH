@@ -21,6 +21,7 @@ import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
 import { ImageComparison } from '../modules/entities/image-comparison.entity'; // <-- thêm nếu cần
 import { Collections } from 'src/modules/entities/collection.entity';
 import { CollectionArticles } from 'src/modules/entities/collection-article.entity';
+import { LocationImage } from 'src/modules/entities/location-image.entity';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { CollectionArticles } from 'src/modules/entities/collection-article.enti
           Notifications,
           ModerationLogs,
           ImageComparison,
+          LocationImage,
         ],
         synchronize: false, // ❌ TẮT AUTO SYNC - Dùng migration thay vì
         logging: false,
