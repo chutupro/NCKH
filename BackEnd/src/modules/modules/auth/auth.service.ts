@@ -105,26 +105,56 @@ export class AuthService {
     fullName?: string,
     role?: string,
   ) {
+    console.log('🔵 [AuthService] Starting OTP verification for:', email);
+
     // 🔥 1. ĐỌC OTP TỪ REDIS
     const redisKey = `otp:${email}`;
     const storedOTP = await this.redis.get(redisKey);
 
-    if (!storedOTP || storedOTP !== otpCode) {
-      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn.');
+    console.log('🔍 [AuthService] Redis OTP check:', {
+      email,
+      providedOTP: otpCode,
+      storedOTP: storedOTP || 'NOT_FOUND',
+      match: storedOTP === otpCode,
+    });
+
+    if (!storedOTP) {
+      console.log('❌ [AuthService] OTP not found in Redis (expired or never sent)');
+      throw new BadRequestException('Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại mã mới.');
     }
 
-    // 🔥 2. XÓA OTP SAU KHI SỬ DỤNG
-    await this.redis.del(redisKey);
+    if (storedOTP !== otpCode) {
+      console.log('❌ [AuthService] OTP mismatch');
+      throw new BadRequestException('Mã OTP không đúng. Vui lòng kiểm tra lại.');
+    }
 
-    // 3. Tạo tài khoản người dùng
+    console.log('✅ [AuthService] OTP verified successfully');
+
+    // 🔥 2. XÓA OTP SAU KHI SỬ DỤNG (tránh reuse)
+    await this.redis.del(redisKey);
+    console.log('✅ [AuthService] OTP deleted from Redis');
+
+    // 🔥 3. TẠO TÀI KHOẢN VỚI IsEmailVerified = true
+    console.log('📝 [AuthService] Creating user account...');
     const user = await this.userService.createUser(email, password, fullName, role);
 
+    // 🔥 4. UPDATE IsEmailVerified = true (QUAN TRỌNG - FIX BUG)
+    user.IsEmailVerified = true;
+    await this.userRepo.save(user);
+
+    console.log('✅ [AuthService] User created and email verified:', {
+      userId: user.UserID,
+      email: user.Email,
+      isEmailVerified: user.IsEmailVerified,
+    });
+
     return {
-      message: 'Đăng ký thành công',
+      message: 'Đăng ký thành công. Email đã được xác thực.',
       user: {
         id: user.UserID,
         email: user.Email,
         fullName: user.FullName,
+        isEmailVerified: user.IsEmailVerified,
       },
     };
   }
