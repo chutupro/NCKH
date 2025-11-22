@@ -78,7 +78,6 @@ export class GalleryService {
     if (titleField) payload[titleField] = meta?.title ?? file.originalname;
     if (descField && meta?.description) payload[descField] = meta.description;
 
-    // ✅ Gắn ArticleID (hoặc CategoryID)
     if (cols.includes('ArticleID') && meta?.categoryId) {
       payload['ArticleID'] = Number(meta.categoryId);
     } else if (cols.includes('CategoryID') && meta?.categoryId) {

@@ -6,7 +6,7 @@ import { faHandHoldingHeart, faBookOpen, faUsers, faLandmark, faHeart, faGlobe }
 
 const ContributeImpact = () => {
   const { t } = useTranslation();
-  
+
   const impacts = [
     {
       icon: faHandHoldingHeart,

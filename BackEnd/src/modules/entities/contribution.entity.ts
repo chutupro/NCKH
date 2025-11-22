@@ -31,7 +31,6 @@ export class Contributions {
   @CreateDateColumn({ type: 'datetime' })
   SubmittedAt: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.contributions)
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;

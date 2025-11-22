@@ -16,7 +16,6 @@ export class Likes {
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.likes)
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;

@@ -1,4 +1,4 @@
-// Trợ giúp API đơn giản cho các endpoint `articles_post` sử dụng axios
+
 import apiClient from '../services/api'
 
 export async function getArticlesPosts(signal) {

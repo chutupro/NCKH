@@ -2,10 +2,6 @@ import React, { useState } from 'react';
 import { uploadPostImage, uploadMultipleImages } from '../services/mediaService';
 import { toast } from 'react-toastify';
 
-/**
- * Component upload ảnh cho bài viết
- * Dùng trong form tạo/edit article
- */
 const ArticleImageUpload = ({ category, onUploadSuccess, multiple = false }) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
@@ -18,23 +14,21 @@ const ArticleImageUpload = ({ category, onUploadSuccess, multiple = false }) => 
 
     try {
       if (multiple) {
-        // Upload nhiều ảnh
+
         const urls = await uploadMultipleImages(Array.from(files), category);
-        
+
         toast.success(`✅ Upload thành công ${urls.length} ảnh!`);
         onUploadSuccess(urls);
       } else {
-        // Upload 1 ảnh
+
         const file = files[0];
-        
-        // Preview local
+
         const reader = new FileReader();
         reader.onloadend = () => setPreview(reader.result);
         reader.readAsDataURL(file);
 
-        // Upload lên Media Service
         const url = await uploadPostImage(file, category);
-        
+
         toast.success('✅ Upload ảnh thành công!');
         onUploadSuccess(url);
       }
@@ -51,7 +45,7 @@ const ArticleImageUpload = ({ category, onUploadSuccess, multiple = false }) => 
       <label htmlFor="image-upload" className="upload-label">
         {uploading ? '⏳ Đang upload...' : '📤 Chọn ảnh'}
       </label>
-      
+
       <input
         id="image-upload"
         type="file"

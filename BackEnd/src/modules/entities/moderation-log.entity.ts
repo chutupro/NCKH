@@ -22,7 +22,6 @@ export class ModerationLogs {
   @CreateDateColumn({ type: 'datetime' })
   Timestamp: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Contributions, (contribution) => contribution.moderationLogs)
   @JoinColumn({ name: 'ContributionID' })
   contribution: Contributions;

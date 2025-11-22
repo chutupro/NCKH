@@ -4,18 +4,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getCollections, getCategories } from "../../API/collections";
 import { CODE_TO_VN } from '../../util/categoryMap'
 
-// NOTE: Replaced local util/mockArticles and categoryMap with a live API call
-// to http://localhost:3000/collections as requested. Assumptions:
-// - API returns an array of collection objects with fields matching the DB
-//   screenshot: CollectionID, Title, Name, Description, ImagePath, ImageDescription, CategoryID, CreatedAt
-// - ImagePath is a URL or path usable in an <img> or CSS background-image
-
 const PAGE_SIZE = 9;
 
-// (labelFor moved inside component so it can use fetched categories)
-
 const ImageLibrary = () => {
-  // i18n removed: dùng chuỗi tiếng Việt trực tiếp
+
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -26,13 +18,11 @@ const ImageLibrary = () => {
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
 
-  // Helper to get a collection's CategoryID from various shapes (CategoryID or Category relation)
   const getCollectionCategoryId = (col) => {
     if (!col) return null;
     return col.CategoryID ?? col.category?.CategoryID ?? col.categoryID ?? col.Category?.CategoryID ?? null;
   };
 
-  // Helper to get a collection's Category name (from relation or from fetched categories)
   const getCollectionCategoryName = (col) => {
     if (!col) return '';
     if (col.category && (col.category.Name || col.category.name)) return col.category.Name ?? col.category.name;
@@ -42,15 +32,13 @@ const ImageLibrary = () => {
     return cat ? (cat.Name || cat.name || '') : '';
   };
 
-  // Generate category list from fetched collections using CategoryID values
   const categoryCodes = (() => {
     const codes = ['all', ...categories.map(cat => String(cat.CategoryID))];
-    // include 'other' if any collection has no CategoryID
+
     if (collections.some(c => c.CategoryID === undefined || c.CategoryID === null || c.CategoryID === '')) codes.push('other');
     return Array.from(new Set(codes));
   })();
 
-  // label helper that uses fetched categories
   const labelFor = (code) => {
     if (!code) return '';
     if (code === 'all') return 'Tất cả';
@@ -59,7 +47,6 @@ const ImageLibrary = () => {
     return cat ? (cat.Name || cat.Title || `Danh mục ${code}`) : `Danh mục ${code}`;
   }
 
-  // Filter collections (search Title/Name/Description and year)
   let filtered = collections.filter(c => {
     const title = (c.Title || '') + ' ' + (c.Name || '');
     const matchTitle = title.toLowerCase().includes(search.toLowerCase());
@@ -79,7 +66,6 @@ const ImageLibrary = () => {
     return (matchTitle || matchYear || matchDesc) && matchCategory;
   });
 
-  // Sắp xếp
   const handleSortChange = e => { setSort(e.target.value); setPage(1); };
   if (sort === "cu_nhat") {
     filtered = filtered.slice().sort((a, b) => new Date(a.CreatedAt) - new Date(b.CreatedAt));
@@ -87,17 +73,15 @@ const ImageLibrary = () => {
     filtered = filtered.slice().sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
   }
 
-  // Phân trang
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const clampedPage = Math.min(Math.max(1, page), totalPages);
   const paginated = filtered.slice((clampedPage - 1) * PAGE_SIZE, clampedPage * PAGE_SIZE);
 
   useEffect(() => {
     if (page !== clampedPage) setPage(clampedPage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [clampedPage]);
 
-  // Fetch collections from API once on mount (moved to API helpers)
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -116,7 +100,6 @@ const ImageLibrary = () => {
     return () => { mounted = false; };
   }, []);
 
-  // Fetch categories from API to populate the category select (moved to API helpers)
   useEffect(() => {
     let mounted = true;
     const loadCats = async () => {
@@ -131,7 +114,6 @@ const ImageLibrary = () => {
     return () => { mounted = false; };
   }, []);
 
-  // Nếu URL có ?query=..., khởi tạo giá trị search từ query param để tự động tìm
   const location = useLocation();
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -142,16 +124,15 @@ const ImageLibrary = () => {
       setPage(1);
     }
 
-    // nếu category có trong query, cố gắng resolve nó sang CategoryID nếu cần
     if (c) {
-      // resolve now or after categories are loaded
+
       const resolveCategory = () => {
         let resolved = c;
-        // numeric -> assume CategoryID
+
         if (/^\d+$/.test(c) || c === 'all' || c === 'other') {
           resolved = c;
         } else {
-          // try map code -> Vietnamese name -> find CategoryID in fetched categories
+
           const vnName = CODE_TO_VN?.[c] || labelFor(c);
           if (vnName && categories.length) {
             const match = categories.find(cat => (cat.Name || cat.name) === vnName);
@@ -168,10 +149,9 @@ const ImageLibrary = () => {
 
       resolveCategory();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [location.search, categories]);
 
-  // Các handler
   const handleSearch = e => { setSearch(e.target.value); setPage(1); };
   const handleCategory = e => { setCategory(e.target.value); setPage(1); };
   const handlePage = p => setPage(p);
@@ -214,7 +194,7 @@ const ImageLibrary = () => {
             >
               <div className="article-card">
                 <div className="card-image" style={{ backgroundImage: `url(${mainImage})` }}>
-                  {/* Show Category name inside the image if available, otherwise fallback to CategoryID */}
+                  {}
                   <span className="card-category">{getCollectionCategoryName(item) || (item.CategoryID ?? item.categoryID ?? item.CategoryId ?? item.categoryId ?? '')}</span>
                 </div>
                 <div className="card-content">

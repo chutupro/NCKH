@@ -31,7 +31,6 @@ function ensureUploadsDir() {
 export class GalleryController {
   constructor(private readonly galleryService: GalleryService) {}
 
-  // 👉 Trả về tất cả hình ảnh, không cần query params
   @Get()
   async list() {
     return this.galleryService.findAll();

@@ -1,4 +1,4 @@
-// src/pages/Timeline/TimelineDetail.jsx
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./TimelineDetail.css"; // Tạo file CSS để đẹp hơn
@@ -27,7 +27,6 @@ const TimelineDetail = () => {
     fetchItem();
   }, [id]);
 
-  // Loading
   if (loading) {
     return (
       <div className="loading-container">
@@ -37,7 +36,6 @@ const TimelineDetail = () => {
     );
   }
 
-  // Error
   if (error || !item) {
     return (
       <main className="article-page error">
@@ -54,12 +52,12 @@ const TimelineDetail = () => {
   return (
     <main className="article-page">
       <div className="article-inner">
-        {/* Nút quay lại */}
+        {}
         <button className="btn back-btn" onClick={() => navigate(-1)}>
           Quay lại
         </button>
 
-        {/* Hero Image */}
+        {}
         <div
           className="article-hero"
           style={{
@@ -70,7 +68,7 @@ const TimelineDetail = () => {
           <span className="article-badge">{item.category}</span>
         </div>
 
-        {/* Meta */}
+        {}
         <div className="article-meta">
           <time dateTime={item.date}>
             {new Date(item.date).getFullYear()}
@@ -78,10 +76,10 @@ const TimelineDetail = () => {
           <span className="category-tag">{item.category}</span>
         </div>
 
-        {/* Tiêu đề */}
+        {}
         <h1 className="article-title">{item.title}</h1>
 
-        {/* Nội dung chi tiết */}
+        {}
         <article className="article-body">
           {item.desc ? (
             item.desc.split("\n").map((paragraph, index) => (
@@ -94,7 +92,7 @@ const TimelineDetail = () => {
           )}
         </article>
 
-        {/* Nguồn */}
+        {}
         {item.sourceUrl && (
           <div className="source-link">
             <strong>Nguồn:</strong>{" "}
@@ -104,7 +102,7 @@ const TimelineDetail = () => {
           </div>
         )}
 
-        {/* Nút chia sẻ (tùy chọn) */}
+        {}
         <div className="share-buttons">
           <button
             onClick={() => {

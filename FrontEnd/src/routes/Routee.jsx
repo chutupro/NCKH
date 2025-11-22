@@ -1,4 +1,4 @@
-// src/routes/Routee.jsx
+
 import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -27,8 +27,6 @@ import MapPage from "../pages/map/MapPage";
 import MapAdmin from "../pages/map/MapAdmin";
 import { fetchMapLocations } from "../pages/map/mapLocationsSlice";
 
-
-// Admin Dashboard
 import AdminLayout from "../Component/admin/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import UserManagement from "../pages/admin/UserManagement";
@@ -48,49 +46,49 @@ const Routee = () => {
 
   return (
     <Routes>
-      {/* TRANG CÓ LAYOUT */}
+      {}
       <Route element={<Lauput />}>
         <Route index element={<Home />} />
         <Route path="/Personal" element={<Personal />} />
-        <Route path="/user/:userId" element={<UserProfile />} /> {/* ✅ XEM PROFILE NGƯỜI KHÁC */}
+        <Route path="/user/:userId" element={<UserProfile />} /> {}
 
-        {/* Timeline */}
+        {}
         <Route path="/timeline" element={<Timeline />} />
-        <Route path="/timeline/:id" element={<TimelineDetail />} /> {/* khác → giữ thêm */}
+        <Route path="/timeline/:id" element={<TimelineDetail />} /> {}
 
-        {/* Contribute */}
+        {}
         <Route path="/contribute" element={<Contribute />} />
         <Route
           path="/contributeinformation"
           element={<ContributeInformation />}
         />
 
-        {/* Gallery */}
+        {}
         <Route path="/ImageLibrary" element={<ImageLibrary />} />
         <Route path="/ImageLibrary/:id" element={<ImageLibraryInformation />} />
 
-        {/* Compare */}
+        {}
         <Route path="/compare" element={<CompareGallery />} />
         <Route path="/compare/:id" element={<CompareDetail />} />
 
-        {/* Community */}
+        {}
         <Route path="/community" element={<Community />} />
 
-        {/* About */}
-        <Route path="/about" element={<About />} /> {/* khác → giữ thêm */}
+        {}
+        <Route path="/about" element={<About />} /> {}
       </Route>
 
-      {/* TRANG KHÔNG LAYOUT */}
+      {}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} /> {/* ✅ FORGOT PASSWORD */}
-  <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {/* ✅ GOOGLE CALLBACK */}
-  <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
-      
-      {/* BẢN ĐỒ: FULL MÀN HÌNH */}
+      <Route path="/forgot-password" element={<ForgotPassword />} /> {}
+  <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {}
+  <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {}
+
+      {}
       <Route path="/map" element={<MapPage />} />
-      
-      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/EDITOR */}
+
+      {}
       <Route 
         path="/map/admin" 
         element={
@@ -100,7 +98,7 @@ const Routee = () => {
         } 
       />
 
-      {/* ADMIN DASHBOARD: CHỈ ADMIN */}
+      {}
       <Route
         path="/admin"
         element={
@@ -120,6 +118,5 @@ const Routee = () => {
     </Routes>
   );
 };
-
 
 export default Routee;

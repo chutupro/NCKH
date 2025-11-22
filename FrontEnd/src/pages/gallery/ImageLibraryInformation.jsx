@@ -1,15 +1,14 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-// compareList removed: not used in collection detail
+
 import { getCollectionById } from '../../API/collections';
 import { getImageComparisons } from '../../API/imageComparisons';
 import '../../Styles/ImageLibrary/ImageLibraryInformation.css';
-// displayCategoryName removed; using category from collection response
 
 const ImageLibraryInformation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  // i18n removed: dùng chuỗi tiếng Việt trực tiếp
+
   const collectionId = Number(id);
   const [collection, setCollection] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -33,7 +32,6 @@ const ImageLibraryInformation = () => {
     return () => { mounted = false; };
   }, [collectionId]);
 
-  // Fetch comparisons and compute related items when collection loads
   React.useEffect(() => {
     if (!collection) return;
     const ac = new AbortController();
@@ -52,18 +50,15 @@ const ImageLibraryInformation = () => {
           const loc = (item.location || item.Location || '').toLowerCase();
           const cat = (item.category || (item.Category && (item.Category.Name || item.Category.name)) || '').toLowerCase();
 
-          // heuristics: title match, description match, location match, or same category
           if (title && (t.includes(title) || d.includes(title))) return true;
           if (location && loc && loc.includes(location)) return true;
           if (category && cat && cat === category.toLowerCase()) return true;
           return false;
         });
 
-        // limit to a few items
         setRelatedCompares(related.slice(0, 6));
       } catch (err) {
-        // keep a minimal log for debugging
-        // (do not break page if comparisons fail)
+
         console.warn('related comparisons load failed', err);
       }
     })();
@@ -109,7 +104,7 @@ const ImageLibraryInformation = () => {
           <h1 className="hero-title">{collection.Title || collection.Name}</h1>
           <div className="hero-meta">
             <span className="meta-item">📅 {'Năm'} {collection.CreatedAt ? new Date(collection.CreatedAt).getFullYear() : ''}</span>
-            {/* Likes removed per request */}
+            {}
           </div>
           <p className="hero-description">{collection.Description || collection.description || collection.Content}</p>
         </div>
@@ -145,7 +140,7 @@ const ImageLibraryInformation = () => {
                   <p className="compare-description">{compare.description}</p>
                   <div className="compare-stats">
                     <span>📍 {compare.location}</span>
-                    {/* Likes removed per request */}
+                    {}
                   </div>
                 </div>
               </div>

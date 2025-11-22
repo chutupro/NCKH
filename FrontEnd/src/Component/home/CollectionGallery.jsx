@@ -5,7 +5,7 @@ import { getCollections } from '../../API/collections'
 import '../../Styles/Home/CollectionGallery.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight, faArrowRight } from '@fortawesome/free-solid-svg-icons'
-// displayCategoryName not used for API-driven collections; we'll read category from API
+
 import useDragScroll from '../../hooks/useDragScroll'
 
 const CollectionGallery = () => {
@@ -16,11 +16,10 @@ const CollectionGallery = () => {
 
   const [collections, setCollections] = useState([])
 
-  // SVG placeholder nhẹ nhắt inline (trả về nếu ảnh không tải được)
   const placeholder = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='280'><rect width='100%' height='100%' fill='%23f3f3f3'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='20'>No image</text></svg>`
 
   const handleArticleClick = (article) => {
-    // Chỉ chuyển trang nếu không phải đang kéo
+
     if (!hasMoved) {
       const id = article.CollectionID ?? article.id ?? article.CollectionId ?? article.ArticleID
       if (!id) return
@@ -29,7 +28,6 @@ const CollectionGallery = () => {
     }
   }
 
-  // prefer API-fetched collections; fallback to empty while loading
   const displayArticles = collections.slice(0, 8)
 
   useEffect(() => {
@@ -94,9 +92,9 @@ const CollectionGallery = () => {
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget
-                      // Tránh vòng lặp vô hạn nếu placeholder cũng không tải được
+
                       if (target.dataset.fallbackSet) return
-                      // Ghi log URL bị lỗi để kiểm tra (xem console trình duyệt để biết URL nào 404)
+
                       console.warn('Image failed to load:', target.dataset.originalSrc || target.src)
                       target.dataset.fallbackSet = '1'
                       target.src = placeholder

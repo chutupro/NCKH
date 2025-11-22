@@ -44,7 +44,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
 
   return (
     <aside className={`admin-sidebar ${collapsed ? 'collapsed' : ''}`}>
-      {/* Header */}
+      {}
       <div className="sidebar-header">
         <Link to="/admin" className="sidebar-logo">
           <div className="sidebar-logo-icon">🏛️</div>
@@ -55,7 +55,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
         </button>
       </div>
 
-      {/* Menu */}
+      {}
       <nav className="sidebar-menu">
         {menuItems.map((section, idx) => (
           <div key={idx}>
@@ -83,7 +83,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
         ))}
       </nav>
 
-      {/* Footer Info */}
+      {}
       {!collapsed && (
         <div style={{ padding: '1.5rem', marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>

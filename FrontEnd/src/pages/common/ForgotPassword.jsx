@@ -13,11 +13,9 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Bước 1: Gửi OTP
   const handleSendOTP = async (e) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!email.trim()) {
       setError('Vui lòng nhập email.');
       return;
@@ -29,7 +27,6 @@ const ForgotPassword = () => {
       return;
     }
 
-    // ✅ CHỈ CLEAR ERROR KHI BẮT ĐẦU REQUEST
     setError('');
     setLoading(true);
 
@@ -62,11 +59,9 @@ const ForgotPassword = () => {
     }
   };
 
-  // Bước 2: Xác thực OTP và đặt lại mật khẩu
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!otp.trim()) {
       setError('Vui lòng nhập mã OTP.');
       return;
@@ -92,7 +87,6 @@ const ForgotPassword = () => {
       return;
     }
 
-    // ✅ CHỈ CLEAR ERROR KHI BẮT ĐẦU REQUEST
     setError('');
     setLoading(true);
 
@@ -134,7 +128,7 @@ const ForgotPassword = () => {
   return (
     <div className="auth-page-split">
       <div className="auth-container">
-        {/* Left Side: Logo & Branding */}
+        {}
         <div className="auth-left">
           <div className="auth-logo-large">
             <div className="dragon-icon">🔒🔑</div>
@@ -146,7 +140,7 @@ const ForgotPassword = () => {
           </div>
         </div>
 
-        {/* Right Side: Form */}
+        {}
         <div className="auth-right">
           <div className="auth-form-wrapper">
             <h2 className="auth-title">
@@ -154,7 +148,7 @@ const ForgotPassword = () => {
               {step === 2 && 'Đặt Lại Mật Khẩu'}
             </h2>
 
-            {/* Progress Indicator */}
+            {}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '30px', gap: '10px' }}>
               <div style={{
                 width: '40px',
@@ -180,7 +174,7 @@ const ForgotPassword = () => {
               }}>2</div>
             </div>
 
-            {/* Error Message */}
+            {}
             {error && (
               <div style={{
                 padding: '12px 16px',
@@ -195,7 +189,7 @@ const ForgotPassword = () => {
               </div>
             )}
 
-            {/* Bước 1: Nhập Email */}
+            {}
             {step === 1 && (
               <form className="auth-form" onSubmit={handleSendOTP}>
                 <div className="form-group">
@@ -207,7 +201,7 @@ const ForgotPassword = () => {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      // ✅ Clear error khi người dùng bắt đầu sửa
+
                       if (error) setError('');
                     }}
                     required
@@ -224,7 +218,7 @@ const ForgotPassword = () => {
               </form>
             )}
 
-            {/* Bước 2: Nhập OTP và Mật Khẩu Mới */}
+            {}
             {step === 2 && (
               <form className="auth-form" onSubmit={handleResetPassword}>
                 <div className="form-group">
@@ -236,7 +230,7 @@ const ForgotPassword = () => {
                     value={otp}
                     onChange={(e) => {
                       setOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
-                      // ✅ Clear error khi người dùng bắt đầu sửa
+
                       if (error) setError('');
                     }}
                     maxLength={6}
@@ -256,7 +250,7 @@ const ForgotPassword = () => {
                     value={newPassword}
                     onChange={(e) => {
                       setNewPassword(e.target.value);
-                      // ✅ Clear error khi người dùng bắt đầu sửa
+
                       if (error) setError('');
                     }}
                     required
@@ -272,7 +266,7 @@ const ForgotPassword = () => {
                     value={confirmPassword}
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
-                      // ✅ Clear error khi người dùng bắt đầu sửa
+
                       if (error) setError('');
                     }}
                     required

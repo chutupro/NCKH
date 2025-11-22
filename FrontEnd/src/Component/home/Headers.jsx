@@ -14,7 +14,7 @@ const Headers = () => {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    // Close dropdown when clicking outside
+
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false);
@@ -28,7 +28,7 @@ const Headers = () => {
   const handleLogout = async () => {
     try {
       await authService.logout();
-      // ✅ CLEAR CONTEXT
+
       setUser(null);
       setAccessToken(null);
       setIsAuthenticated(false);
@@ -61,7 +61,7 @@ const Headers = () => {
         </div>
         <div className="nav-buttons">
           <LanguageSwitcher />
-          
+
           {user ? (
             <div className="user-menu" ref={dropdownRef}>
               <div 
@@ -75,7 +75,7 @@ const Headers = () => {
               >
                 {!user.avatar && getInitials(user.fullName)}
               </div>
-              
+
               {showDropdown && (
                 <div className="user-dropdown">
                   <div className="dropdown-header">

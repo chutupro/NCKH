@@ -13,15 +13,15 @@ const ContributeCall = () => {
   const { isAuthenticated } = useAppContext()
 
   const onContributeClick = (e) => {
-    // if not authenticated, show message and redirect to login
+
     if (!isAuthenticated) {
       e.preventDefault()
-      // simple alert for now — we can replace with a nicer modal later
+
       const goLogin = window.confirm('Bạn cần đăng nhập để đóng góp. Đi tới trang đăng nhập?')
       if (goLogin) navigate('/login')
       return
     }
-    // if authenticated, navigate to contribute page
+
     navigate('/contribute')
   }
 

@@ -4,7 +4,7 @@ import "../../Styles/Home/Banner.css";
 import { useAppContext } from '../../context/useAppContext';
 
 const Banner = () => {
-  // Replaced i18n calls with Vietnamese literals (vi.json)
+
   const navigate = useNavigate();
   const { images, locations, locIndex } = useAppContext();
   const [query, setQuery] = useState('');

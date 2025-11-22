@@ -1,4 +1,4 @@
-// src/pages/map/mapLocationsSlice.js
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
@@ -25,7 +25,6 @@ export const fetchMapLocations = createAsyncThunk(
   }
 );
 
-// Các thunk khác giữ nguyên
 export const addMapLocation = createAsyncThunk(
   'mapLocations/addMapLocation',
   async (newLocation) => {

@@ -25,12 +25,9 @@ export class AdminUsersService {
     private readonly feedbackRepo: Repository<Feedback>,
   ) {}
 
-  /**
-   * Lấy danh sách users với filter, pagination
-   */
   async getAllUsers(filter: UserFilter) {
     const { search, page, limit, role, status } = filter;
-    
+
     const query = this.userRepo.createQueryBuilder('user')
       .leftJoinAndSelect('user.role', 'role')
       .select([
@@ -44,30 +41,25 @@ export class AdminUsersService {
         'role.RoleName',
       ]);
 
-    // Tìm kiếm theo tên hoặc email
     if (search) {
       query.where('(user.FullName LIKE :search OR user.Email LIKE :search)', {
         search: `%${search}%`,
       });
     }
 
-    // Lọc theo role
     if (role) {
       query.andWhere('user.RoleID = :role', { role });
     }
 
-    // Lọc theo trạng thái (active = verified email)
     if (status === 'active') {
       query.andWhere('user.IsEmailVerified = :verified', { verified: true });
     } else if (status === 'inactive') {
       query.andWhere('user.IsEmailVerified = :verified', { verified: false });
     }
 
-    // Phân trang
     const skip = (page - 1) * limit;
     query.skip(skip).take(limit);
 
-    // Sắp xếp theo ngày tạo mới nhất
     query.orderBy('user.CreatedAt', 'DESC');
 
     const [users, total] = await query.getManyAndCount();
@@ -91,9 +83,6 @@ export class AdminUsersService {
     };
   }
 
-  /**
-   * Lấy chi tiết user
-   */
   async getUserById(id: number) {
     const user = await this.userRepo.findOne({
       where: { UserID: id },
@@ -116,20 +105,15 @@ export class AdminUsersService {
     };
   }
 
-  /**
-   * Tạo user mới
-   */
   async createUser(dto: { email: string; password: string; fullName: string; roleId: number }) {
-    // Kiểm tra email đã tồn tại
+
     const existing = await this.userRepo.findOne({ where: { Email: dto.email } });
     if (existing) {
       throw new BadRequestException('Email đã được sử dụng');
     }
 
-    // Hash password
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // Tạo user
     const user = this.userRepo.create({
       Email: dto.email,
       PasswordHash: passwordHash,
@@ -146,9 +130,6 @@ export class AdminUsersService {
     };
   }
 
-  /**
-   * Cập nhật user (role, status)
-   */
   async updateUser(id: number, dto: { roleId?: number; status?: string; fullName?: string }) {
     const user = await this.userRepo.findOne({ where: { UserID: id } });
     if (!user) {
@@ -174,70 +155,57 @@ export class AdminUsersService {
     };
   }
 
-  /**
-   * Xóa user và tất cả dữ liệu liên quan
-   */
   async deleteUser(id: number) {
     const user = await this.userRepo.findOne({ where: { UserID: id } });
     if (!user) {
       throw new NotFoundException(`User với ID ${id} không tồn tại`);
     }
 
-    // ⚠️ XÓA THEO THỨ TỰ ĐỂ TRÁNH FOREIGN KEY CONSTRAINT
-    
     try {
-      // 1. XÓA FEEDBACK của user
+
       await this.feedbackRepo.delete({ UserID: id });
-      
-      // 2. XÓA NOTIFICATIONS (nếu bảng tồn tại)
+
       try {
         await this.userRepo.query('DELETE FROM notifications WHERE UserID = ?', [id]);
       } catch (err) {
         console.log('⚠️ Table notifications not found, skipping...');
       }
-      
-      // 3. XÓA LIKES
+
       try {
         await this.userRepo.query('DELETE FROM likes WHERE UserID = ?', [id]);
       } catch (err) {
         console.log('⚠️ Table likes not found, skipping...');
       }
-      
-      // 4. XÓA COMMENTS
+
       try {
         await this.userRepo.query('DELETE FROM comments WHERE UserID = ?', [id]);
       } catch (err) {
         console.log('⚠️ Table comments not found, skipping...');
       }
-      
-      // 5. XÓA CONTRIBUTIONS
+
       try {
         await this.userRepo.query('DELETE FROM contributions WHERE UserID = ?', [id]);
       } catch (err) {
         console.log('⚠️ Table contributions not found, skipping...');
       }
-      
-      // 6. XÓA MODERATION_LOGS (nếu user là moderator)
+
       try {
         await this.userRepo.query('DELETE FROM moderation_logs WHERE ModeratorID = ?', [id]);
       } catch (err) {
         console.log('⚠️ Table moderation_logs not found, skipping...');
       }
-      
-      // 7. XÓA ARTICLES (bài viết của user)
+
       try {
         await this.userRepo.query('DELETE FROM articles WHERE UserID = ?', [id]);
       } catch (err) {
         console.log('⚠️ Table articles not found, skipping...');
       }
-      
-      // 8. XÓA USER PROFILE
+
       const profile = await this.userProfileRepo.findOne({ where: { UserID: id } });
       if (profile) {
         await this.userProfileRepo.remove(profile);
       }
 
-      // 9. Cuối cùng mới xóa USER
       await this.userRepo.remove(user);
 
       return {
@@ -249,9 +217,6 @@ export class AdminUsersService {
     }
   }
 
-  /**
-   * Thống kê users
-   */
   async getUserStats() {
     const total = await this.userRepo.count();
     const active = await this.userRepo.count({ where: { IsEmailVerified: true } });

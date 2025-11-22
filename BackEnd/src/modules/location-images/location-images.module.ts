@@ -13,5 +13,3 @@ import { LocationImagesController } from './location-images.controller';
 })
 export class LocationImagesModule {}
 
-
-

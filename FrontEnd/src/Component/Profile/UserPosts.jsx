@@ -16,14 +16,13 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
     const fetchUserPosts = async () => {
       try {
         const data = await getArticlesPosts();
-        
+
         const targetUserId = userId || user?.userId || user?.UserID || user?.sub;
-        
+
         const userPosts = data.filter(article => {
           return parseInt(article.author?.id) === parseInt(targetUserId);
         });
 
-        // Normalize avatar URL
         const normalizeUrl = (url) => {
           if (!url) return '/img/default-avatar.png';
           if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -43,10 +42,9 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
           likes: a.likeCount || 0,
           commentCount: a.commentCount || 0,
         }));
-        
+
         setPosts(mapped);
-        
-        // Tính toán stats và gửi lên parent
+
         if (onStatsUpdate) {
           const totalPosts = mapped.length;
           const totalLikes = mapped.reduce((sum, post) => sum + (post.likes || 0), 0);
@@ -54,7 +52,7 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
         }
       } catch (error) {
         console.error('Error fetching user posts:', error);
-        // Không hiển thị toast error
+
       } finally {
         setLoading(false);
       }
@@ -65,12 +63,11 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
     }
   }, [user, userId, onStatsUpdate, refreshKey]); // ✅ Thêm userId vào dependencies
 
-  // ✅ Listen for profile update event
   useEffect(() => {
     const handleProfileUpdate = () => {
       setRefreshKey(prev => prev + 1); // Trigger re-fetch
     };
-    
+
     window.addEventListener('profileUpdated', handleProfileUpdate);
     return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
   }, []);
@@ -82,13 +79,12 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
     try {
       const { deleteArticlePost } = await import('../../API/articlesPost');
       await deleteArticlePost(id);
-      
+
       setPosts(posts.filter(p => p.id !== id));
       toast.success('Đã xóa bài viết thành công', {
         position: 'top-right',
       });
-      
-      // Cập nhật stats sau khi xóa
+
       if (onStatsUpdate) {
         const newPosts = posts.filter(p => p.id !== id);
         const totalPosts = newPosts.length;
@@ -129,7 +125,6 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
     );
   }
 
-  // Kiểm tra xem có phải trang cá nhân của chính mình không
   const currentUserId = user?.userId || user?.UserID || user?.sub;
   const isOwnProfile = !userId || parseInt(userId) === parseInt(currentUserId);
 

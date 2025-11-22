@@ -12,27 +12,22 @@ const LikedPosts = () => {
   useEffect(() => {
     const fetchLikedPosts = async () => {
       try {
-        // Lấy tất cả likes từ API
+
         const allLikes = await listLikes();
-        
-        // Lấy tất cả bài viết
+
         const allArticles = await getArticlesPosts();
-        
-        // Filter likes của user hiện tại
+
         const userId = user?.userId || user?.UserID || user?.sub;
         const userLikes = allLikes.filter(like => 
           like.UserID === userId
         );
-        
-        // Lấy ArticleID của các bài viết đã like
+
         const likedArticleIds = userLikes.map(like => like.ArticleID);
-        
-        // Filter các bài viết đã like
+
         const likedArticles = allArticles.filter(article => 
           likedArticleIds.includes(article.id)
         );
 
-        // Map sang format của PostCard
         const mapped = likedArticles.map(a => ({
           id: a.id,
           author: a.author?.fullName || 'Người dùng',
@@ -44,11 +39,11 @@ const LikedPosts = () => {
           likes: a.likeCount || 0,
           commentCount: a.commentCount || 0,
         }));
-        
+
         setPosts(mapped);
       } catch (error) {
         console.error('Error fetching liked posts:', error);
-        // Không hiển thị toast error
+
       } finally {
         setLoading(false);
       }

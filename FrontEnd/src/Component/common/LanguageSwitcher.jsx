@@ -4,12 +4,11 @@ import GoogleTranslate from './GoogleTranslate';
 import { setGoogleTranslateLanguage, getGoogleTranslateLanguage } from './googleTranslateUtils';
 
 const LanguageSwitcher = () => {
-  // getGoogleTranslateLanguage đọc cookie `googtrans` (hoặc mặc định)
-  // ngôn ngữ mặc định của site là tiếng Việt ('vi')
+
   const current = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'vi';
 
   const changeLanguage = (lng) => {
-    // Lưu lựa chọn và gọi helper để reload
+
     localStorage.setItem('language', lng);
     setGoogleTranslateLanguage(lng);
   };
@@ -22,7 +21,7 @@ const LanguageSwitcher = () => {
         title="Tiếng Việt"
         aria-label="Tiếng Việt"
       >
-        {/* Vietnamese flag emoji */}
+        {}
         <span className="flag-icon">🇻🇳</span>
       </button>
       <button
@@ -31,10 +30,10 @@ const LanguageSwitcher = () => {
         title="English"
         aria-label="English"
       >
-        {/* UK flag emoji */}
+        {}
         <span className="flag-icon">EN</span>
       </button>
-      {/* ensure widget script exists; hidden component is fine */}
+      {}
       <GoogleTranslate />
     </div>
   );

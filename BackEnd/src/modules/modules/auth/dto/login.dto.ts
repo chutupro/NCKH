@@ -9,7 +9,6 @@ export class LoginDto {
   @IsNotEmpty({ message: 'Mật khẩu không được để trống.' })
   password: string;
 
-  // 🔐 GHI NHỚ ĐĂNG NHẬP (giống Facebook/Shopee)
   @IsBoolean()
   @IsOptional()
   rememberMe?: boolean;

@@ -1,9 +1,9 @@
-// Lightweight helpers for image comparisons endpoint
+
 const BASE_URL = 'http://localhost:3000';
 
 function normalize(item) {
   if (!item || typeof item !== 'object') return item;
-  // backend shape (example): { ComparisonID, Title, Description, YearOld, YearNew, Category: { Name }, OldImagePath, NewImagePath }
+
   const id = item.id ?? item.ComparisonID ?? null;
   const title = item.title ?? item.Title ?? '';
   const description = item.description ?? item.Description ?? '';
@@ -16,7 +16,7 @@ function normalize(item) {
   const likes = typeof item.likes === 'number' ? item.likes : (item.Likes ?? 0);
 
   return {
-    // keep original fields too
+
     ...item,
     id,
     ComparisonID: item.ComparisonID ?? item.id ?? null,

@@ -12,7 +12,7 @@ const AdminNavbar = ({ sidebarCollapsed, title = 'Dashboard' }) => {
   const handleLogout = async () => {
     try {
       await authService.logout();
-      // ✅ CLEAR CONTEXT (cookie đã clear ở backend)
+
       setUser(null);
       setIsAuthenticated(false);
       navigate('/login');
@@ -23,32 +23,32 @@ const AdminNavbar = ({ sidebarCollapsed, title = 'Dashboard' }) => {
 
   return (
     <nav className={`admin-navbar ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* Left Side */}
+      {}
       <div className="navbar-left">
         <h1 className="navbar-title">{title}</h1>
       </div>
 
-      {/* Right Side */}
+      {}
       <div className="navbar-right">
-        {/* Search */}
+        {}
         <div className="navbar-search">
           <span className="navbar-search-icon">🔍</span>
           <input type="text" placeholder="Tìm kiếm..." />
         </div>
 
-        {/* Notifications */}
+        {}
         <button className="navbar-icon-btn">
           <span>🔔</span>
           <span className="badge">5</span>
         </button>
 
-        {/* Messages */}
+        {}
         <button className="navbar-icon-btn">
           <span>💬</span>
           <span className="badge">3</span>
         </button>
 
-        {/* User Menu */}
+        {}
         <div
           className="navbar-user"
           onClick={() => setShowUserMenu(!showUserMenu)}
@@ -66,7 +66,7 @@ const AdminNavbar = ({ sidebarCollapsed, title = 'Dashboard' }) => {
             </div>
           </div>
 
-          {/* Dropdown Menu */}
+          {}
           {showUserMenu && (
             <div
               style={{

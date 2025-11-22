@@ -1,4 +1,4 @@
-// src/pages/map/MapAdmin.jsx
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMapLocations } from "./mapLocationsSlice";
@@ -47,7 +47,6 @@ const MapAdmin = () => {
   const fileInputRef = useRef(null);
   const debounceTimeout = useRef(null);
 
-  // === KHỞI TẠO MAP ===
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
@@ -65,7 +64,6 @@ const MapAdmin = () => {
       attribution: "&copy; Google Maps",
     }).addTo(map);
 
-    // Click để đặt marker
     map.on("click", async (e) => {
       const { lat, lng } = e.latlng;
       const address = await reverseGeocodeHere(lat, lng);
@@ -95,7 +93,6 @@ const MapAdmin = () => {
     fetchCategories();
   }, [dispatch]);
 
-  // === LẤY DANH MỤC ===
   const fetchCategories = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/categories`);
@@ -105,7 +102,6 @@ const MapAdmin = () => {
     }
   };
 
-  // === TÌM KIẾM GỢI Ý ===
   const searchHere = async (query) => {
     if (!query.trim()) {
       setSuggestions([]);
@@ -187,7 +183,6 @@ const MapAdmin = () => {
     }
   };
 
-  // === REVERSE GEOCODE ===
   const reverseGeocodeHere = async (lat, lng) => {
     try {
       const res = await axios.get("https://revgeocode.search.hereapi.com/v1/revgeocode", {
@@ -215,7 +210,6 @@ const MapAdmin = () => {
     }
   };
 
-  // === CẬP NHẬT MARKER ===
   useEffect(() => {
     if (!mapInstance.current || !Array.isArray(places)) return;
 
@@ -245,7 +239,6 @@ const MapAdmin = () => {
     });
   }, [places]);
 
-  // === XỬ LÝ ẢNH ===
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -264,7 +257,6 @@ const MapAdmin = () => {
     fileInputRef.current.click();
   };
 
-  // === SUBMIT – ĐÃ SỬA HOÀN CHỈNH ===
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.address || !form.position[0] || !form.position[1]) {
@@ -331,7 +323,7 @@ const MapAdmin = () => {
       </h2>
 
       <div style={{ display: "flex", gap: "30px" }}>
-        {/* FORM */}
+        {}
         <div style={{ flex: 1, background: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: "20px" }}>
@@ -386,7 +378,7 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            {/* ẢNH HIỆN ĐẠI */}
+            {}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh hiện đại</label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -420,7 +412,7 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            {/* ẢNH XƯA */}
+            {}
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh xưa</label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -454,25 +446,7 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} accept="image/*" data-field="" />
-
-            <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Mô tả ngắn</label>
-              <input type="text" value={form.desc} onChange={e => setForm(prev => ({ ...prev, desc: e.target.value }))} placeholder="Mô tả ngắn gọn" style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "8px", fontSize: "1rem" }} />
-            </div>
-
-            <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Mô tả chi tiết</label>
-              <textarea value={form.fullDesc} onChange={e => setForm(prev => ({ ...prev, fullDesc: e.target.value }))} placeholder="Lịch sử, ý nghĩa..." style={{ width: "100%", padding: "12px", border: "1px solid #ddd", borderRadius: "8px", fontSize: "1rem", height: "150px", resize: "vertical" }} />
-            </div>
-
-            <button type="submit" style={{ width: "100%", padding: "14px", background: "#1a73e8", color: "white", border: "none", borderRadius: "8px", fontWeight: "600", fontSize: "1rem", cursor: "pointer" }}>
-              Thêm địa điểm
-            </button>
-          </form>
-        </div>
-
-        {/* BẢN ĐỒ */}
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} accept="image}
         <div style={{ flex: 2, borderRadius: "12px", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
           <div ref={mapRef} style={{ height: "700px", width: "100%" }} />
           <p style={{ marginTop: "10px", fontSize: "0.95rem", color: "#555", textAlign: "center" }}>

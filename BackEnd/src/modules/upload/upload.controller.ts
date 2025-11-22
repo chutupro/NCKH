@@ -24,7 +24,7 @@ export class UploadController {
     }),
   )
   uploadFile(@UploadedFile() file: Express.Multer.File) {
-    // Trả về đường dẫn public của ảnh để frontend hiển thị
+
     return {
       message: 'Upload successful',
       filePath: `/uploads/${file.filename}`,

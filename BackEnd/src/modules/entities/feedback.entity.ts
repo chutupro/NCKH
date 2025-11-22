@@ -1,4 +1,4 @@
-// src/modules/entities/feedback.entity.ts
+
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Articles } from './article.entity';
 import { Users } from './user.entity';
@@ -32,8 +32,6 @@ export class Feedback {
 
   @Column({ type: 'boolean', nullable: false, default: false })
   ImagesApproved: boolean; // whether uploaded images are approved by admin
-
-  // ...existing fields
 
   @Column({ type: 'datetime', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
   CreatedAt: Date;

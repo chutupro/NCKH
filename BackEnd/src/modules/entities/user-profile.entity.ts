@@ -21,7 +21,6 @@ export class UserProfiles {
   @Column({ type: 'int', nullable: true, default: 0 })
   TotalLikes: number;
 
-  // --- RELATIONS ---
   @OneToOne(() => Users, (user) => user.profile)
   @JoinColumn({ name: 'UserID' })
   user: Users;

@@ -19,7 +19,6 @@ export class VersionHistory {
   @CreateDateColumn({ type: 'datetime' })
   Timestamp: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.versionHistory)
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;

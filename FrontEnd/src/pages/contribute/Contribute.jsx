@@ -5,7 +5,7 @@ import '../../Styles/Contribute/contribute.css'
 import getAiFeatureConfig, { getAiEndpointUrl } from '../../config/aiConfig'
 
 const Contribute = () => {
-  // i18n removed: use Google Translate helper to detect language when needed
+
   const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'en'
   const [dragOver, setDragOver] = useState(false)
   const [fileName, setFileName] = useState(null)
@@ -25,12 +25,12 @@ const Contribute = () => {
     setAnalysis(null)
     if (!preserveMessage) setMessage(null)
     setError(null)
-    // reset native input value
+
     if (inputRef.current) inputRef.current.value = null
   }
 
   const handleMessageOk = () => {
-    // when user acknowledges AI block, clear the image
+
     clearFile()
   }
   const onDrop = useCallback((e) => {
@@ -51,16 +51,14 @@ const Contribute = () => {
     }
   }, [])
 
-  // create preview when file changes
   useEffect(() => {
     if (!file) {
       setPreviewUrl(null)
-      // remove persisted preview when there's no file
+
   try { sessionStorage.removeItem('contribute_filePreview') } catch (e) { console.debug('sessionStorage remove error', e) }
       return
     }
 
-    // Read file as data URL so preview survives page reloads (sessionStorage)
     const reader = new FileReader()
     reader.onload = () => {
       const dataUrl = reader.result
@@ -71,12 +69,11 @@ const Contribute = () => {
       setError('Không thể đọc file')
     }
     reader.readAsDataURL(file)
-    // no cleanup needed for FileReader
+
   }, [file])
 
   const navigate = useNavigate()
 
-  // Analyze image and category when user confirms, but not title
   const handleConfirm = async () => {
     setError(null)
     setMessage(null)
@@ -88,7 +85,7 @@ const Contribute = () => {
     const aiConfig = getAiFeatureConfig()
     const analyzeDisabled = aiConfig?.featureFlags?.analyze === false || aiConfig?.enableAnalyze === false
     if (analyzeDisabled) {
-      // Skip AI flow entirely; go straight to form
+
       navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult: null, file } })
       return
     }
@@ -114,12 +111,12 @@ const Contribute = () => {
         try {
           window.alert(msg)
         } catch {
-          /* ignore */
+
         }
         clearFile({ preserveMessage: true })
         setAnalysis(null)
       }
-      // show message and block navigation when AI marks issues
+
       if (action === 'blocked') {
         const msg = json?.message || 'Ảnh bị chặn bởi AI'
         blockAndNotify(msg)
@@ -139,20 +136,20 @@ const Contribute = () => {
         return
       }
       const label = Array.isArray(json?.activeLabels) && json.activeLabels.length ? json.activeLabels[0] : null
-      // map AI labels to frontend category names in both EN and VI
+
       const mapAiToFeCategory = (aiLabel) => {
         if (!aiLabel) return { category_en: null, category_vi: null }
         const key = aiLabel.toLowerCase()
       if (key.includes('nature') || key.includes('landscape') || key.includes('thiên nhiên')) return { category_en: 'Nature', category_vi: 'Thiên nhiên' }
-      // map legacy/ambiguous heritage -> Architecture as requested
+
       if (key.includes('heritage') || key.includes('architecture') || key.includes('kiến trúc')) return { category_en: 'Architecture', category_vi: 'Kiến trúc' }
       if (key.includes('culture') || key.includes('art') || key.includes('văn hóa')) return { category_en: 'Culture', category_vi: 'Văn hóa' }
       if (key.includes('people') || key.includes('event') || key.includes('sự kiện')) return { category_en: 'People', category_vi: 'Du lịch' }
-        // fallback: return original label for both
+
         return { category_en: aiLabel, category_vi: aiLabel }
       }
       const mappedCat = mapAiToFeCategory(label)
-      // Only send category, NOT title (title will be analyzed separately in details page)
+
       const aiResult = {
         category_en: mappedCat.category_en || null,
         category_vi: mappedCat.category_vi || null,
@@ -161,7 +158,7 @@ const Contribute = () => {
       }
       setAnalysis({ label })
       setLoading(false)
-      // navigate to details page; pass preview + file + AI result (category only)
+
       navigate('/contributeinformation', { state: { filePreview: previewUrl, aiResult, file } })
     } catch (err) {
       setError(err.message)
@@ -186,16 +183,15 @@ const Contribute = () => {
               onDrop={onDrop}
               className={`upload-area ${dragOver ? 'drag-over' : ''}`}
             >
-              <input ref={inputRef} type="file" accept="image/*" onChange={onFileChange} />
-              {/* preview should overlay upload area */}
+              <input ref={inputRef} type="file" accept="image}
               {previewUrl && (
                 <div className="preview-wrap">
                   <img src={previewUrl} alt="preview" className="preview-image" />
                 </div>
               )}
 
-              {/* loading overlay shown when confirming */}
-              {/* no image overlay when loading; button indicates loading instead */}
+              {}
+              {}
 
               <div className="upload-inner">
                 <div className="upload-icon">⬆</div>
@@ -224,7 +220,7 @@ const Contribute = () => {
 
           <div className="contribute-footer">
               <div className="contribute-footer-text">{'AI sẽ phân tích ảnh và danh mục, sau đó chuyển đến trang điền thông tin'}</div>
-              {/* Confirm button triggers AI analyze (category only) then navigates */}
+              {}
               <button
                 type="button"
                 className={`confirm-btn ${loading ? 'loading' : (analysis ? 'enabled' : 'primary')}`}

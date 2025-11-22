@@ -7,7 +7,7 @@ export async function getArticles() {
 }
 
 export async function getArticleById(id) {
-  // Backend doesn't expose GET /articles_post/:id in this project, so fetch all and find.
+
   const articles = await getArticles();
   return articles.find(a => (a.ArticleID ?? a.id ?? a.id) == id) || null;
 }

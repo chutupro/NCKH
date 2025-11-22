@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import '../../Styles/Contribute/contributeInformation.css'
 import { useLocation, useNavigate } from 'react-router-dom'
-// i18n removed: useTranslation import removed
+
 import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils'
 import { KNOWN_CODES, CODE_TO_VN, labelFor, getCodeFromName } from '../../util/categoryMap'
 import CustomSelect from '../../Component/common/CustomSelect'
@@ -11,7 +11,6 @@ import AppContext from '../../context/context'
 import getAiFeatureConfig, { getAiEndpointUrl } from '../../config/aiConfig'
 const BACKEND_BASE = 'http://localhost:3000'
 
-// helper: convert dataURL -> Blob
 function dataURLtoBlob(dataurl) {
   const arr = dataurl.split(',')
   const mimeMatch = arr[0].match(/:(.*?);/)
@@ -28,9 +27,7 @@ function dataURLtoBlob(dataurl) {
 const ContributeInformation = () => {
   const loc = useLocation()
   const navigate = useNavigate()
-  // const { t, i18n } = useTranslation()  // no longer used
-  // try to get file data from location state (set by previous page)
-  // fallback to sessionStorage so image persists across reloads
+
   let initialImage = null
   if (loc.state?.filePreview) initialImage = loc.state.filePreview
   else {
@@ -43,7 +40,6 @@ const ContributeInformation = () => {
   }
   const incomingAi = loc.state?.aiResult || null
 
-  // normalize ai result to include both title_en/title_vi and category_en/category_vi
   const initialAI = incomingAi ? {
     category_en: incomingAi.category_en || incomingAi.category || '',
     category_vi: incomingAi.category_vi || incomingAi.category || '',
@@ -63,28 +59,22 @@ const ContributeInformation = () => {
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
 
-  // Prefill contributor info from logged-in user (AppContext)
   const appCtx = useContext(AppContext)
   useEffect(() => {
     const ctxUser = appCtx?.user
     if (ctxUser) {
-      // AuthService shapes user as { userId, email, fullName }
+
       setName(ctxUser.fullName || ctxUser.FullName || '')
       setEmail(ctxUser.email || ctxUser.Email || '')
     }
   }, [appCtx?.user])
 
-  // Prefer uploading the original File when available. The previous flow
-  // only had a dataURL preview; uploading that can produce a new image
-  // (or a different format) that looks blurry. We now look for a File in
-  // the navigation state and upload it. If that's not present, fall back to
-  // uploading a dataURL blob (legacy behavior).
   useEffect(() => {
     let mounted = true
     const doUpload = async () => {
-      // If we already have a server path, nothing to do
+
       if (uploadedPath) return
-      // First try to get a File object from location state (set by previous page)
+
       const incomingFile = loc.state?.file || null
       if (!imageSrc && !incomingFile) return
 
@@ -92,14 +82,14 @@ const ContributeInformation = () => {
         setUploading(true)
         const fd = new FormData()
         if (incomingFile instanceof File) {
-          // upload original file to preserve quality
+
           fd.append('file', incomingFile, incomingFile.name)
         } else if (String(imageSrc).startsWith('data:')) {
-          // legacy: convert dataURL -> Blob and upload
+
           const blob = dataURLtoBlob(imageSrc)
           fd.append('file', blob, 'upload.png')
         } else {
-          // imageSrc is probably already a server path; nothing to upload
+
           return
         }
 
@@ -123,7 +113,6 @@ const ContributeInformation = () => {
     return () => { mounted = false }
   }, [imageSrc, loc.state, uploadedPath])
 
-  // helpers to get/set title based on language (use Google Translate language when available)
   const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : 'en'
   const getTitle = () => (currentLang === 'vi' ? (ai.title_vi ?? '') : (ai.title_en ?? ''))
   const setTitleForCurrentLang = (val) => {
@@ -132,7 +121,7 @@ const ContributeInformation = () => {
   }
 
   const getCurrentCode = () => {
-    // Prefer english field, fallback to vietnamese
+
     const codeFromEn = getCodeFromName(ai.category_en)
     if (codeFromEn && codeFromEn !== 'other') return codeFromEn
     const codeFromVi = getCodeFromName(ai.category_vi)
@@ -140,7 +129,6 @@ const ContributeInformation = () => {
     return 'other'
   }
 
-  // Handle AI analysis when user clicks the button
   const handleAnalyzeAI = async () => {
     setAnalyzeError(null)
     const fileToAnalyze = loc.state?.file
@@ -161,13 +149,11 @@ const ContributeInformation = () => {
       })
       if (!res.ok) throw new Error(`Server returned ${res.status}`)
       const json = await res.json()
-      
-      // Extract label and captions
+
       const label = Array.isArray(json?.activeLabels) && json.activeLabels.length ? json.activeLabels[0] : null
       const caption_en = json?.caption_en || ''
       const caption_vi = json?.caption_vi || ''
-      
-      // Map AI labels to frontend categories
+
       const mapAiToFeCategory = (aiLabel) => {
         if (!aiLabel) return { category_en: null, category_vi: null }
         const key = aiLabel.toLowerCase()
@@ -177,9 +163,9 @@ const ContributeInformation = () => {
         if (key.includes('people') || key.includes('event') || key.includes('sự kiện')) return { category_en: 'People', category_vi: 'Du lịch' }
         return { category_en: aiLabel, category_vi: aiLabel }
       }
-      
+
       const mappedCat = mapAiToFeCategory(label)
-      // Update AI state with analyzed data
+
       setAi({
         category_en: mappedCat.category_en || 'Tourism',
         category_vi: mappedCat.category_vi || 'Du lịch',
@@ -198,17 +184,14 @@ const ContributeInformation = () => {
     try {
       const code = getCurrentCode()
       const codeToId = { architecture: 1, culture: 2, tourism: 3, nature: 4 }
-      // Choose imagePath to send to backend API when creating article
-      // If we have an uploadedPath (backend returned '/uploads/xxx'), use that
-      // Otherwise if imageSrc already looks like a server-relative path use it
-      // Do not send data: URLs
+
       const imgToSend = uploadedPath || (imageSrc && String(imageSrc).startsWith('/') ? imageSrc : undefined)
 
       const payload = {
         title: getTitle(),
         content,
         categoryId: codeToId[code] || 1,
-        // Use logged-in user info when available
+
         userId: appCtx?.user?.userId || appCtx?.user?.UserID || 1,
         email: appCtx?.user?.email || appCtx?.user?.Email || email,
         imagePath: imgToSend,
@@ -222,28 +205,24 @@ const ContributeInformation = () => {
     }
   }
 
-  // For preview, prefer the uploaded server file, then a native object URL
-  // from the original File (keeps full resolution), and finally the
-  // fallback dataURL preview.
   let previewDisplay = null
   if (uploadedPath) previewDisplay = `${BACKEND_BASE}${uploadedPath}`
   else if (localObjectUrl) previewDisplay = localObjectUrl
   else previewDisplay = imageSrc
 
-  // create/revoke object URL for original File when available
   useEffect(() => {
     const f = loc.state?.file
     if (f instanceof File) {
       const url = URL.createObjectURL(f)
       setLocalObjectUrl(url)
       return () => {
-        try { URL.revokeObjectURL(url) } catch { /* ignore */ }
+        try { URL.revokeObjectURL(url) } catch {  }
         setLocalObjectUrl(null)
       }
     }
-    // if no file provided, ensure we don't keep an old object URL
-  return () => { if (localObjectUrl) { try { URL.revokeObjectURL(localObjectUrl) } catch { /* ignore */ } ; setLocalObjectUrl(null) } }
-  }, [loc.state, /* eslint-disable-line react-hooks/exhaustive-deps */])
+
+  return () => { if (localObjectUrl) { try { URL.revokeObjectURL(localObjectUrl) } catch {  } ; setLocalObjectUrl(null) } }
+  }, [loc.state, ])
 
   return (
     <div className="info-page">
@@ -303,7 +282,7 @@ const ContributeInformation = () => {
             <div className="field-row">
               <div className="field">
                 <label>{'Họ và tên'} *</label>
-                {/* Fixed contributor name: not editable in this form */}
+                {}
                 <input
                   className="fixed-field"
                   placeholder={'Nhập họ và tên của bạn'}
@@ -314,7 +293,7 @@ const ContributeInformation = () => {
               </div>
               <div className="field">
                 <label>{'Email'} *</label>
-                {/* Fixed contributor email: not editable in this form */}
+                {}
                 <input
                   className="fixed-field"
                   placeholder={'email@example.com'}

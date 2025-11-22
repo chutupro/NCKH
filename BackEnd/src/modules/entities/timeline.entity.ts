@@ -1,4 +1,4 @@
-// src/entities/timeline.entity.ts
+
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Articles } from './article.entity';
 import { MapLocations } from './map-location.entity';

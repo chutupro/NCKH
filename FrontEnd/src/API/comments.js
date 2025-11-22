@@ -1,6 +1,5 @@
 import { apiClient } from '../services/api'
 
-// Tạo comment mới
 export const createComment = async (articleId, content) => {
   try {
     const response = await apiClient.post('/comments', {
@@ -14,7 +13,6 @@ export const createComment = async (articleId, content) => {
   }
 }
 
-// Tạo reply cho comment
 export const createReply = async (articleId, parentCommentId, content, replyToName) => {
   try {
     const response = await apiClient.post('/comments', {
@@ -30,7 +28,6 @@ export const createReply = async (articleId, parentCommentId, content, replyToNa
   }
 }
 
-// Lấy tất cả comment của một bài viết
 export const getCommentsByArticle = async (articleId) => {
   try {
     const response = await apiClient.get(`/comments/${articleId}`)
@@ -41,7 +38,6 @@ export const getCommentsByArticle = async (articleId) => {
   }
 }
 
-// Cập nhật comment
 export const updateComment = async (commentId, content) => {
   try {
     const response = await apiClient.put(`/comments/${commentId}`, { content })
@@ -52,7 +48,6 @@ export const updateComment = async (commentId, content) => {
   }
 }
 
-// Xóa comment
 export const deleteComment = async (commentId) => {
   try {
     const response = await apiClient.delete(`/comments/${commentId}`)

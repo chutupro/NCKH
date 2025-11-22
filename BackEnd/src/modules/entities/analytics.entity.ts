@@ -18,7 +18,6 @@ export class Analytics {
   @UpdateDateColumn({ type: 'datetime', nullable: true })
   UpdatedAt: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.analytics)
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;

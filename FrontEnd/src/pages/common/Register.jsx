@@ -15,10 +15,8 @@ const Register = () => {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Show/hide password requirements
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
 
-  // Password strength validation
   const [passwordStrength, setPasswordStrength] = useState({
     hasMinLength: false,
     hasUpperCase: false,
@@ -28,10 +26,8 @@ const Register = () => {
     hasNoSpaces: true
   })
 
-  // Password match status
   const [passwordMatch, setPasswordMatch] = useState(null) // null, true, false
 
-  // Check password strength
   const checkPasswordStrength = (pwd) => {
     setPasswordStrength({
       hasMinLength: pwd.length >= 6,
@@ -43,7 +39,6 @@ const Register = () => {
     })
   }
 
-  // Check password match
   const checkPasswordMatch = (pwd, confirmPwd) => {
     if (confirmPwd === '') {
       setPasswordMatch(null)
@@ -54,7 +49,6 @@ const Register = () => {
     }
   }
 
-  // Handle password change
   const handlePasswordChange = (e) => {
     const newPassword = e.target.value
     setPassword(newPassword)
@@ -62,14 +56,12 @@ const Register = () => {
     checkPasswordMatch(newPassword, confirmPassword)
   }
 
-  // Handle confirm password change
   const handleConfirmPasswordChange = (e) => {
     const newConfirmPassword = e.target.value
     setConfirmPassword(newConfirmPassword)
     checkPasswordMatch(password, newConfirmPassword)
   }
 
-  // Check if form is valid
   const isFormValid = () => {
     return (
       fullName.trim() !== '' &&
@@ -79,31 +71,26 @@ const Register = () => {
     )
   }
 
-  // Gửi OTP
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    // Validation: Không được để trống
     if (!fullName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       setError('Vui lòng điền đầy đủ thông tin.')
       return
     }
 
-    // Validation: Email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       setError('Email không hợp lệ.')
       return
     }
 
-    // Validation: Password strength
     if (!Object.values(passwordStrength).every(value => value === true)) {
       setError('Mật khẩu chưa đủ mạnh. Vui lòng kiểm tra các yêu cầu.')
       return
     }
 
-    // Validation: Password match
     if (password !== confirmPassword) {
       setError('Mật khẩu không khớp.')
       return
@@ -132,7 +119,6 @@ const Register = () => {
     }
   }
 
-  // Verify OTP
   const handleVerifyOTP = async (otpCode) => {
     setError('')
     setLoading(true)
@@ -154,7 +140,7 @@ const Register = () => {
         position: "top-right",
         autoClose: 2000,
       })
-      
+
       setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
       setError(err.message)
@@ -170,12 +156,12 @@ const Register = () => {
   }
 
   const onGoogle = () => {
-    // ✅ REDIRECT TO GOOGLE OAUTH
+
     window.location.href = 'http://localhost:3000/auth/google';
   }
 
   const onFacebook = () => {
-    // ✅ REDIRECT TO FACEBOOK OAUTH
+
     window.location.href = 'http://localhost:3000/auth/facebook';
   }
 
@@ -244,8 +230,8 @@ const Register = () => {
                       onBlur={() => setShowPasswordRequirements(false)}
                       required
                     />
-                    
-                    {/* Password Strength Indicator - Only show when focused or typing */}
+
+                    {}
                     {password && showPasswordRequirements && (
                       <div style={{ 
                         marginTop: '12px', 
@@ -291,7 +277,7 @@ const Register = () => {
                             </span>
                             <span>Ít nhất 6 ký tự</span>
                           </div>
-                          
+
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
@@ -316,7 +302,7 @@ const Register = () => {
                             </span>
                             <span>Có chữ hoa (A-Z)</span>
                           </div>
-                          
+
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
@@ -341,7 +327,7 @@ const Register = () => {
                             </span>
                             <span>Có chữ thường (a-z)</span>
                           </div>
-                          
+
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
@@ -366,7 +352,7 @@ const Register = () => {
                             </span>
                             <span>Có số (0-9)</span>
                           </div>
-                          
+
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
@@ -391,7 +377,7 @@ const Register = () => {
                             </span>
                             <span>Có ký tự đặc biệt (!@#$%...)</span>
                           </div>
-                          
+
                           <div style={{ 
                             display: 'flex', 
                             alignItems: 'center', 
@@ -430,8 +416,8 @@ const Register = () => {
                       onChange={handleConfirmPasswordChange}
                       required
                     />
-                    
-                    {/* Password Match Indicator */}
+
+                    {}
                     {confirmPassword && (
                       <div style={{ 
                         marginTop: '10px',
@@ -483,12 +469,12 @@ const Register = () => {
                   </button>
                 </form>
 
-                {/* Divider */}
+                {}
                 <div className="divider">
                   <span>hoặc</span>
                 </div>
 
-                {/* Social Buttons */}
+                {}
                 <div className="social-buttons">
                   <button className="btn-social" onClick={onGoogle}>
                     <svg width="20" height="20" viewBox="0 0 24 24">
@@ -505,7 +491,7 @@ const Register = () => {
                   </button>
                 </div>
 
-                {/* Login link */}
+                {}
                 <p className="auth-footer">
                   Bạn đã có tài khoản? <Link to="/login" className="link-primary">Đăng nhập</Link>
                 </p>
@@ -525,7 +511,7 @@ const Register = () => {
                     {error}
                   </div>
                 )}
-                
+
                 <OTPVerification
                   email={email}
                   onVerifySuccess={handleVerifyOTP}

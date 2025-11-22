@@ -8,37 +8,32 @@ import { ApiTags, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // 🔐 BẢO MẬT: PHẢI ĐĂNG NHẬP MỚI XEM ĐƯỢC THÔNG TIN CỦA MÌNH
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Get('me')
   async me(@Req() req: any) {
     const id = req.user?.sub || req.user?.userId;
-    
-    // 🔥 DOUBLE CHECK: Nếu không có userId → throw 401 ngay
+
     if (!id) {
       throw new UnauthorizedException('You must be logged in to access this resource');
     }
-    
+
     return this.userService.findById(id);
   }
 
-  // 🔐 BẢO MẬT: PHẢI ĐĂNG NHẬP MỚI XEM ĐƯỢC PROFILE CỦA MÌNH
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Get('profile/me')
   async getMyProfile(@Req() req: any) {
     const userId = req.user?.sub || req.user?.userId;
-    
-    // 🔥 DOUBLE CHECK: Nếu không có userId → throw 401 ngay
+
     if (!userId) {
       throw new UnauthorizedException('You must be logged in to access this resource');
     }
-    
+
     return this.userService.getUserProfile(userId);
   }
 
-  // ✅ Cập nhật User Profile
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Put('profile/me')
@@ -60,13 +55,11 @@ export class UserController {
     return this.userService.updateUserProfile(userId, body);
   }
 
-  // ✅ Xem profile của user khác (public)
   @Get('profile/:id')
   async getUserProfileById(@Param('id') id: string) {
     return this.userService.getUserProfile(Number(id));
   }
 
-  // 🔐 BẢO MẬT: Chỉ authenticated users mới xem được user info
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @Get(':id')

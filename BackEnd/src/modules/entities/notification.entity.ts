@@ -15,11 +15,9 @@ export class Notifications {
  @Column({ type: 'tinyint', width: 1, default: 0 })
   IsRead: boolean;
 
-
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Users, (user) => user.notifications)
   @JoinColumn({ name: 'UserID' })
   user: Users;

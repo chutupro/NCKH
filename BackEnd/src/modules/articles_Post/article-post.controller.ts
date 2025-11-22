@@ -9,16 +9,15 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
-  // --- GET ALL ARTICLES ---
   @Get()
   async getAll() {
     const articles = await this.articleService.getAllArticles();
     return articles;
   }
-  // --- CREATE NEW ARTICLE ---
+
   @Post()
   async create(@Req() req: any, @Body() dto: CreateArticleDto) {
-    // If request is authenticated, prefer server-side user info to prevent spoofing
+
     const authUser = req?.user || {};
     const authUserId = authUser.userId ?? authUser.sub ?? authUser.UserID ?? null;
     const authEmail = authUser.email ?? authUser.Email ?? null;
@@ -30,7 +29,6 @@ export class ArticleController {
     return article;
   }
 
-  // --- DELETE ARTICLE BY ID ---
   @Delete(':id')
   async delete(@Param('id') id: number) {
     return this.articleService.deleteArticle(id);

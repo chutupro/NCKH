@@ -38,7 +38,7 @@ import { RedisService } from '../../../common/redis.service';
     RefreshTokenStrategy,
     GoogleStrategy, // ✅ THÊM GOOGLE STRATEGY
     FacebookStrategy, // ✅ THÊM FACEBOOK STRATEGY
-  // JwtStrategy removed to avoid duplicate 'jwt' strategy registration — AccessTokenStrategy is used
+
   ],
   exports: [AuthService],
 })

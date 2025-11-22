@@ -46,7 +46,6 @@ export class Articles {
   @Column({ type: 'int', nullable: true })
   CategoryID: number;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Users, (user) => user.articles)
   @JoinColumn({ name: 'UserID' })
   user: Users;

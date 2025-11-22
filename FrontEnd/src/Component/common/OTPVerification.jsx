@@ -8,7 +8,6 @@ const OTPVerification = ({ email, onVerifySuccess, onBack }) => {
   const [resendTimer, setResendTimer] = useState(60)
   const [canResend, setCanResend] = useState(false)
 
-  // Countdown timer cho resend
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000)
@@ -27,7 +26,7 @@ const OTPVerification = ({ email, onVerifySuccess, onBack }) => {
     }
 
     setLoading(true)
-    // Callback trả về OTP code để parent component xử lý
+
     onVerifySuccess(otpCode)
     setLoading(false)
   }
@@ -46,15 +45,15 @@ const OTPVerification = ({ email, onVerifySuccess, onBack }) => {
       const data = await response.json()
 
       if (!response.ok) {
-        // Xử lý error message từ backend
+
         let errorMessage = 'Không thể gửi lại mã OTP'
-        
+
         if (data.message) {
           errorMessage = Array.isArray(data.message) 
             ? data.message.join(', ') 
             : data.message
         }
-        
+
         throw new Error(errorMessage)
       }
 
@@ -73,7 +72,7 @@ const OTPVerification = ({ email, onVerifySuccess, onBack }) => {
   }
 
   const handleOTPChange = (value) => {
-    // Chỉ cho phép nhập số
+
     const numericValue = value.replace(/\D/g, '').slice(0, 6)
     setOtpCode(numericValue)
   }
