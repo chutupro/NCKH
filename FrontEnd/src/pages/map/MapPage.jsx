@@ -225,7 +225,7 @@ const MapPage = () => {
     dispatch(fetchMapLocations());
 
     axios
-      .get(`${BASE_URL}/categories`)
+      .get(`${ BASE_URL }/categories`)
       .then((res) => setCategories(res.data || []))
       .catch(console.error);
 
@@ -646,10 +646,10 @@ const MapPage = () => {
         lng: p.position[1],
         image: p.image,
         oldImage: p.oldImage,
-        match: 
+        match:
           (p.image || "").toLowerCase().includes(q) ? "ảnh hiện tại" :
-          (p.oldImage || "").toLowerCase().includes(q) ? "ảnh xưa" :
-          "tên / địa chỉ",
+            (p.oldImage || "").toLowerCase().includes(q) ? "ảnh xưa" :
+              "tên / địa chỉ",
       }));
 
     setLocalSuggestions(matches);
@@ -1008,9 +1008,8 @@ const MapPage = () => {
               data-user="${submittedBy}"
               loading="lazy"
             />
-            <button class="save-photo-btn" data-photo-id="${submissionId}" style="position:absolute;top:12px;right:12px;border:none;border-radius:999px;padding:6px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;z-index:6;background:${
-              isSaved ? '#1a73e8' : 'rgba(15,23,42,0.85)'
-            };color:${isSaved ? '#fff' : '#f1f5f9'};">
+            <button class="save-photo-btn" data-photo-id="${submissionId}" style="position:absolute;top:12px;right:12px;border:none;border-radius:999px;padding:6px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;z-index:6;background:${isSaved ? '#1a73e8' : 'rgba(15,23,42,0.85)'
+          };color:${isSaved ? '#fff' : '#f1f5f9'};">
               ${isSaved ? '★ Đã lưu' : '☆ Lưu ảnh'}
             </button>
             <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.85),transparent 55%);border-radius:16px;pointer-events:none;"></div>
@@ -1042,8 +1041,7 @@ const MapPage = () => {
     dotsContainer.innerHTML = photos
       .map(
         (_, idx) =>
-          `<span data-idx="${idx}" style="width:8px;height:8px;border-radius:50%;background:${
-            idx === 0 ? '#1a73e8' : '#cbd5f5'
+          `<span data-idx="${idx}" style="width:8px;height:8px;border-radius:50%;background:${idx === 0 ? '#1a73e8' : '#cbd5f5'
           };display:inline-block;"></span>`,
       )
       .join('');
@@ -1251,15 +1249,15 @@ const MapPage = () => {
               <div style="width:100%;display:flex;gap:12px;margin-bottom:16px;align-items:flex-start;">
                 <div style="flex:1;">
                   ${(() => {
-                    const counts = [0,0,0,0,0];
-                    reviews.forEach(rv => { counts[5 - rv.rating] = (counts[5 - rv.rating] || 0) + 1; });
-                    const total = reviews.length || 1;
-                    return `
+        const counts = [0, 0, 0, 0, 0];
+        reviews.forEach(rv => { counts[5 - rv.rating] = (counts[5 - rv.rating] || 0) + 1; });
+        const total = reviews.length || 1;
+        return `
                       <div style="display:flex;flex-direction:column;gap:6px;">
-                        ${[5,4,3,2,1].map((star, idx) => {
-                          const num = reviews.filter(r => r.rating === star).length;
-                          const pct = Math.round((num / Math.max(reviews.length,1)) * 100);
-                          return `
+                        ${[5, 4, 3, 2, 1].map((star, idx) => {
+          const num = reviews.filter(r => r.rating === star).length;
+          const pct = Math.round((num / Math.max(reviews.length, 1)) * 100);
+          return `
                             <div style="display:flex;align-items:center;gap:8px;">
                               <div style="width:36px">${star}★</div>
                               <div style="flex:1;background:#eee;border-radius:6px;height:10px;overflow:hidden;">
@@ -1268,10 +1266,10 @@ const MapPage = () => {
                               <div style="width:36px;text-align:right;color:#666">${pct}%</div>
                             </div>
                           `;
-                        }).join('')}
+        }).join('')}
                       </div>
                     `;
-                  })()}
+      })()}
                 </div>
                 <div style="width:160px;">
                   <button id="write-review-btn" style="width:100%;padding:12px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Viết đánh giá</button>
@@ -1299,33 +1297,33 @@ const MapPage = () => {
     }
 
     const overlay = L.DomUtil.create("div", "modal-overlay");
-    overlay.style.cssText = `position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:10001;cursor:pointer;`;
+    overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); backdrop - filter: blur(4px); z - index: 10001; cursor: pointer; `;
     document.body.appendChild(overlay);
     overlayRef.current = overlay;
 
     const modal = L.DomUtil.create("div", "detail-modal");
-    modal.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;max-height:80vh;background:white;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:10002;font-family:system-ui;display:flex;flex-direction:column;`;
+    modal.style.cssText = `position: fixed; top: 50 %; left: 50 %; transform: translate(-50 %, -50 %); width: 90 %; max - width: 700px; max - height: 80vh; background: white; border - radius: 16px; overflow: hidden; box - shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z - index: 10002; font - family: system - ui; display: flex; flex - direction: column; `;
 
     modal.innerHTML = `
-      <div style="position:relative;">
+      < div style = "position:relative;" >
         <div onclick="window.closeDetailModal()" style="position:absolute;top:12px;right:12px;width:36px;height:36px;background:rgba(0,0,0,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">
           <span style="font-size:1.4rem;color:#666;">×</span>
         </div>
         <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/700xauto?text=Chưa+có+hình"}" style="width:100%;height:auto;object-fit:contain;border-radius:12px;" />
-      </div>
-      <div style="padding:20px;flex:1;overflow-y:auto;">
-        <h3 style="margin:0 0 12px;font-size:1.4rem;font-weight:600;color:#1a0dab;">${place.title}</h3>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;">
-          <span style="color:#d50000;font-weight:bold;">${place.rating || 0}</span>
-          ${"★".repeat(Math.floor(place.rating || 0))}${"☆".repeat(5 - Math.floor(place.rating || 0))}
-          <span style="color:#666;font-size:0.9rem;">(${place.reviews || 0} đánh giá)</span>
-        </div>
-        <p style="margin:0 0 20px;font-size:1rem;line-height:1.7;color:#333;">${place.fullDesc || "Chi tiết chưa có"}</p>
-        <div style="padding:16px;background:#f8f9fa;border-radius:8px;font-size:0.95rem;color:#555;">
-          <div style="margin-bottom:8px;"><strong>Địa chỉ:</strong> ${place.address || "Địa chỉ chưa có"}</div>
-        </div>
-      </div>
-    `;
+      </div >
+  <div style="padding:20px;flex:1;overflow-y:auto;">
+    <h3 style="margin:0 0 12px;font-size:1.4rem;font-weight:600;color:#1a0dab;">${place.title}</h3>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;">
+      <span style="color:#d50000;font-weight:bold;">${place.rating || 0}</span>
+      ${"★".repeat(Math.floor(place.rating || 0))}${"☆".repeat(5 - Math.floor(place.rating || 0))}
+      <span style="color:#666;font-size:0.9rem;">(${place.reviews || 0} đánh giá)</span>
+    </div>
+    <p style="margin:0 0 20px;font-size:1rem;line-height:1.7;color:#333;">${place.fullDesc || "Chi tiết chưa có"}</p>
+    <div style="padding:16px;background:#f8f9fa;border-radius:8px;font-size:0.95rem;color:#555;">
+      <div style="margin-bottom:8px;"><strong>Địa chỉ:</strong> ${place.address || "Địa chỉ chưa có"}</div>
+    </div>
+  </div>
+`;
 
     document.body.appendChild(modal);
     modalRef.current = modal;
@@ -1364,34 +1362,34 @@ const MapPage = () => {
     const modal = document.createElement('div');
     modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:420px;background:white;border-radius:20px;padding:24px;box-shadow:0 24px 60px rgba(15,23,42,0.25);z-index:10002;';
     modal.innerHTML = `
-      <button id="close-photo-modal" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:1.1rem;cursor:pointer;">×</button>
+  < button id = "close-photo-modal" style = "position:absolute;top:12px;right:12px;width:34px;height:34px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:1.1rem;cursor:pointer;" >×</button >
       <h2 style="margin:0 0 8px;font-size:1.4rem;color:#1f2937;">Thêm ảnh cộng đồng</h2>
       <p style="margin:0 0 16px;color:#64748b;font-size:0.95rem;">Chia sẻ khoảnh khắc của bạn tại <strong>${place.title}</strong>. Ảnh sẽ được kiểm duyệt trước khi hiển thị.</p>
       ${
-        user && user.userId
-          ? `
+  user && user.userId
+    ? `
         <div style="display:flex;flex-direction:column;gap:12px;">
           <div>
             <label style="display:block;font-weight:600;margin-bottom:6px;color:#1f2937;">Chọn ảnh *</label>
             <input type="file" id="photo-modal-file" accept="image
   const calculateRoute = async (from, to, map) => {
     const url = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${from.lng},${from.lat};${to[1]},${to[0]}?overview=full&geometries=geojson`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Không thể kết nối với máy chủ định tuyến");
-      const data = await res.json();
-      if (data.routes && data.routes[0]) {
-        const route = data.routes[0];
-        const coords = route.geometry.coordinates.map((c) => [c[1], c[0]]);
-        const polyline = L.polyline(coords, { color: "#4285f4", weight: 6, opacity: 0.9 }).addTo(map);
-        currentRouteLayer.current = polyline;
-        map.fitBounds(polyline.getBounds());
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Không thể kết nối với máy chủ định tuyến");
+    const data = await res.json();
+    if (data.routes && data.routes[0]) {
+      const route = data.routes[0];
+      const coords = route.geometry.coordinates.map((c) => [c[1], c[0]]);
+      const polyline = L.polyline(coords, { color: "#4285f4", weight: 6, opacity: 0.9 }).addTo(map);
+      currentRouteLayer.current = polyline;
+      map.fitBounds(polyline.getBounds());
 
-        const km = (route.distance / 1000).toFixed(1);
-        const mins = Math.round(route.duration / 60);
+      const km = (route.distance / 1000).toFixed(1);
+      const mins = Math.round(route.duration / 60);
 
-        const routeDetails = document.getElementById("route-details");
-        routeDetails.innerHTML = `
+      const routeDetails = document.getElementById("route-details");
+      routeDetails.innerHTML = `
           <h4 style="margin:16px 0 8px;font-size:1rem;color:#333;font-weight:600">Lộ trình</h4>
           <div style="padding:16px;background:#f8f9fa;border-radius:8px">
             <div style="font-weight:600;color:#333;margin-bottom:8px">
@@ -1399,18 +1397,18 @@ const MapPage = () => {
             </div>
           </div>
         `;
-        routeDetails.style.display = "block";
-      }
-    } catch (err) {
-      document.getElementById("route-details").innerHTML = `<div style="color:#d50000;padding:10px">Không thể tìm đường: ${err.message}</div>`;
-      document.getElementById("route-details").style.display = "block";
+      routeDetails.style.display = "block";
     }
-  };
+  } catch (err) {
+    document.getElementById("route-details").innerHTML = `<div style="color:#d50000;padding:10px">Không thể tìm đường: ${err.message}</div>`;
+    document.getElementById("route-details").style.display = "block";
+  }
+};
 
-  const showFavoritesSidebar = () => {
-    const userPhotoFavorites = getCurrentUserPhotoFavorites();
-    const userPlaceFavorites = getCurrentUserPlaceFavorites();
-    favoritesSidebarRef.current.innerHTML = `
+const showFavoritesSidebar = () => {
+  const userPhotoFavorites = getCurrentUserPhotoFavorites();
+  const userPlaceFavorites = getCurrentUserPlaceFavorites();
+  favoritesSidebarRef.current.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h3 style="margin:0;font-size:1.4rem;font-weight:600;color:white;">Mục yêu thích</h3>
         <div onclick="window.closeFavoritesSidebar()" style="width:36px;height:36px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
@@ -1428,19 +1426,19 @@ const MapPage = () => {
       <div id="favorites-list" style="color:white;"></div>
     `;
 
-    const photoContainer = document.getElementById("favorite-photos-container");
-    if (!user || !user.userId) {
-      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Đăng nhập để lưu và xem ảnh yêu thích.</div>`;
-    } else if (!userPhotoFavorites.length) {
-      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Chưa có ảnh nào được lưu.</div>`;
-    } else {
-      photoContainer.innerHTML = userPhotoFavorites
-        .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
-        .map((photo) => {
-          const src = photo.ImagePath?.startsWith('http')
-            ? photo.ImagePath
-            : `${BASE_URL}${photo.ImagePath || ''}`;
-          return `
+  const photoContainer = document.getElementById("favorite-photos-container");
+  if (!user || !user.userId) {
+    photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Đăng nhập để lưu và xem ảnh yêu thích.</div>`;
+  } else if (!userPhotoFavorites.length) {
+    photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Chưa có ảnh nào được lưu.</div>`;
+  } else {
+    photoContainer.innerHTML = userPhotoFavorites
+      .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
+      .map((photo) => {
+        const src = photo.ImagePath?.startsWith('http')
+          ? photo.ImagePath
+          : `${BASE_URL}${photo.ImagePath || ''}`;
+        return `
             <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #333;position:relative;cursor:pointer;" onclick="window.openFavoritePhoto('${photo.submissionId}')">
               <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;" alt="Ảnh yêu thích" />
               <div style="flex:1;">
@@ -1453,18 +1451,18 @@ const MapPage = () => {
               </div>
             </div>
           `;
-        })
-        .join("");
-    }
+      })
+      .join("");
+  }
 
-    const list = document.getElementById("favorites-list");
-    if (userPlaceFavorites.length === 0) {
-      list.innerHTML = `<div style="color:#aaa;text-align:center;padding:20px;">Chưa có địa điểm nào được lưu.</div>`;
-    } else {
-      list.innerHTML = userPlaceFavorites
-        .map((fav) => {
-          const place = places.find((p) => p.id === fav.id) || fav;
-          return `
+  const list = document.getElementById("favorites-list");
+  if (userPlaceFavorites.length === 0) {
+    list.innerHTML = `<div style="color:#aaa;text-align:center;padding:20px;">Chưa có địa điểm nào được lưu.</div>`;
+  } else {
+    list.innerHTML = userPlaceFavorites
+      .map((fav) => {
+        const place = places.find((p) => p.id === fav.id) || fav;
+        return `
             <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #444;position:relative;">
               <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/60x60?text=Chưa+có+hình"}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" />
               <div style="flex:1;cursor:pointer;" onclick="window.showPlaceFromFav(${place.id})">
@@ -1480,166 +1478,166 @@ const MapPage = () => {
               </div>
             </div>
           `;
-        })
-        .join("");
-    }
-
-    favoritesSidebarRef.current.style.display = "block";
-
-    if (sidebarRef.current.style.display === "block") {
-      sidebarRef.current.style.left = "380px";
-    }
-
-    window.updateTopBarPosition();
-    setTimeout(() => window.updateTopBarPosition(), 50);
-  };
-
-  window.closeFavoritesSidebar = () => {
-    favoritesSidebarRef.current.style.display = "none";
-
-    if (sidebarRef.current.style.display === "block") {
-      sidebarRef.current.style.left = "100px";
-    }
-
-    window.updateTopBarPosition();
-    setTimeout(() => window.updateTopBarPosition(), 50);
-  };
-
-  window.removeFromFavorites = (id) => {
-    removePlaceFromFavorites(id);
-    setTimeout(showFavoritesSidebar, 0);
-  };
-
-  window.removeFavoritePhoto = (submissionId) => {
-    if (!user || !user.userId) return;
-    const normalizedId = String(submissionId);
-    setFavoritePhotosByUser((prev) => {
-      const next = { ...prev };
-      const list = Array.isArray(next[user.userId])
-        ? next[user.userId].filter((item) => item.submissionId !== normalizedId)
-        : [];
-      next[user.userId] = list;
-      return next;
-    });
-    setTimeout(showFavoritesSidebar, 0);
-  };
-
-  window.openFavoritePhoto = (submissionId) => {
-    const list = getCurrentUserPhotoFavorites();
-    const index = list.findIndex((item) => item.submissionId === String(submissionId));
-    if (index !== -1) {
-      openPhotoPreview({ photos: list, startIndex: index });
-    }
-  };
-
-  window.showPlaceFromFav = (id) => {
-    const userPlaceFavorites = getCurrentUserPlaceFavorites();
-    const place = places.find((p) => p.id === id) || userPlaceFavorites.find((f) => f.id === id);
-    if (place) {
-      currentPlace.current = place;
-      clearCurrentRoute();
-      showPlaceDetail(place, mapInstance.current);
-      highlightMarker(place.id);
-      favoritesSidebarRef.current.style.display = "block";
-      sidebarRef.current.style.left = "380px";
-      sidebarRef.current.style.display = "block";
-    }
-  };
-
-  window.closeSidebar = () => {
-    sidebarRef.current.style.display = "none";
-    clearCurrentRoute();
-
-    window.updateTopBarPosition();
-    setTimeout(() => window.updateTopBarPosition(), 50);
-  };
-
-  useEffect(() => {
-    if (!mapInstance.current || !navigator.geolocation) return;
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        if (userMarker.current) {
-          mapInstance.current.removeLayer(userMarker.current);
-        }
-
-        const icon = L.divIcon({
-          html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-          className: "user-location-marker",
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
-        });
-
-        userMarker.current = L.marker([lat, lng], { icon }).addTo(mapInstance.current);
-        userMarker.current.bindPopup('<b style="color:#4285f4">Vị trí của bạn</b>').openPopup();
-        mapInstance.current.setView([lat, lng], 14);
-      },
-      () => console.warn("Không thể lấy vị trí người dùng"),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
-  }, [mapInstance.current]);
-
-  if (status === "failed") {
-    return <div style={{ color: "red", padding: "20px" }}>Lỗi: {error}</div>;
+      })
+      .join("");
   }
 
-  return (
-    <>
-      <div
-        ref={mapRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          zIndex: 9999,
-        }}
-      />
+  favoritesSidebarRef.current.style.display = "block";
 
-      {}
-      <button
-        onClick={() => setIsDarkMode(!isDarkMode)}
-        style={{
-          position: "fixed",
-          bottom: "145px", // Ngay trên zoom controls (3 nút + padding)
-          right: "16px",
-          zIndex: 10001,
-          width: "40px",
-          height: "40px",
-          borderRadius: "12px",
-          border: "2px solid rgba(0,0,0,0.2)",
-          backgroundColor: "#fff",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "20px",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
-          transition: "all 0.2s ease",
-        }}
-        title={isDarkMode ? "Bản đồ thường" : "Chế độ vệ tinh"}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#f0f0f0";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "#fff";
-        }}
-      >
-        🛰️
-      </button>
+  if (sidebarRef.current.style.display === "block") {
+    sidebarRef.current.style.left = "380px";
+  }
 
-      {}
-      {comparePlace &&
-        ReactDOM.createPortal(
-          <CompareModal place={comparePlace} onClose={() => setComparePlace(null)} />,
-          document.body
-        )}
-    </>
+  window.updateTopBarPosition();
+  setTimeout(() => window.updateTopBarPosition(), 50);
+};
+
+window.closeFavoritesSidebar = () => {
+  favoritesSidebarRef.current.style.display = "none";
+
+  if (sidebarRef.current.style.display === "block") {
+    sidebarRef.current.style.left = "100px";
+  }
+
+  window.updateTopBarPosition();
+  setTimeout(() => window.updateTopBarPosition(), 50);
+};
+
+window.removeFromFavorites = (id) => {
+  removePlaceFromFavorites(id);
+  setTimeout(showFavoritesSidebar, 0);
+};
+
+window.removeFavoritePhoto = (submissionId) => {
+  if (!user || !user.userId) return;
+  const normalizedId = String(submissionId);
+  setFavoritePhotosByUser((prev) => {
+    const next = { ...prev };
+    const list = Array.isArray(next[user.userId])
+      ? next[user.userId].filter((item) => item.submissionId !== normalizedId)
+      : [];
+    next[user.userId] = list;
+    return next;
+  });
+  setTimeout(showFavoritesSidebar, 0);
+};
+
+window.openFavoritePhoto = (submissionId) => {
+  const list = getCurrentUserPhotoFavorites();
+  const index = list.findIndex((item) => item.submissionId === String(submissionId));
+  if (index !== -1) {
+    openPhotoPreview({ photos: list, startIndex: index });
+  }
+};
+
+window.showPlaceFromFav = (id) => {
+  const userPlaceFavorites = getCurrentUserPlaceFavorites();
+  const place = places.find((p) => p.id === id) || userPlaceFavorites.find((f) => f.id === id);
+  if (place) {
+    currentPlace.current = place;
+    clearCurrentRoute();
+    showPlaceDetail(place, mapInstance.current);
+    highlightMarker(place.id);
+    favoritesSidebarRef.current.style.display = "block";
+    sidebarRef.current.style.left = "380px";
+    sidebarRef.current.style.display = "block";
+  }
+};
+
+window.closeSidebar = () => {
+  sidebarRef.current.style.display = "none";
+  clearCurrentRoute();
+
+  window.updateTopBarPosition();
+  setTimeout(() => window.updateTopBarPosition(), 50);
+};
+
+useEffect(() => {
+  if (!mapInstance.current || !navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      if (userMarker.current) {
+        mapInstance.current.removeLayer(userMarker.current);
+      }
+
+      const icon = L.divIcon({
+        html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+        className: "user-location-marker",
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      });
+
+      userMarker.current = L.marker([lat, lng], { icon }).addTo(mapInstance.current);
+      userMarker.current.bindPopup('<b style="color:#4285f4">Vị trí của bạn</b>').openPopup();
+      mapInstance.current.setView([lat, lng], 14);
+    },
+    () => console.warn("Không thể lấy vị trí người dùng"),
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
   );
+}, [mapInstance.current]);
+
+if (status === "failed") {
+  return <div style={{ color: "red", padding: "20px" }}>Lỗi: {error}</div>;
+}
+
+return (
+  <>
+    <div
+      ref={mapRef}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 9999,
+      }}
+    />
+
+    { }
+    <button
+      onClick={() => setIsDarkMode(!isDarkMode)}
+      style={{
+        position: "fixed",
+        bottom: "145px", // Ngay trên zoom controls (3 nút + padding)
+        right: "16px",
+        zIndex: 10001,
+        width: "40px",
+        height: "40px",
+        borderRadius: "12px",
+        border: "2px solid rgba(0,0,0,0.2)",
+        backgroundColor: "#fff",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "20px",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+        transition: "all 0.2s ease",
+      }}
+      title={isDarkMode ? "Bản đồ thường" : "Chế độ vệ tinh"}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "#f0f0f0";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "#fff";
+      }}
+    >
+      🛰️
+    </button>
+
+    { }
+    {comparePlace &&
+      ReactDOM.createPortal(
+        <CompareModal place={comparePlace} onClose={() => setComparePlace(null)} />,
+        document.body
+      )}
+  </>
+);
 };
 
 export default MapPage;
