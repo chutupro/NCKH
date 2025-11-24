@@ -1,6 +1,23 @@
-import { apiClient } from './api';
+import axios from 'axios';
 
 const MEDIA_SERVICE_URL = 'http://localhost:3001';
+const MAIN_BACKEND_URL = 'http://localhost:3000';
+
+/**
+ * Get access token by calling backend endpoint that returns the token from cookie
+ */
+const getAccessToken = async () => {
+  try {
+    // Call the backend to get the token from HttpOnly cookie
+    const response = await axios.get(`${MAIN_BACKEND_URL}/auth/token`, {
+      withCredentials: true, // Important: send cookies
+    });
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Failed to get access token:', error);
+    throw new Error('Không thể lấy access token. Vui lòng đăng nhập lại.');
+  }
+};
 
 /**
  * Upload avatar (ảnh đại diện)
@@ -12,10 +29,14 @@ export const uploadAvatar = async (file) => {
   formData.append('file', file);
   formData.append('type', 'avatar');
 
-  // apiClient tự động thêm Authorization header (access token)
-  const response = await apiClient.post(`${MEDIA_SERVICE_URL}/upload`, formData, {
+  // Get access token from backend
+  const accessToken = await getAccessToken();
+
+  // Make direct axios request with explicit Authorization header
+  const response = await axios.post(`${MEDIA_SERVICE_URL}/upload`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${accessToken}`,
     },
   });
 
@@ -34,9 +55,13 @@ export const uploadPostImage = async (file, category) => {
   formData.append('type', 'post');
   formData.append('category', category);
 
-  const response = await apiClient.post(`${MEDIA_SERVICE_URL}/upload`, formData, {
+  // Get access token from backend
+  const accessToken = await getAccessToken();
+
+  const response = await axios.post(`${MEDIA_SERVICE_URL}/upload`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${accessToken}`,
     },
   });
 
@@ -64,5 +89,12 @@ export const deleteFile = async (url) => {
   // → /storage/avatar/user-123/file.jpg
   const path = new URL(url).pathname;
   
-  await apiClient.delete(`${MEDIA_SERVICE_URL}${path}`);
+  // Get access token from backend
+  const accessToken = await getAccessToken();
+  
+  await axios.delete(`${MEDIA_SERVICE_URL}${path}`, {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
 };

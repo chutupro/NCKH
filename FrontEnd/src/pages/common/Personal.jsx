@@ -3,6 +3,7 @@ import { useAppContext } from '../../context/useAppContext';
 import { toast } from 'react-toastify';
 import UserPosts from '../../Component/Profile/UserPosts';
 import LikedPosts from '../../Component/Profile/LikedPosts';
+import PendingPosts from '../../Component/Profile/PendingPosts';
 
 const Personal = () => {
   const { accessToken, user, setUser } = useAppContext();
@@ -392,6 +393,33 @@ const Personal = () => {
             >
               ❤️ Bài viết đã thích
             </button>
+            <button
+              onClick={() => setActiveTab('pending-posts')}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: activeTab === 'pending-posts' ? '#e8d7b7' : 'transparent',
+                color: activeTab === 'pending-posts' ? '#2b2b2b' : '#f5e6d3',
+                border: 'none',
+                borderBottom: activeTab === 'pending-posts' ? '3px solid #e8d7b7' : '3px solid transparent',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '600',
+                transition: 'all 0.3s ease',
+                borderRadius: '8px 8px 0 0'
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== 'pending-posts') {
+                  e.target.style.backgroundColor = 'rgba(232, 215, 183, 0.1)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== 'pending-posts') {
+                  e.target.style.backgroundColor = 'transparent';
+                }
+              }}
+            >
+              ⏳ Chờ duyệt
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -401,6 +429,7 @@ const Personal = () => {
               setTotalLikes(stats.totalLikes);
             }} />}
             {activeTab === 'liked-posts' && <LikedPosts />}
+            {activeTab === 'pending-posts' && <PendingPosts />}
           </div>
         </div>
       )}

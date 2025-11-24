@@ -1,11 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const AdminSidebar = ({ collapsed, onToggle }) => {
   const location = useLocation();
+  const [pendingCount, setPendingCount] = useState(0);
 
   const isActive = (path) => location.pathname === path;
+
+  useEffect(() => {
+    fetchPendingCount();
+    // Refresh mỗi 30 giây
+    const interval = setInterval(fetchPendingCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchPendingCount = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/articles_post/pending/list');
+      setPendingCount(response.data.length);
+    } catch (error) {
+      console.error('Error fetching pending count:', error);
+    }
+  };
 
   const menuItems = [
     {
@@ -21,7 +39,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
         { path: '/admin/users', icon: '👥', label: 'Người dùng', badge: '12' },
         { path: '/admin/content', icon: '📰', label: 'Nội dung', badge: '5' },
         { path: '/admin/photos', icon: '🖼️', label: 'Ảnh người dùng', badge: null },
-        { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: '8' },
+        { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: pendingCount > 0 ? String(pendingCount) : null },
         { path: '/admin/comments', icon: '💬', label: 'Bình luận', badge: '3' },
       ],
     },

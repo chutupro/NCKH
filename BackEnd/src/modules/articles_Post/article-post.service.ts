@@ -36,7 +36,7 @@ export class ArticleService {
     private likeRepo: Repository<Likes>,
   ) {}
 
-  // --- GET ALL ARTICLES ---
+  // --- GET ALL ARTICLES (Chỉ lấy bài đã verified) ---
   async getAllArticles() {
     const articles = await this.articleRepo
       .createQueryBuilder('article')
@@ -47,6 +47,8 @@ export class ArticleService {
       .leftJoinAndSelect('article.analytics', 'analytics')
       .loadRelationCountAndMap('article.likeCount', 'article.likes')
       .loadRelationCountAndMap('article.commentCount', 'article.comments')
+      .where('article.Verified = :verified', { verified: true })
+      .andWhere('article.Rejected = :rejected', { rejected: false })
       .orderBy('article.CreatedAt', 'DESC')
       .getMany();
 
@@ -109,6 +111,87 @@ export class ArticleService {
       image: dto.imagePath || null,
       imageDescription: dto.imageDescription || null,
     };
+  }
+
+  // --- GET PENDING ARTICLES (Chờ xác nhận) ---
+  async getPendingArticles() {
+    const articles = await this.articleRepo
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.user', 'user')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('article.category', 'category')
+      .leftJoinAndSelect('article.images', 'images')
+      .where('article.Verified = :verified', { verified: false })
+      .andWhere('article.Rejected = :rejected', { rejected: false })
+      .orderBy('article.CreatedAt', 'DESC')
+      .getMany();
+
+    return articles.map((a) => ({
+      id: a.ArticleID,
+      title: a.Title,
+      content: a.Content,
+      createdAt: a.CreatedAt,
+      category: a.category?.Name,
+      author: {
+        id: a.user?.UserID,
+        fullName: a.user?.FullName,
+        avatar: a.user?.profile?.Avatar || null,
+      },
+      image: a.images?.length ? a.images[0].FilePath : null,
+      imageDescription: a.images?.length ? a.images[0].AltText : null,
+    }));
+  }
+
+  // --- GET REJECTED ARTICLES ---
+  async getRejectedArticles() {
+    const articles = await this.articleRepo
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.user', 'user')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('article.category', 'category')
+      .leftJoinAndSelect('article.images', 'images')
+      .where('article.Rejected = :rejected', { rejected: true })
+      .orderBy('article.CreatedAt', 'DESC')
+      .getMany();
+
+    return articles.map((a) => ({
+      id: a.ArticleID,
+      title: a.Title,
+      content: a.Content,
+      createdAt: a.CreatedAt,
+      category: a.category?.Name,
+      author: {
+        id: a.user?.UserID,
+        fullName: a.user?.FullName,
+        avatar: a.user?.profile?.Avatar || null,
+      },
+      image: a.images?.length ? a.images[0].FilePath : null,
+      imageDescription: a.images?.length ? a.images[0].AltText : null,
+    }));
+  }
+
+  // --- APPROVE ARTICLE ---
+  async approveArticle(articleId: number) {
+    const article = await this.articleRepo.findOne({ where: { ArticleID: articleId } });
+    if (!article) throw new Error('Article not found');
+
+    article.Verified = true;
+    article.Rejected = false;
+    await this.articleRepo.save(article);
+
+    return { message: 'Article approved successfully', article };
+  }
+
+  // --- REJECT ARTICLE ---
+  async rejectArticle(articleId: number) {
+    const article = await this.articleRepo.findOne({ where: { ArticleID: articleId } });
+    if (!article) throw new Error('Article not found');
+
+    article.Verified = false;
+    article.Rejected = true;
+    await this.articleRepo.save(article);
+
+    return { message: 'Article rejected successfully', article };
   }
 
   // --- DELETE ARTICLE ---

@@ -41,5 +41,29 @@ export class ArticleController {
   @ApiBody({ type: UpdateArticleDto })
   async update(@Param('id') id: number, @Body() dto: UpdateArticleDto) {
     return this.articleService.updateArticle(id, dto);
-}
+  }
+
+  // --- GET PENDING ARTICLES ---
+  @Get('pending/list')
+  async getPending() {
+    return this.articleService.getPendingArticles();
+  }
+
+  // --- GET REJECTED ARTICLES ---
+  @Get('rejected/list')
+  async getRejected() {
+    return this.articleService.getRejectedArticles();
+  }
+
+  // --- APPROVE ARTICLE ---
+  @Put(':id/approve')
+  async approve(@Param('id') id: number) {
+    return this.articleService.approveArticle(id);
+  }
+
+  // --- REJECT ARTICLE ---
+  @Put(':id/reject')
+  async reject(@Param('id') id: number) {
+    return this.articleService.rejectArticle(id);
+  }
 }

@@ -221,6 +221,18 @@ export class AuthController {
     return res.status(HttpStatus.NO_CONTENT).send();
   }
 
+  // --- Get Access Token from Cookie (for Media Service) ---
+  @Get('token')
+  async getToken(@Req() req: any) {
+    const accessToken = req.cookies?.access_token;
+    
+    if (!accessToken) {
+      throw new UnauthorizedException('Access token không tồn tại. Vui lòng đăng nhập.');
+    }
+    
+    return { access_token: accessToken };
+  }
+
   // --- Đăng xuất ---
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')

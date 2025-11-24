@@ -46,6 +46,12 @@ export class Articles {
   @Column({ type: 'int', nullable: true })
   CategoryID: number;
 
+  @Column({ type: 'bit', default: false })
+  Verified: boolean;
+
+  @Column({ type: 'bit', default: false })
+  Rejected: boolean;
+
   // --- RELATIONS ---
   @ManyToOne(() => Users, (user) => user.articles)
   @JoinColumn({ name: 'UserID' })

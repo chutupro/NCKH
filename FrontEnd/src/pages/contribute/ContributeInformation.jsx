@@ -3,9 +3,10 @@ import '../../Styles/Contribute/contributeInformation.css'
 import { useLocation, useNavigate } from 'react-router-dom'
 // i18n removed: useTranslation import removed
 import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils'
-import { KNOWN_CODES, CODE_TO_VN, labelFor, getCodeFromName } from '../../util/categoryMap'
+
 import CustomSelect from '../../Component/common/CustomSelect'
 import { createArticlePost } from '../../API/articlesPost'
+import { getCategories } from '../../API/collections'
 import { useEffect, useContext } from 'react'
 import AppContext from '../../context/context'
 import getAiFeatureConfig, { getAiEndpointUrl } from '../../config/aiConfig'
@@ -62,6 +63,21 @@ const ContributeInformation = () => {
   const [content, setContent] = useState('')
   const [analyzing, setAnalyzing] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [categories, setCategories] = useState([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null)
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategoriesData = async () => {
+      try {
+        const data = await getCategories()
+        setCategories(data || [])
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+      }
+    }
+    fetchCategoriesData()
+  }, [])
 
   // Prefill contributor info from logged-in user (AppContext)
   const appCtx = useContext(AppContext)
@@ -131,15 +147,6 @@ const ContributeInformation = () => {
     else setAi(prev => ({ ...prev, title_en: val }))
   }
 
-  const getCurrentCode = () => {
-    // Prefer english field, fallback to vietnamese
-    const codeFromEn = getCodeFromName(ai.category_en)
-    if (codeFromEn && codeFromEn !== 'other') return codeFromEn
-    const codeFromVi = getCodeFromName(ai.category_vi)
-    if (codeFromVi && codeFromVi !== 'other') return codeFromVi
-    return 'other'
-  }
-
   // Handle AI analysis when user clicks the button
   const handleAnalyzeAI = async () => {
     setAnalyzeError(null)
@@ -196,8 +203,6 @@ const ContributeInformation = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const code = getCurrentCode()
-      const codeToId = { architecture: 1, culture: 2, tourism: 3, nature: 4 }
       // Choose imagePath to send to backend API when creating article
       // If we have an uploadedPath (backend returned '/uploads/xxx'), use that
       // Otherwise if imageSrc already looks like a server-relative path use it
@@ -207,7 +212,7 @@ const ContributeInformation = () => {
       const payload = {
         title: getTitle(),
         content,
-        categoryId: codeToId[code] || 1,
+        categoryId: selectedCategoryId || (categories.length > 0 ? categories[0].CategoryID : 1),
         // Use logged-in user info when available
         userId: appCtx?.user?.userId || appCtx?.user?.UserID || 1,
         email: appCtx?.user?.email || appCtx?.user?.Email || email,
@@ -266,14 +271,23 @@ const ContributeInformation = () => {
 
           <div className="ai-result">
           <div className="ai-row">
-            <label>{'Danh mục (AI gợi ý)'}</label>
+            <label>{'Danh mục'}</label>
             <CustomSelect
-              value={getCurrentCode() !== 'other' ? getCurrentCode() : KNOWN_CODES[0]}
-              options={KNOWN_CODES.map(code => ({ value: code, label: labelFor(code) }))}
-              onChange={(code) => {
-                const enLabel = code ? (code.charAt(0).toUpperCase() + code.slice(1)) : ''
-                const viLabel = CODE_TO_VN[code] || enLabel
-                setAi(prev => ({ ...prev, category_en: enLabel, category_vi: viLabel }))
+              value={selectedCategoryId || (categories.length > 0 ? categories[0].CategoryID : '')}
+              options={categories.map(cat => ({ 
+                value: cat.CategoryID, 
+                label: cat.Name 
+              }))}
+              onChange={(categoryId) => {
+                setSelectedCategoryId(categoryId)
+                const selectedCat = categories.find(c => c.CategoryID === categoryId)
+                if (selectedCat) {
+                  setAi(prev => ({ 
+                    ...prev, 
+                    category_en: selectedCat.Name, 
+                    category_vi: selectedCat.Name 
+                  }))
+                }
               }}
             />
           </div>

@@ -37,6 +37,7 @@ import AIModels from "../pages/admin/AIModels";
 import SystemMonitor from "../pages/admin/SystemMonitor";
 import RolePermissions from "../pages/admin/RolePermissions";
 import PhotoModeration from "../pages/admin/PhotoModeration";
+import AdminContributions from "../Component/admin/AdminContributions";
 import ProtectedRoute from "../Component/common/ProtectedRoute";
 
 const Routee = () => {
@@ -113,6 +114,7 @@ const Routee = () => {
         <Route path="users" element={<UserManagement />} />
         <Route path="content" element={<ContentModeration />} />
         <Route path="photos" element={<PhotoModeration />} />
+        <Route path="contributions" element={<AdminContributions />} />
         <Route path="ai-models" element={<AIModels />} />
         <Route path="system-monitor" element={<SystemMonitor />} />
         <Route path="permissions" element={<RolePermissions />} />
