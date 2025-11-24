@@ -61,14 +61,23 @@ const Login = () => {
       const response = await authService.login(email, password, rememberMe)
       
       // Normalize user data
+      const roleId = response?.user?.roleId ?? response?.user?.RoleID ?? null;
+      const roleName = response?.user?.role ?? response?.user?.Role ?? (
+        roleId === 1 ? 'Admin' : 
+        roleId === 4 ? 'Editor' : 
+        'User'
+      );
+      
       const normalizedUser = {
         userId: response?.user?.userId ?? response?.user?.UserID ?? null,
         email: response?.user?.email ?? response?.user?.Email ?? email,
         fullName: response?.user?.fullName ?? response?.user?.FullName ?? '',
-        roleId: response?.user?.roleId ?? response?.user?.RoleID ?? null,
-        Role: response?.user?.role ?? 'User',
+        roleId: roleId,
+        Role: roleName,
         avatar: response?.user?.profile?.avatar ?? response?.user?.avatar ?? '/img/default-avatar.png',
       };
+      
+      console.log('🔐 [Login] Normalized user:', normalizedUser);
 
       // 🔥 KHÔNG set accessToken nữa - dùng HttpOnly cookie
       setUser(normalizedUser);

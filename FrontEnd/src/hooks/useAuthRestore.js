@@ -39,14 +39,23 @@ export const useAuthRestore = () => {
 
         const { user } = response;
         
+        const roleId = user?.roleId || user?.RoleID || null;
+        const roleName = user?.role || user?.Role || (
+          roleId === 1 ? 'Admin' : 
+          roleId === 4 ? 'Editor' : 
+          'User'
+        );
+        
         const normalizedUser = {
           userId: user?.userId || user?.UserID || null,
           email: user?.email || user?.Email || '',
           fullName: user?.fullName || user?.FullName || '',
-          roleId: user?.roleId || user?.RoleID || null,
-          Role: user?.role || 'User',
+          roleId: roleId,
+          Role: roleName,
           avatar: user?.profile?.avatar || user?.avatar || '/img/default-avatar.png',
         };
+        
+        console.log('🔐 [AuthRestore] Normalized user:', normalizedUser);
 
         // 🔥 KHÔNG set accessToken vì đã trong cookie
         setUser(normalizedUser);

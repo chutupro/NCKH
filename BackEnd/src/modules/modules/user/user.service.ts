@@ -59,10 +59,30 @@ export class UserService {
   }
 
   async findById(id: number) {
-    const user = await this.userRepo.findOne({ where: { UserID: id } });
+    const user = await this.userRepo.findOne({ 
+      where: { UserID: id },
+      relations: ['role', 'profile'], // Load role and profile relations
+    });
     
-    // 🔐 BẢO MẬT: Loại bỏ PasswordHash trước khi return
-    return this.sanitizeUser(user);
+    if (!user) return null;
+    
+    // 🔐 BẢO MẬT: Loại bỏ PasswordHash và return normalized data
+    const { PasswordHash, role, profile, ...safeUser } = user;
+    
+    // Return normalized format matching login response
+    return {
+      ...safeUser,
+      userId: user.UserID,
+      email: user.Email,
+      fullName: user.FullName,
+      roleId: user.RoleID,
+      role: user.role?.RoleName || 'User',
+      isEmailVerified: user.IsEmailVerified,
+      createdAt: user.CreatedAt,
+      profile: {
+        avatar: user.profile?.Avatar || '/img/default-avatar.png',
+      },
+    };
   }
 
   // ✅ Lấy thông tin User Profile đầy đủ

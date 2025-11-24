@@ -31,18 +31,37 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // Map RoleID sang RoleName nếu chưa có Role field
   // RoleID: 1=Admin, 2=User, 4=Editor
-  const userRole = user?.Role || (
-    user?.roleId === 1 ? 'Admin' : 
-    user?.roleId === 4 ? 'Editor' : 
+  const roleId = user?.roleId || user?.RoleID || null;
+  const userRole = user?.Role || user?.role || (
+    roleId === 1 ? 'Admin' : 
+    roleId === 4 ? 'Editor' : 
     'User'
   );
   
+  console.log('🔐 [ProtectedRoute] Checking access:', {
+    path: location.pathname,
+    user: user?.email,
+    roleId,
+    userRole,
+    allowedRoles,
+  });
 
   // Nếu đã đăng nhập nhưng không có quyền → redirect về trang chủ với thông báo
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    // Hiển thị thông báo lỗi
-    alert('⛔ Bạn không có quyền truy cập trang này!');
-    return <Navigate to="/" replace />;
+  if (allowedRoles.length > 0) {
+    // Case-insensitive role comparison
+    const normalizedUserRole = String(userRole || '').toLowerCase();
+    const normalizedAllowedRoles = allowedRoles.map(r => String(r).toLowerCase());
+    
+    if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
+      console.error('⛔ [ProtectedRoute] Access denied:', {
+        userRole,
+        allowedRoles,
+        normalizedUserRole,
+        normalizedAllowedRoles,
+      });
+      alert('⛔ Bạn không có quyền truy cập trang này!');
+      return <Navigate to="/" replace />;
+    }
   }
 
   // Nếu có quyền → render component
