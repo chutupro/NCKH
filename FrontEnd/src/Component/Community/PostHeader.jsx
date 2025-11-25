@@ -9,7 +9,7 @@ const PostHeader = ({ post, user, showDeleteButton, onDelete }) => {
       const currentUserId = user?.userId || user?.UserID || user?.sub
       const authorId = parseInt(post.authorId)
       const currentId = parseInt(currentUserId)
-      
+
       if (currentId && authorId === currentId) {
         navigate('/Personal')
       } else {

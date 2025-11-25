@@ -56,4 +56,3 @@ export class LocationImage {
   user?: Users;
 }
 
-

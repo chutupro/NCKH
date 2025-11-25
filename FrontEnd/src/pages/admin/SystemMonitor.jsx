@@ -25,7 +25,6 @@ const SystemMonitor = () => {
     { name: 'AI Service', status: 'stopped', uptime: '0h', port: 5000 },
   ]);
 
-  // Simulate real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
       setSystemStats({
@@ -55,7 +54,7 @@ const SystemMonitor = () => {
 
   return (
     <div>
-      {/* System Stats */}
+      {}
       <div className="stats-grid" style={{ marginBottom: '2rem' }}>
         <div className="stats-card">
           <div className="stats-card-header">
@@ -138,7 +137,7 @@ const SystemMonitor = () => {
         </div>
       </div>
 
-      {/* Services Status */}
+      {}
       <div className="data-table-container" style={{ marginBottom: '2rem' }}>
         <div className="table-header">
           <h2 className="table-title">Services Status</h2>
@@ -186,7 +185,7 @@ const SystemMonitor = () => {
         </table>
       </div>
 
-      {/* System Logs */}
+      {}
       <div className="data-table-container">
         <div className="table-header">
           <h2 className="table-title">System Logs</h2>

@@ -29,12 +29,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = exceptionResponse as string;
       }
     } else if (exception instanceof Error) {
-      // Handle validation errors, custom errors, etc.
+
       message = exception.message;
       error = exception.name;
     }
 
-    // Log error for debugging
     console.error(`❌ [ExceptionFilter] ${request.method} ${request.url}`, {
       status,
       error,
@@ -50,7 +49,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message: Array.isArray(message) ? message : [message],
     });
 
-    // Standardized JSON response
     response.status(status).json({
       success: false,
       statusCode: status,

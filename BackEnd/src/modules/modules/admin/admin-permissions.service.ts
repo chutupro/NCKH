@@ -17,9 +17,6 @@ export class AdminPermissionsService {
     private readonly userRepository: Repository<Users>,
   ) {}
 
-  /**
-   * Default permissions cho từng role
-   */
   private getDefaultPermissions(role: string): RolePermissions {
     const defaults: Record<string, RolePermissions> = {
       Admin: {
@@ -39,17 +36,14 @@ export class AdminPermissionsService {
     return defaults[role] || { content: [], users: [] };
   }
 
-  /**
-   * Lấy quyền từ Redis, nếu chưa có thì trả về default
-   */
   async getPermissions(role: string) {
     const key = `permissions:${role}`;
-    
+
     try {
       const data = await this.redisService.get(key);
-      
+
       if (!data) {
-        // Chưa có trong Redis → trả về default và lưu luôn
+
         const defaultPerms = this.getDefaultPermissions(role);
         await this.redisService.set(key, JSON.stringify(defaultPerms));
         return {
@@ -63,7 +57,7 @@ export class AdminPermissionsService {
         data: JSON.parse(data),
       };
     } catch (error) {
-      // Fallback nếu Redis lỗi
+
       return {
         success: true,
         data: this.getDefaultPermissions(role),
@@ -71,12 +65,9 @@ export class AdminPermissionsService {
     }
   }
 
-  /**
-   * Cập nhật quyền vào Redis
-   */
   async updatePermissions(role: string, permissions: RolePermissions) {
     const key = `permissions:${role}`;
-    
+
     try {
       await this.redisService.set(key, JSON.stringify(permissions));
       return {
@@ -88,15 +79,11 @@ export class AdminPermissionsService {
     }
   }
 
-  /**
-   * Lấy thống kê số lượng user theo role (THẬT từ DB)
-   * Cache 5 phút trong Redis
-   */
   async getRoleStats() {
     const cacheKey = 'role_stats';
-    
+
     try {
-      // Check cache
+
       const cached = await this.redisService.get(cacheKey);
       if (cached) {
         return {
@@ -106,13 +93,11 @@ export class AdminPermissionsService {
         };
       }
 
-      // Query DB với relation role
       const users = await this.userRepository.find({
         relations: ['role'],
         select: ['UserID', 'RoleID'],
       });
 
-      // Đếm theo RoleID
       const stats = {
         Admin: 0,
         Editor: 0,
@@ -125,7 +110,6 @@ export class AdminPermissionsService {
         else if (user.RoleID === 2) stats.User++;
       });
 
-      // Cache 5 phút (300 seconds)
       await this.redisService.set(cacheKey, JSON.stringify(stats), 300);
 
       return {
@@ -135,7 +119,7 @@ export class AdminPermissionsService {
       };
     } catch (error) {
       console.error('Error getting role stats:', error);
-      // Fallback
+
       return {
         success: true,
         data: { Admin: 0, Editor: 0, User: 0 },

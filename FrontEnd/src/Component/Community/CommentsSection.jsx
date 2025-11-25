@@ -15,7 +15,7 @@ const CommentsSection = ({ postId, user, isAuthenticated, onCommentCountChange }
 
   useEffect(() => {
     loadComments()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [postId])
 
   const loadComments = async () => {
@@ -53,14 +53,13 @@ const CommentsSection = ({ postId, user, isAuthenticated, onCommentCountChange }
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm('Bạn có chắc muốn xóa bình luận này?')) return
 
-    // Đếm số lượng comment + replies sẽ bị xóa
     const countCommentsToDelete = (comments, targetId) => {
       for (const comment of comments) {
         if (comment.id === targetId) {
-          // Đếm comment này + tất cả replies
+
           return 1 + (comment.replies?.length || 0)
         }
-        // Kiểm tra trong replies
+
         if (comment.replies && comment.replies.length > 0) {
           for (const reply of comment.replies) {
             if (reply.id === targetId) {
@@ -122,7 +121,7 @@ const CommentsSection = ({ postId, user, isAuthenticated, onCommentCountChange }
         onChange={setCommentText}
         onSubmit={handleAddComment}
       />
-      
+
       {replyingTo && (
         <div className="reply-input-wrapper">
           <div className="reply-to-header">

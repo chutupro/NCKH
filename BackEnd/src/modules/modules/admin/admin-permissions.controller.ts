@@ -11,28 +11,16 @@ import { AdminPermissionsService } from './admin-permissions.service';
 export class AdminPermissionsController {
   constructor(private readonly permissionsService: AdminPermissionsService) {}
 
-  /**
-   * Lấy thống kê số lượng user theo role
-   * GET /admin/permissions/roles/stats
-   */
   @Get('roles/stats')
   async getRoleStats() {
     return this.permissionsService.getRoleStats();
   }
 
-  /**
-   * Lấy quyền của một role
-   * GET /admin/permissions/roles/:role
-   */
   @Get('roles/:role')
   async getPermissions(@Param('role') role: string) {
     return this.permissionsService.getPermissions(role);
   }
 
-  /**
-   * Cập nhật quyền của một role
-   * PATCH /admin/permissions/roles/:role
-   */
   @Patch('roles/:role')
   async updatePermissions(
     @Param('role') role: string,

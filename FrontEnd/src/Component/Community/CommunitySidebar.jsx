@@ -30,10 +30,9 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
     { id: 'thiên nhiên', label: t('sidebar.nature'), icon: null }
   ]
 
-  // Compute trending topics from fetched posts (count by category)
   const trendingTopics = (() => {
     const counts = {};
-    // initialize counts for known codes
+
     KNOWN_CODES.forEach(c => (counts[c] = 0));
     posts.forEach(p => {
       const catName = p.category || p.categoryName || p.category_en || p.category_vi || '';
@@ -45,14 +44,13 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
       .sort((a, b) => b.count - a.count);
   })();
 
-  // Load articles from backend and keep in state
   useEffect(() => {
     let mounted = true
     const load = async () => {
       try {
         const data = await getArticlesPosts()
         if (!mounted) return
-        // API returns array of articles (service maps fields)
+
         setPosts(Array.isArray(data) ? data : (data.items || []))
       } catch (err) {
         console.error('Failed to load articles for sidebar:', err)
@@ -62,13 +60,11 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
     return () => { mounted = false }
   }, [])
 
-  // Lọc top posts theo category đang chọn
   const getTopPosts = () => {
     let filteredPosts = activeFilter === 'all'
       ? posts
       : posts.filter(post => String(post.category || '').toLowerCase() === activeFilter.toLowerCase())
 
-    // Sắp xếp theo likeCount (fallback to 0) và lấy top 3
     return filteredPosts
       .sort((a, b) => (b.likeCount || b.likeCount === 0 ? b.likeCount : b.likes || 0) - (a.likeCount || a.likeCount === 0 ? a.likeCount : a.likes || 0))
       .slice(0, 3)
@@ -89,7 +85,6 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
     onSearchChange(value)
   }
 
-  // Derive top contributors from posts
   const topContributors = (() => {
     const counts = {}
     posts.forEach(p => {
@@ -105,7 +100,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
 
   return (
     <aside className="community-sidebar">
-      {/* Tìm kiếm */}
+      {}
       <div className="sidebar-card search-card">
         <h3 className="sidebar-card-title">
           <FontAwesomeIcon icon={faSearch} />
@@ -123,7 +118,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
         </div>
       </div>
 
-      {/* Bộ lọc */}
+      {}
       <div className="sidebar-card filter-card">
         <h3 className="sidebar-card-title">
           <FontAwesomeIcon icon={faFilter} />
@@ -142,7 +137,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
         </div>
       </div>
 
-      {/* Trending Topics */}
+      {}
       <div className="sidebar-card trending-card">
         <h3 className="sidebar-card-title">
           <FontAwesomeIcon icon={faFire} />
@@ -158,7 +153,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
         </div>
       </div>
 
-      {/* Top Posts */}
+      {}
       <div className="sidebar-card top-posts-card">
         <h3 className="sidebar-card-title">
           <FontAwesomeIcon icon={faHeart} />
@@ -185,7 +180,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
         </div>
       </div>
 
-      {/* Top Contributors */}
+      {}
       <div className="sidebar-card contributors-card">
         <h3 className="sidebar-card-title">
           <FontAwesomeIcon icon={faTrophy} />
@@ -214,7 +209,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
         </div>
       </div>
 
-      {/* CTA Sticky Card */}
+      {}
       <div className="sidebar-card cta-card sticky-card">
         <div className="cta-icon">
           <FontAwesomeIcon icon={faCamera} />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../../Styles/community/Community.css'
-// fetch posts from backend
+
 import { getArticlesPosts } from '../../API/articlesPost'
 import postsMock from '../../util/posts'
 const BACKEND_BASE = 'http://localhost:3000'
@@ -22,7 +22,6 @@ const Community = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Nếu URL có query param ?query=..., dùng nó làm searchQuery ban đầu
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const q = params.get('query') || ''
@@ -30,13 +29,13 @@ const Community = () => {
   }, [location.search])
 
   useEffect(() => {
-    // Scroll đến bài viết cụ thể nếu có hash trong URL
+
     if (location.hash) {
       setTimeout(() => {
         const element = document.querySelector(location.hash)
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          // Thêm hiệu ứng highlight
+
           element.style.transition = 'all 0.3s ease'
           element.style.transform = 'scale(1.02)'
           element.style.boxShadow = '0 8px 30px rgba(232, 215, 183, 0.4)'
@@ -49,12 +48,10 @@ const Community = () => {
     }
   }, [location])
 
-  // Lọc bài viết theo category và search query
   const filteredPosts = posts.filter(post => {
-    // Lọc theo category
+
     const matchCategory = activeFilter === 'all' || (post.category || '').toLowerCase() === activeFilter.toLowerCase()
 
-    // Lọc theo search query
     const text = (post.text || '').toString()
     const author = (post.author || '').toString()
     const category = (post.category || '').toString()
@@ -74,14 +71,14 @@ const Community = () => {
       try {
         const data = await getArticlesPosts(controller.signal)
         const mapped = data.map(a => {
-          // normalize image URL: backend may return '/uploads/xxx.jpg' (relative to backend)
+
           let image = a.image || ''
           if (image && !/^https?:\/\//i.test(image)) {
-            // ensure leading slash
+
             if (!image.startsWith('/')) image = '/' + image
             image = `${BACKEND_BASE}${image}`
           }
-          // normalize avatar URL
+
           let authorAvatar = a.author?.avatar || null
           if (authorAvatar && !/^https?:\/\//i.test(authorAvatar)) {
             if (!authorAvatar.startsWith('/')) authorAvatar = '/' + authorAvatar
@@ -102,15 +99,15 @@ const Community = () => {
         })
         setPosts(mapped)
       } catch (err) {
-        // ignore abort/cancel errors (these happen when user navigates away or request is cancelled)
+
         const isAxiosCanceled = err?.code === 'ERR_CANCELED' || err?.name === 'CanceledError' || /canceled/i.test(err?.message || '')
         if (isAxiosCanceled) return
         if (err.name !== 'AbortError') {
           const msg = err.message || String(err)
-          // If it's a network error (backend down / CORS / connection), fall back to local mock so UI remains usable
+
           const isNetwork = /network error/i.test(msg) || err.cause === undefined || err.message === 'Network Error'
           if (isNetwork) {
-            // map local mock posts to same shape
+
             const mappedMock = postsMock.map(p => ({
               id: p.id,
               author: p.author || 'Người dùng',
@@ -154,7 +151,7 @@ const Community = () => {
 
         <div className="community-content">
             <div className="posts-list">
-              {/* search indicator removed (handled via UI elsewhere or not shown) */}
+              {}
             {loading ? (
               <div className="loading">{t('common.loading') || 'Đang tải...'}</div>
             ) : error ? (
@@ -169,7 +166,7 @@ const Community = () => {
               </div>
             )}
           </div>
-          
+
           <CommunitySidebar 
             activeFilter={activeFilter} 
             onFilterChange={setActiveFilter}

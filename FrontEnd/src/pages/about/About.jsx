@@ -7,7 +7,6 @@ import ProtectedLink from '../../Component/common/ProtectedLink'
 const About = () => {
   const { t } = useTranslation()
 
-  // Team: top 3 in first row, 2 in second row (centered)
   const team = [
     { id: 1, name: 'Nguyễn Minh Khán', role: 'AI', img: '/images/team/nguyen-minh-khan.jpg', bio: 'Nghiên cứu và triển khai mô hình AI cho tìm kiếm hình ảnh.' },
     { id: 2, name: 'Lê Văn Nghĩa', role: 'Full Stack', img: '/images/team/le-van-nghia.jpg', bio: 'Kiến trúc hệ thống, API và tích hợp backend/frontend.' },
@@ -16,7 +15,6 @@ const About = () => {
     { id: 5, name: 'Nguyễn Văn Đức', role: 'Backend', img: '/images/team/nguyen-van-duc.jpg', bio: 'Quản lý cơ sở dữ liệu và xử lý ảnh trên server.' }
   ]
 
-  // FAQ state
   const [openFaq, setOpenFaq] = useState(null)
 
   const faqs = [
@@ -64,10 +62,6 @@ const About = () => {
             </div>
           </div>
         </section>
-
-        
-
-        
 
         <section className="about-section">
           <h2>Đội ngũ</h2>

@@ -12,7 +12,6 @@ export class Roles {
   @Column({ type: 'nvarchar', length: 255, nullable: true })
   Description: string;
 
-  // --- RELATIONS ---
   @OneToMany(() => Users, (user) => user.role)
   users: Users[];
 }

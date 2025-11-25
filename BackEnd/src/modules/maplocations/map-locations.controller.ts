@@ -1,4 +1,4 @@
-// src/modules/maplocations/map-locations.controller.ts
+
 import {
   Controller,
   Get,
@@ -32,13 +32,11 @@ export class MapLocationsController {
 
   constructor(private readonly mapLocationsService: MapLocationsService) {}
 
-  // GET /map-locations
   @Get()
   findAll() {
     return this.mapLocationsService.findAll();
   }
 
-  // POST /map-locations
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -80,7 +78,6 @@ export class MapLocationsController {
     this.logger.log('POST /map-locations - Raw FormData:', body);
     this.logger.log('Uploaded files:', files);
 
-    // === XỬ LÝ CÁC TRƯỜNG BẮT BUỘC ===
     const title = body.title?.trim();
     const latitude = body.latitude ? parseFloat(body.latitude) : null;
     const longitude = body.longitude ? parseFloat(body.longitude) : null;
@@ -90,7 +87,6 @@ export class MapLocationsController {
       throw new BadRequestException('Tiêu đề, tọa độ là bắt buộc và phải hợp lệ.');
     }
 
-    // === XỬ LÝ CategoryID ===
     let categoryId: number | null = null;
     if (body.CategoryID) {
       const parsed = parseInt(body.CategoryID, 10);
@@ -101,18 +97,15 @@ export class MapLocationsController {
       }
     }
 
-    // === XỬ LÝ NĂM ẢNH ===
     const imageYear = normalizeYearInput(body.imageYear ?? body.ImageYear);
     const oldImageYear = normalizeYearInput(body.oldImageYear ?? body.OldImageYear);
 
-    // === XỬ LÝ ẢNH ===
     const imageUrl =
       files?.image?.[0] ? `/uploads/${files.image[0].filename}` : body.image || null;
 
     const oldImageUrl =
       files?.oldImage?.[0] ? `/uploads/${files.oldImage[0].filename}` : body.oldImage || null;
 
-    // === TẠO DTO ===
     const dto = {
       title,
       latitude,
@@ -134,7 +127,6 @@ export class MapLocationsController {
     return this.mapLocationsService.create(dto);
   }
 
-  // PUT /map-locations/:id
   @Put(':id')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -210,7 +202,6 @@ export class MapLocationsController {
     return result;
   }
 
-  // DELETE /map-locations/:id
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {
     const result = await this.mapLocationsService.remove(id);
@@ -220,13 +211,11 @@ export class MapLocationsController {
     return { message: `Đã xóa địa điểm ID: ${id}` };
   }
 
-  // GET /map-locations/:id/feedback
   @Get(':id/feedback')
   getFeedback(@Param('id', ParseIntPipe) id: number) {
     return this.mapLocationsService.getFeedbackByLocation(id);
   }
 
-  // POST /map-locations/:id/feedback
   @Post(':id/feedback')
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -271,7 +260,6 @@ export class MapLocationsController {
       throw new BadRequestException('userId, rating, comment là bắt buộc');
     }
 
-    // Build imageUrls array from uploaded files
     const imageUrls = files?.images?.map(f => `/uploads/${f.filename}`) || [];
 
     return this.mapLocationsService.addFeedback(id, feedbackDto.userId, {
@@ -281,7 +269,6 @@ export class MapLocationsController {
     });
   }
 
-  // POST /map-locations/:locationId/feedback/:feedbackId/like
   @Post(':locationId/feedback/:feedbackId/like')
   async likeFeedback(
     @Param('locationId', ParseIntPipe) locationId: number,
@@ -290,7 +277,6 @@ export class MapLocationsController {
     return this.mapLocationsService.likeFeedback(feedbackId);
   }
 
-  // DELETE /map-locations/:locationId/feedback/:feedbackId/like
   @Delete(':locationId/feedback/:feedbackId/like')
   async unlikeFeedback(
     @Param('locationId', ParseIntPipe) locationId: number,

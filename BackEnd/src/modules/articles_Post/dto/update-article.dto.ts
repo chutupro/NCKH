@@ -1,4 +1,4 @@
-// src/articles/dto/update-article.dto.ts
+
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateArticleDto {

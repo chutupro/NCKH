@@ -22,10 +22,9 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     done: (err: any, user: any, info?: any) => void,
   ): Promise<any> {
     const { id, name, photos } = profile;
-    
-    // ✅ Tạo email từ Facebook ID (vì không xin quyền email)
+
     const email = `facebook_${id}@danang-vault.local`;
-    
+
     const user = {
       facebookId: id,
       email: email,

@@ -1,7 +1,5 @@
 import { useRef, useState } from 'react';
 
-// Hook generic kéo để cuộn cho carousel/danh sách ngang
-// Trả về: { scrollRef, isDragging, hasMoved, handlers, scrollBy }
 export default function useDragScroll() {
   const scrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);

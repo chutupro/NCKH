@@ -1,4 +1,4 @@
-// src/pages/map/CompareModal.jsx
+
 import React, { useState, useRef, useEffect } from "react";
 
 const CompareModal = ({ place, onClose }) => {
@@ -17,7 +17,6 @@ const CompareModal = ({ place, onClose }) => {
   const oldYearLabel = place.oldImageYear || "Chưa rõ";
   const newYearLabel = place.imageYear || "Chưa rõ";
 
-  // Xử lý kéo chuột / cảm ứng
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -100,7 +99,7 @@ const CompareModal = ({ place, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div style={{ padding: "20px", position: "relative" }}>
-          {/* NÚT ĐÓNG */}
+          {}
           <div
             onClick={onClose}
             style={{
@@ -133,7 +132,7 @@ const CompareModal = ({ place, onClose }) => {
             So sánh qua các thời kỳ
           </h3>
 
-          {/* CONTAINER SO SÁNH */}
+          {}
           <div
             ref={containerRef}
             style={{
@@ -147,7 +146,7 @@ const CompareModal = ({ place, onClose }) => {
               userSelect: "none",
             }}
           >
-            {/* ẢNH HIỆN TẠI (PHẢI) */}
+            {}
             <img
               src={currentImageUrl}
               alt="Hình nay"
@@ -161,7 +160,7 @@ const CompareModal = ({ place, onClose }) => {
               }}
             />
 
-            {/* ẢNH XƯA (TRÁI) - BỊ CẮT THEO SLIDER */}
+            {}
             <div
               style={{
                 position: "absolute",
@@ -186,7 +185,7 @@ const CompareModal = ({ place, onClose }) => {
               />
             </div>
 
-            {/* THANH TRƯỢT */}
+            {}
             <div
               style={{
                 position: "absolute",
@@ -202,7 +201,7 @@ const CompareModal = ({ place, onClose }) => {
               }}
             />
 
-            {/* NÚT KÉO */}
+            {}
             <div
               style={{
                 position: "absolute",
@@ -227,7 +226,7 @@ const CompareModal = ({ place, onClose }) => {
               </svg>
             </div>
 
-            {/* NHÃN */}
+            {}
             <div
               style={{
                 position: "absolute",
@@ -264,7 +263,7 @@ const CompareModal = ({ place, onClose }) => {
             </div>
           </div>
 
-          {/* CHỮ DƯỚI */}
+          {}
           <div
             style={{
               display: "flex",

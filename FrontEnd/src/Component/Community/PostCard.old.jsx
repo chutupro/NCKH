@@ -20,7 +20,6 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
 
   const overrideRef = useRef({})
 
-  // Fetch likes state
   useEffect(() => {
     let mounted = true
     const run = async () => {
@@ -70,7 +69,6 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
     setLoading(true)
     const willLike = !liked
 
-    // Optimistic update
     setLiked(willLike)
     setLikes((n) => Math.max(0, n + (willLike ? 1 : -1)))
 
@@ -87,7 +85,7 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
         overrideRef.current[post.id] = { liked: false, expires: Date.now() + 4000 }
       }
     } catch (err) {
-      // Rollback on error
+
       setLiked((prev) => !prev)
       setLikes((n) => Math.max(0, n + (willLike ? -1 : 1)))
       toast.error(err?.message || 'Đã có lỗi. Vui lòng thử lại')

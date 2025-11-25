@@ -1,4 +1,3 @@
-// Utility to map dataset category names (Vietnamese) to stable codes and localize labels
 
 export const VN_TO_CODE = {
   'Kiến trúc': 'architecture',
@@ -15,9 +14,9 @@ export const KNOWN_CODES = ['architecture', 'culture', 'tourism', 'nature'];
 
 export function getCodeFromName(name) {
   if (!name) return 'other';
-  // direct VN lookup
+
   if (VN_TO_CODE[name]) return VN_TO_CODE[name];
-  // support common English labels as well
+
   const EN_TO_CODE = {
     'Architecture': 'architecture',
     'Culture': 'culture',
@@ -26,7 +25,7 @@ export function getCodeFromName(name) {
   };
   const maybe = EN_TO_CODE[name] || EN_TO_CODE[String(name).trim()];
   if (maybe) return maybe;
-  // case-insensitive English match
+
   const lower = String(name).toLowerCase()
   for (const [k, v] of Object.entries(EN_TO_CODE)) {
     if (k.toLowerCase() === lower) return v
@@ -34,8 +33,8 @@ export function getCodeFromName(name) {
   return 'other';
 }
 
-export function labelFor(code /*, t - kept for compatibility */) {
-  // Trả về nhãn tiếng Việt tương ứng với mã danh mục
+export function labelFor(code ) {
+
   switch (code) {
     case 'architecture':
       return 'Kiến trúc';
@@ -52,10 +51,10 @@ export function labelFor(code /*, t - kept for compatibility */) {
   }
 }
 
-export function displayCategoryName(vnName /*, t - legacy param */) {
+export function displayCategoryName(vnName ) {
   if (!vnName) return 'Chưa phân loại';
   const code = getCodeFromName(vnName);
-  // Nếu không phải các category đã biết, trả về category gốc thay vì "Khác"
+
   if (code === 'other') return vnName;
   return labelFor(code);
 }

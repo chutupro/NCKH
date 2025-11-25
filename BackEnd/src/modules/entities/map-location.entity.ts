@@ -1,4 +1,4 @@
-// src/entities/map-location.entity.ts
+
 import {
   Entity,
   PrimaryGeneratedColumn,

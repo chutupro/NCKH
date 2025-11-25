@@ -1,5 +1,4 @@
-// Lightweight API helpers for collections and categories
-// Keep URL explicit to avoid proxy issues; change BASE_URL if needed.
+
 const BASE_URL = 'http://localhost:3000';
 
 export async function getCollections() {

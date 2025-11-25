@@ -5,9 +5,6 @@ import { TimelineService } from './timeline.service';
 export class TimelineController {
   constructor(private timelineService: TimelineService) {}
 
-  // ===============================
-  // Lấy danh sách timeline (mặc định)
-  // ===============================
   @Get()
   async getItems(
     @Query('categories') categories?: string,
@@ -18,9 +15,6 @@ export class TimelineController {
     return this.timelineService.getTimelineItems(catArray, fromYear, toYear);
   }
 
-  // ===============================
-  // Route cũ: /timeline/items -> danh sách timeline
-  // ===============================
   @Get('items')
   async getItemsOld(
     @Query('categories') categories?: string,
@@ -30,9 +24,6 @@ export class TimelineController {
     return this.getItems(categories, fromYear, toYear);
   }
 
-  // ===============================
-  // Route cũ: /timeline/items/:id -> chi tiết timeline
-  // ===============================
   @Get('items/:id')
   async getItemOld(@Param('id', ParseIntPipe) id: number) {
     const item = await this.timelineService.getTimelineItemById(id);
@@ -42,9 +33,6 @@ export class TimelineController {
     return item;
   }
 
-  // ===============================
-  // Route mới: /timeline/:id -> chi tiết timeline
-  // ===============================
   @Get(':id')
   async getItem(@Param('id', ParseIntPipe) id: number) {
     const item = await this.timelineService.getTimelineItemById(id);

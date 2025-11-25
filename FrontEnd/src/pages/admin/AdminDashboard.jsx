@@ -16,8 +16,7 @@ const AdminDashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
 
   useEffect(() => {
-    // Fetch stats từ API
-    // TODO: Thay bằng API thật
+
     setStats({
       totalUsers: 1248,
       totalArticles: 456,
@@ -35,7 +34,7 @@ const AdminDashboard = () => {
 
   return (
     <div>
-      {/* Stats Grid */}
+      {}
       <div className="stats-grid">
         <StatsCard
           icon="👥"
@@ -75,14 +74,14 @@ const AdminDashboard = () => {
         />
       </div>
 
-      {/* Map Management Cards */}
+      {}
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
         gap: '1.5rem', 
         marginTop: '2rem' 
       }}>
-        {/* 1. Quản lý Địa điểm */}
+        {}
         <div
           onClick={() => navigate('/map/admin')}
           style={{
@@ -140,7 +139,7 @@ const AdminDashboard = () => {
               <span>Nhấn để vào trang quản trị</span>
             </div>
           </div>
-          {/* Background decoration */}
+          {}
           <div style={{
             position: 'absolute',
             top: '-50px',
@@ -153,9 +152,9 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Charts & Tables Grid */}
+      {}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginTop: '2rem' }}>
-        {/* Recent Articles */}
+        {}
         <div className="data-table-container">
           <div className="table-header">
             <h2 className="table-title">Bài viết gần đây</h2>
@@ -202,7 +201,7 @@ const AdminDashboard = () => {
           </table>
         </div>
 
-        {/* Recent Activities */}
+        {}
         <div className="data-table-container">
           <div className="table-header">
             <h2 className="table-title">Hoạt động gần đây</h2>
@@ -234,7 +233,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {}
       <div className="data-table-container" style={{ marginTop: '2rem' }}>
         <div className="table-header">
           <h2 className="table-title">Thao tác nhanh</h2>

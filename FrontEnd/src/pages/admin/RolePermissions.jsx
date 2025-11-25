@@ -44,12 +44,10 @@ const RolePermissions = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load role stats khi mount
   useEffect(() => {
     loadRoleStats();
   }, []);
 
-  // Load permissions khi đổi role
   useEffect(() => {
     loadPermissions();
   }, [selectedRole.name]);
@@ -107,7 +105,7 @@ const RolePermissions = () => {
 
   return (
     <div>
-      {/* Current User Info */}
+      {}
       <div style={{
         background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
         color: 'white',
@@ -142,7 +140,7 @@ const RolePermissions = () => {
         </div>
       </div>
 
-      {/* Roles Grid */}
+      {}
       <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 700 }}>
           Danh sách vai trò
@@ -201,7 +199,7 @@ const RolePermissions = () => {
         </div>
       </div>
 
-      {/* Permissions Matrix */}
+      {}
       <div className="data-table-container">
         <div className="table-header">
           <h2 className="table-title">
@@ -275,8 +273,7 @@ const RolePermissions = () => {
         )}
       </div>
 
-      {/* Access Control Rules */}
-
+      {}
 
     </div>
   );

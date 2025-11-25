@@ -10,7 +10,6 @@ export class TimelineService {
     private timelineRepo: Repository<Timelines>,
   ) {}
 
-  // Lấy danh sách timeline, hỗ trợ filter categories, fromYear, toYear
   async getTimelineItems(categories?: string[], fromYear?: string, toYear?: string) {
     const query = this.timelineRepo.createQueryBuilder('t');
 
@@ -39,7 +38,6 @@ export class TimelineService {
     }));
   }
 
-  // Lấy chi tiết timeline theo ID
   async getTimelineItemById(id: number) {
     const t = await this.timelineRepo.findOne({
       where: { timelineID: id },

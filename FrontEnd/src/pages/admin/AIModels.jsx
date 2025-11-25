@@ -34,7 +34,7 @@ const AIModels = () => {
 
   return (
     <div>
-      {/* Warning Banner */}
+      {}
       <div style={{
         background: 'linear-gradient(135deg, #f59e0b, #d97706)',
         color: 'white',
@@ -56,7 +56,7 @@ const AIModels = () => {
         </div>
       </div>
 
-      {/* Stats */}
+      {}
       <div className="stats-grid" style={{ marginBottom: '2rem' }}>
         <div className="stats-card">
           <div className="stats-card-header">
@@ -95,7 +95,7 @@ const AIModels = () => {
         </div>
       </div>
 
-      {/* Models Table */}
+      {}
       <div className="data-table-container">
         <div className="table-header">
           <h2 className="table-title">Danh sách AI Models</h2>
@@ -170,7 +170,7 @@ const AIModels = () => {
         </table>
       </div>
 
-      {/* Quick Actions */}
+      {}
       <div className="data-table-container" style={{ marginTop: '2rem' }}>
         <div className="table-header">
           <h2 className="table-title">Thao tác nhanh</h2>

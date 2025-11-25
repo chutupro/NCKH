@@ -3,10 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { getGoogleTranslateLanguage } from '../../Component/common/googleTranslateUtils';
 import './LanguageDemo.css';
 
-/**
- * Component demo chức năng đa ngôn ngữ
- * Trang này để test và minh họa cách sử dụng i18n
- */
 const LanguageDemo = () => {
   const { t, i18n } = useTranslation();
   const currentLang = typeof window !== 'undefined' ? getGoogleTranslateLanguage() : i18n.language;
@@ -16,7 +12,7 @@ const LanguageDemo = () => {
       <div className="demo-container">
         <h1 className="demo-title">🌍 {t('demo.title')}</h1>
         <p className="demo-subtitle">{t('demo.subtitle')}</p>
-        
+
         <div className="demo-section">
           <h2>📋 {t('demo.currentLanguage')}</h2>
           <div className="language-info">
@@ -64,7 +60,7 @@ const LanguageDemo = () => {
 
 const MyComponent = () => {
   const { t } = useTranslation();
-  
+
   return (
     <div>
       <h1>{t('yourKey.title')}</h1>

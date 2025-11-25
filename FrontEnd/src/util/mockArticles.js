@@ -1,31 +1,4 @@
-/**
- * =============================================================================
- * MOCK ARTICLES - Dữ liệu cho THƯ VIỆN ẢNH (Image Library)
- * =============================================================================
- * Sử dụng trong:
- * - FrontEnd/src/pages/gallery/ImageLibrary.jsx (Gallery view)
- * - FrontEnd/src/pages/gallery/ImageLibraryInformation.jsx (Detail view)
- * 
- * Cấu trúc:
- * - id: ID duy nhất
- * - title: Tiêu đề bài viết
- * - date: Năm (string, trước năm 2000)
- * - likes: Số lượt thích
- * - category: Thể loại (Văn hóa, Kiến trúc, Du lịch, Thiên nhiên)
- * - image: URL hình ảnh chính
- * - description: Mô tả chi tiết
- * - relatedCompares: Mảng ID liên kết đến compareList (hiển thị ảnh xưa-nay liên quan)
- * 
- * Tổng: 10 articles
- * =============================================================================
- */
- /**
- * Mock data aligned with your database schema (ArticleID, Images, MapLocations, Timelines...)
- * Fields:
- * - ArticleID, Title, Content, Language, CreatedAt, UpdatedAt, UserID, CategoryID
- * - images: array of objects matching Images table (ImageID, FilePath, AltText, Type)
- * - likes, categoryName, description, relatedCompareIds (reference to compareList ids)
- */
+
 const articles = [
   {
     ArticleID: 1,
@@ -182,7 +155,6 @@ const articles = [
   },
 ];
 
-// Tự động sinh thêm nhiều bài mẫu để làm đầy bộ sưu tập (dùng cho phát triển / demo)
 const categories = [
   { id: 1, name: "Văn hóa" },
   { id: 2, name: "Kiến trúc" },
@@ -195,7 +167,7 @@ const extraCount = 60; // thêm 60 bài mẫu
 const extra = Array.from({ length: extraCount }).map((_, idx) => {
   const id = startId + idx;
   const cat = categories[idx % categories.length];
-  // distribute years from 1900..2023 in a repeating pattern
+
   const year = 1900 + (idx % 124);
   return {
     ArticleID: id,
@@ -216,7 +188,6 @@ const extra = Array.from({ length: extraCount }).map((_, idx) => {
   };
 });
 
-// Gộp dữ liệu gốc và dữ liệu mẫu
 const allArticles = articles.concat(extra);
 
 export default allArticles;

@@ -25,10 +25,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class AdminUsersController {
   constructor(private readonly adminUsersService: AdminUsersService) {}
 
-  /**
-   * Lấy danh sách users với phân trang, tìm kiếm
-   * GET /api/admin/users?search=nguyen&page=1&limit=10
-   */
   @Get()
   @Roles(Role.ADMIN)
   @ApiQuery({ name: 'search', required: false, description: 'Tìm theo tên hoặc email' })
@@ -52,50 +48,30 @@ export class AdminUsersController {
     });
   }
 
-  /**
-   * Lấy thống kê tổng quan
-   * GET /api/admin/users/stats/overview
-   */
   @Get('stats/overview')
   @Roles(Role.ADMIN)
   async getUserStats() {
     return this.adminUsersService.getUserStats();
   }
 
-  /**
-   * Lấy chi tiết user
-   * GET /api/admin/users/:id
-   */
   @Get(':id')
   @Roles(Role.ADMIN)
   async getUserById(@Param('id') id: string) {
     return this.adminUsersService.getUserById(parseInt(id));
   }
 
-  /**
-   * Tạo user mới
-   * POST /api/admin/users
-   */
   @Post()
   @Roles(Role.ADMIN)
   async createUser(@Body() dto: CreateUserDto) {
     return this.adminUsersService.createUser(dto);
   }
 
-  /**
-   * Cập nhật vai trò và trạng thái
-   * PATCH /api/admin/users/:id
-   */
   @Patch(':id')
   @Roles(Role.ADMIN)
   async updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.adminUsersService.updateUser(parseInt(id), dto);
   }
 
-  /**
-   * Xóa user
-   * DELETE /api/admin/users/:id
-   */
   @Delete(':id')
   @Roles(Role.ADMIN)
   async deleteUser(@Param('id') id: string) {

@@ -1,11 +1,6 @@
 import vi from './locales/vi.json';
 import en from './locales/en.json';
 
-// Simple shim to replace react-i18next for this project.
-// - Provides useTranslation() hook that returns { t, i18n }
-// - t(key) returns the string from the selected locale (supports nested keys with dot notation)
-// - language selection prefers Google Translate cookie `googtrans`, then localStorage 'language', then default 'vi'
-
 function readGoogleTranslateCookie() {
   if (typeof document === 'undefined') return null;
   const re = new RegExp('(?:^|; )googtrans=(?:/[^/]+/)?([^;]*)');
@@ -40,7 +35,7 @@ export function t(key, fallback) {
   const resObj = resources[lang] || resources['vi'];
   const val = get(resObj, key.replace(/^\./, ''));
   if (val !== undefined) return val;
-  // fallback: try english
+
   const valEn = get(resources['en'], key.replace(/^\./, ''));
   if (valEn !== undefined) return valEn;
   return fallback || key;

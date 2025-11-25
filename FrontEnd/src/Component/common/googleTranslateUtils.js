@@ -1,5 +1,3 @@
-// Các helper tiện ích cho tích hợp Google Translate
-// Exports: setGoogleTranslateLanguage(targetLang), getGoogleTranslateLanguage()
 
 const DEFAULT_SOURCE_LANG = 'vi';
 

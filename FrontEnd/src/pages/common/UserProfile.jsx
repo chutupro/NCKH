@@ -16,7 +16,7 @@ const UserProfile = () => {
       setLoading(true);
       fetchUserProfile();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [userId]);
 
   const normalizeImageUrl = (url) => {
@@ -72,7 +72,7 @@ const UserProfile = () => {
     }}>
       <h1 style={{ marginBottom: '30px' }}>Thông tin người dùng</h1>
 
-      {/* Profile Info */}
+      {}
       <div>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <img 
@@ -114,7 +114,7 @@ const UserProfile = () => {
         </div>
       </div>
 
-      {/* Posts Section */}
+      {}
       <div style={{ marginTop: '40px' }}>
         <h3 style={{ 
           marginBottom: '24px',
@@ -124,7 +124,7 @@ const UserProfile = () => {
         }}>
           📝 Bài viết của {profile.fullName || profile.username}
         </h3>
-        
+
         <div style={{ minHeight: '200px' }}>
           <UserPosts 
             userId={parseInt(userId)}

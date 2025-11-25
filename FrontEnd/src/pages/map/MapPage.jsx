@@ -1,4 +1,4 @@
-// src/pages/map/MapPage.jsx
+
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -14,7 +14,6 @@ const BASE_URL = "http://localhost:3000";
 const FAVORITE_PHOTOS_KEY = "favoritePhotosByUser";
 const FAVORITE_PLACES_KEY = "favoritePlacesByUser";
 
-/* ---------- FIX MARKER ICON (CHUẨN 100%) ---------- */
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -34,13 +33,11 @@ const DA_NANG_BOUNDS = [
   [16.25, 108.4],
 ];
 
-/* ---------- COMPONENT ---------- */
 const MapPage = () => {
   const dispatch = useDispatch();
   const { places, status, error } = useSelector((state) => state.mapLocations);
   const { user, isAuthLoading } = useAppContext(); // ✅ LẤY USER + AUTH LOADING STATE
-  
-  // ✅ RESTORE SESSION SAU KHI F5 (quan trọng!)
+
   useAuthRestore();
 
   const mapRef = useRef(null);
@@ -60,7 +57,6 @@ const MapPage = () => {
   const tileLayerRef = useRef(null); // ✅ Ref cho tile layer
   const communityPhotosRef = useRef(new Map());
 
-  /* ---------- STATE ---------- */
   const [searchQuery, setSearchQuery] = useState("");
   const [localSuggestions, setLocalSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -72,12 +68,12 @@ const MapPage = () => {
   const [selectedImages, setSelectedImages] = useState([]); // ✅ State for review images
   const [activeTab, setActiveTab] = useState("overview");
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    // ✅ Lưu preference vào localStorage
+
     const saved = localStorage.getItem("mapDarkMode");
     return saved === "true";
   });
   const [isSidebarDark, setIsSidebarDark] = useState(() => {
-    // ✅ Dark mode cho sidebar
+
     const saved = localStorage.getItem("sidebarDarkMode");
     return saved === "true";
   });
@@ -131,33 +127,29 @@ const MapPage = () => {
     }
   }, [favoritePhotosByUser]);
 
-  /* ---------- KIỂM TRA REDIRECT SAU KHI LOGIN ---------- */
   useEffect(() => {
     if (!user || !user.userId) return;
-    
-    // Kiểm tra xem có địa điểm cần quay lại không
+
     const returnToPlaceData = localStorage.getItem('returnToPlace');
     if (!returnToPlaceData) return;
-    
+
     try {
       const placeData = JSON.parse(returnToPlaceData);
-      // Kiểm tra timestamp để tránh dữ liệu cũ (chỉ trong vòng 10 phút)
+
       if (Date.now() - placeData.timestamp > 10 * 60 * 1000) {
         localStorage.removeItem('returnToPlace');
         return;
       }
-      
-      // Xóa dữ liệu sau khi đọc
+
       localStorage.removeItem('returnToPlace');
-      
-      // Tìm địa điểm trong danh sách places
+
       const placeToOpen = places.find(p => p.id === placeData.placeId);
       if (placeToOpen) {
-        // Set activeTab thành reviews nếu user muốn đánh giá
+
         if (placeData.openReviewTab) {
           setActiveTab('reviews');
         }
-        // Mở sidebar cho địa điểm đó sau 500ms để đảm bảo map đã load xong
+
         setTimeout(() => {
           showPlaceDetail(placeToOpen, mapInstance.current);
         }, 500);
@@ -168,39 +160,34 @@ const MapPage = () => {
     }
   }, [user, places]);
 
-  // ✅ RE-RENDER FORM ĐÁNH GIÁ SAU KHI USER RESTORE (KHÔNG RESET RATING)
   useEffect(() => {
     if (!user || !user.userId) return;
     if (!sidebarRef.current) return;
     if (!currentPlace.current) return;
-    
+
     const isVisible = sidebarRef.current.style && sidebarRef.current.style.display === 'block';
     if (!isVisible) return;
-    
-    // Chỉ update nếu đang ở tab reviews
+
     if (activeTab !== 'reviews') return;
-    
+
     console.log('🔄 [User Restored] Updating review form for user:', user.email);
-    
-    // Delay để đảm bảo DOM đã ready
+
     const timer = setTimeout(() => {
       try {
-        // Tìm content area
+
         const contentArea = sidebarRef.current.querySelector('#reviews-tab-content, [style*="display:flex;flex-direction:column"]');
         if (!contentArea) return;
-        
-        // Kiểm tra xem có đang hiển thị "Vui lòng đăng nhập" không
+
         const loginPrompt = contentArea.querySelector('#login-to-review-link');
         if (!loginPrompt) return; // Form đã đúng rồi
-        
+
         console.log('✅ [User Restored] Replacing login prompt with review form');
-        
-        // Replace login prompt với form đánh giá
+
         const loginPromptContainer = loginPrompt.closest('[style*="background:#fff3cd"]');
         if (loginPromptContainer && loginPromptContainer.parentNode) {
-          // Lấy rating hiện tại (nếu có)
+
           const savedRating = window.currentRating ?? newRating ?? 0;
-          
+
           const reviewFormHTML = `
             <div style="width:100%;margin-bottom:16px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
@@ -212,454 +199,7 @@ const MapPage = () => {
               <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
               <div style="margin-bottom:8px;">
                 <label for="review-images" style="display:block;font-size:0.9rem;margin-bottom:4px;color:#555;">Thêm ảnh (tùy chọn, tối đa 5):</label>
-                <input type="file" id="review-images" accept="image/*" multiple style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" />
-                <div id="image-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
-              </div>
-              <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
-            </div>
-          `;
-          
-          loginPromptContainer.outerHTML = reviewFormHTML;
-          
-          // ✅ KHÔI PHỤC LẠI window.currentRating (QUAN TRỌNG!)
-          if (savedRating > 0) {
-            window.currentRating = savedRating;
-            console.log('🔄 [User Restored] Restored window.currentRating:', savedRating);
-          }
-          
-          // Re-attach event listeners
-          const submitBtn = document.getElementById("submit-review-btn");
-          const imageInput = document.getElementById("review-images");
-          const imagePreview = document.getElementById("image-preview");
-          
-          if (submitBtn) {
-            // Attach image input preview handler
-            if (imageInput) {
-              imageInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                if (files.length > 5) {
-                  alert('⚠️ Chỉ được chọn tối đa 5 ảnh!');
-                  imageInput.value = '';
-                  return;
-                }
-                
-                // Show preview
-                if (imagePreview) {
-                  imagePreview.innerHTML = files.map((f, idx) => `
-                    <div style="position:relative;width:80px;height:80px;">
-                      <img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid #ccc" />
-                      <span style="position:absolute;top:-6px;right:-6px;background:#666;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer;" data-remove-idx="${idx}">✕</span>
-                    </div>
-                  `).join('');
-                  
-                  // Attach remove handlers
-                  imagePreview.querySelectorAll('[data-remove-idx]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                      const idx = parseInt(btn.getAttribute('data-remove-idx'));
-                      const dt = new DataTransfer();
-                      Array.from(imageInput.files).forEach((f, i) => {
-                        if (i !== idx) dt.items.add(f);
-                      });
-                      imageInput.files = dt.files;
-                      imageInput.dispatchEvent(new Event('change'));
-                    });
-                  });
-                }
-              });
-            }
-            
-            // Attach stars click handlers
-            for (let i = 1; i <= 5; i++) {
-              const star = document.getElementById(`star-${i}`);
-              if (star) {
-                star.addEventListener("click", () => {
-                  console.log('⭐ Star clicked:', i);
-                  window.setStarRating(i);
-                });
-              }
-            }
-            
-            // Attach submit handler
-            submitBtn.addEventListener("click", async () => {
-              const commentInput = document.getElementById("comment-input");
-              const comment = commentInput?.value?.trim();
-              
-              const currentRating = window.currentRating ?? newRating;
-              
-              console.log('📊 [SUBMIT] Rating check:', {
-                'window.currentRating': window.currentRating,
-                'newRating state': newRating,
-                'final currentRating': currentRating,
-                'type': typeof currentRating,
-                'comment': comment?.substring(0, 30)
-              });
-              
-              if (currentRating === null || currentRating === undefined || currentRating < 1 || currentRating > 5) {
-                console.error('❌ Rating validation failed:', {
-                  currentRating,
-                  windowCurrentRating: window.currentRating,
-                  newRatingState: newRating,
-                  type: typeof currentRating,
-                  isNull: currentRating === null,
-                  isUndefined: currentRating === undefined
-                });
-                alert("🌟 Vui lòng chọn số sao (1-5 sao) trước khi gửi đánh giá!");
-                return;
-              }
-              if (!comment) {
-                alert("💬 Vui lòng nhập bình luận!");
-                return;
-              }
-              
-              try {
-                console.log('🚀 [SUBMIT] Sending to API:', {
-                  userId: user.userId,
-                  rating: currentRating,
-                  comment: comment,
-                  endpoint: `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`
-                });
-                
-                // ✅ Build FormData to send images + data
-                const formData = new FormData();
-                formData.append('userId', user.userId);
-                formData.append('rating', currentRating);
-                formData.append('comment', comment);
-                
-                // Add images if selected
-                if (imageInput?.files) {
-                  Array.from(imageInput.files).forEach(file => {
-                    formData.append('images', file);
-                  });
-                }
-                
-                await axios.post(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`, formData, {
-                  headers: { 'Content-Type': 'multipart/form-data' }
-                });
-                
-                console.log('✅ [SUBMIT] Review submitted successfully!');
-                
-                // Reset form
-                setNewRating(null);
-                setNewComment("");
-                window.currentRating = null;
-                if (commentInput) commentInput.value = "";
-                if (imageInput) imageInput.value = "";
-                if (imagePreview) imagePreview.innerHTML = "";
-                
-                // Reset màu sao
-                for (let i = 1; i <= 5; i++) {
-                  const star = document.getElementById(`star-${i}`);
-                  if (star) star.style.color = "#ccc";
-                }
-                
-                // Reload reviews
-                const reviewsRes = await axios.get(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`);
-                const newReviewsList = reviewsRes.data.map(r => ({
-                  rating: r.Rating,
-                  comment: r.Comment,
-                  timestamp: new Date(r.CreatedAt).toLocaleDateString('vi-VN'),
-                  userName: r.user?.FullName || 'Ẩn danh'
-                }));
-                
-                setReviews(newReviewsList);
-                
-                console.log('✅ [SUBMIT] Reviews updated:', newReviewsList.length, 'total reviews');
-                
-                // Update reviews list in DOM immediately (with avatar + like button)
-                const reviewsList = document.getElementById('reviews-list');
-                if (reviewsList) {
-                  reviewsList.innerHTML = newReviewsList.length > 0 ? newReviewsList.map(r => `
-                    <div style="padding:12px;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:flex-start;">
-                      <img src="${r.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" />
-                      <div style="flex:1;">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
-                          <div>
-                            <div style="font-weight:600;color:#333">${r.userName || 'Ẩn danh'}</div>
-                            <div style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
-                          </div>
-                          <div style="display:flex;align-items:center;gap:8px">
-                            <button class="like-btn" data-feedback-id="${r.FeedbackID || ''}" style="background:transparent;border:none;cursor:pointer;color:#666;display:flex;align-items:center;gap:6px">👍 <span class="like-count">${r.likes}</span></button>
-                          </div>
-                        </div>
-                        <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
-                        ${r.images && r.images.length > 0 && r.imagesApproved ? `
-                          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-                            ${r.images.map(img => `<img src="${img.startsWith('http')?img:`${BASE_URL}${img}`}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eee"/>`).join('')}
-                          </div>
-                        ` : ''}
-                        <div style="font-size:0.8rem;color:#888;margin-top:8px;">${r.timestamp}</div>
-                      </div>
-                    </div>
-                  `).join("") : '<p style="text-align:center;color:#999;padding:20px;">Chưa có đánh giá nào</p>';
-
-                  // Attach like button handlers
-                  const likeButtons = reviewsList.querySelectorAll('.like-btn');
-                  likeButtons.forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                      e.preventDefault();
-                      const fid = btn.getAttribute('data-feedback-id');
-                      if (!fid) return;
-                      const countSpan = btn.querySelector('.like-count');
-                      // Optimistic UI
-                      const current = parseInt(countSpan.textContent || '0', 10) || 0;
-                      countSpan.textContent = (current + 1).toString();
-                      try {
-                        await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback/${fid}/like`);
-                      } catch (err) {
-                        console.error('Like failed', err);
-                        countSpan.textContent = current.toString();
-                        alert('Không thể like, thử lại sau');
-                      }
-                    });
-                  });
-                }
-                
-                // Show success message
-                const successMsg = document.createElement('div');
-                successMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;';
-                successMsg.textContent = '✅ Đã gửi đánh giá thành công!';
-                document.body.appendChild(successMsg);
-                setTimeout(() => successMsg.remove(), 3000);
-              } catch (error) {
-                console.error("Error submitting review:", error);
-                alert(`Có lỗi khi gửi đánh giá: ${error.response?.data?.message || error.message}`);
-              }
-            });
-          }
-        }
-      } catch (err) {
-        console.error('Error updating review form:', err);
-      }
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [user?.userId, activeTab]);
-
-  // ✅ HANDLE isAuthLoading CHANGES - FIX "Đang kiểm tra đăng nhập..." STUCK
-  useEffect(() => {
-    console.log('🔍 [isAuthLoading useEffect] Triggered:', { isAuthLoading, activeTab, userEmail: user?.email });
-    
-    if (isAuthLoading) return; // Chỉ chạy khi isAuthLoading = false
-    if (!sidebarRef.current) return;
-    if (!currentPlace.current) return;
-    
-    const isVisible = sidebarRef.current.style && sidebarRef.current.style.display === 'block';
-    if (!isVisible) {
-      console.log('⚠️ [isAuthLoading=false] Sidebar not visible, skipping');
-      return;
-    }
-    
-    // Chỉ update nếu đang ở tab reviews
-    if (activeTab !== 'reviews') {
-      console.log('⚠️ [isAuthLoading=false] Not on reviews tab, skipping');
-      return;
-    }
-    
-    console.log('🔄 [isAuthLoading=false] Updating review form. User:', user?.email || 'null');
-    
-    // Delay để đảm bảo DOM đã ready
-    const timer = setTimeout(() => {
-      try {
-        // Tìm content area
-        const contentArea = sidebarRef.current.querySelector('#reviews-tab-content, [style*="display:flex;flex-direction:column"]');
-        if (!contentArea) return;
-        
-        // Kiểm tra xem có đang hiển thị "Đang kiểm tra đăng nhập..." không
-        // Spinner có text trong <p> tag
-        const loadingText = Array.from(contentArea.querySelectorAll('p')).find(p => 
-          p.textContent.includes('Đang kiểm tra đăng nhập')
-        );
-        if (!loadingText) {
-          console.log('✅ [isAuthLoading=false] No loading spinner found, DOM already updated');
-          return; // Không còn spinner
-        }
-        
-        // Tìm container div chứa spinner (parent of <p>)
-        const loadingSpinner = loadingText.closest('div[style*="text-align:center"]');
-        if (!loadingSpinner) {
-          console.log('⚠️ [isAuthLoading=false] Found loading text but no container div');
-          return;
-        }
-        
-        console.log('✅ [isAuthLoading=false] Removing loading spinner and showing form/login prompt');
-        
-        // Xác định nội dung thay thế dựa trên user state
-        let replacementHTML = '';
-        
-        if (user && user.userId) {
-          // User đã đăng nhập - hiển thị form đánh giá
-          const savedRating = window.currentRating ?? newRating ?? 0;
-          
-          replacementHTML = `
-            <div style="width:100%;margin-bottom:16px;">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <span>Đánh giá của bạn: </span>
-                <div id="star-rating" style="display:flex;gap:2px;">
-                  ${[1, 2, 3, 4, 5].map(i => `<span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= savedRating ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>`).join("")}
-                </div>
-              </div>
-              <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
-              <div style="margin-bottom:8px;">
-                <label for="review-images" style="display:block;font-size:0.9rem;margin-bottom:4px;color:#555;">Thêm ảnh (tùy chọn, tối đa 5):</label>
-                <input type="file" id="review-images" accept="image/*" multiple style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" />
-                <div id="image-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
-              </div>
-              <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
-            </div>
-          `;
-        } else {
-          // User chưa đăng nhập - hiển thị login prompt
-          replacementHTML = `
-            <div style="width:100%;background:#fff3cd;border-left:4px solid #ffc107;padding:12px;border-radius:4px;margin-bottom:12px;">
-              <p style="margin:0;font-size:0.9rem;color:#856404;">
-                Vui lòng <a href="#" id="login-to-review-link" style="color:#007bff;text-decoration:underline;cursor:pointer;">đăng nhập</a> để viết đánh giá.
-              </p>
-            </div>
-          `;
-        }
-        
-        // Replace loading spinner
-        const spinnerContainer = loadingSpinner.closest('div');
-        if (spinnerContainer && spinnerContainer.parentNode) {
-          spinnerContainer.outerHTML = replacementHTML;
-          
-          // ✅ RE-ATTACH EVENT LISTENERS
-          if (user && user.userId) {
-            // Restore window.currentRating
-            const savedRating = window.currentRating ?? newRating ?? 0;
-            if (savedRating > 0) {
-              window.currentRating = savedRating;
-              console.log('🔄 [isAuthLoading=false] Restored window.currentRating:', savedRating);
-            }
-            
-            // Re-attach event listeners for review form
-            const submitBtn = document.getElementById("submit-review-btn");
-            const imageInput = document.getElementById("review-images");
-            const imagePreview = document.getElementById("image-preview");
-            
-            if (imageInput) {
-              imageInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files || []);
-                if (files.length > 5) {
-                  alert('⚠️ Chỉ được chọn tối đa 5 ảnh!');
-                  imageInput.value = '';
-                  return;
-                }
-                
-                // Show preview
-                if (imagePreview) {
-                  imagePreview.innerHTML = files.map((f, idx) => `
-                    <div style="position:relative;width:80px;height:80px;">
-                      <img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid #ccc" />
-                      <span style="position:absolute;top:-6px;right:-6px;background:#666;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer;" data-remove-idx="${idx}">✕</span>
-                    </div>
-                  `).join('');
-                  
-                  // Attach remove handlers
-                  imagePreview.querySelectorAll('[data-remove-idx]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                      const idx = parseInt(btn.getAttribute('data-remove-idx'));
-                      const dt = new DataTransfer();
-                      Array.from(imageInput.files).forEach((f, i) => {
-                        if (i !== idx) dt.items.add(f);
-                      });
-                      imageInput.files = dt.files;
-                      imageInput.dispatchEvent(new Event('change'));
-                    });
-                  });
-                }
-              });
-            }
-            
-            // Attach stars click handlers
-            for (let i = 1; i <= 5; i++) {
-              const star = document.getElementById(`star-${i}`);
-              if (star) {
-                star.addEventListener("click", () => {
-                  console.log('⭐ Star clicked:', i);
-                  window.setStarRating(i);
-                });
-              }
-            }
-            
-            // Attach submit handler (simplified - full logic already exists in original code)
-            if (submitBtn) {
-              submitBtn.addEventListener("click", async () => {
-                const commentInput = document.getElementById("comment-input");
-                const comment = commentInput?.value?.trim();
-                const currentRating = window.currentRating ?? newRating;
-                
-                if (!currentRating || currentRating < 1 || currentRating > 5) {
-                  alert("🌟 Vui lòng chọn số sao (1-5 sao) trước khi gửi đánh giá!");
-                  return;
-                }
-                if (!comment) {
-                  alert("💬 Vui lòng nhập bình luận!");
-                  return;
-                }
-                
-                // Handle image upload and submission
-                const files = imageInput ? Array.from(imageInput.files) : [];
-                const formData = new FormData();
-                formData.append('userId', user.userId);
-                formData.append('rating', currentRating);
-                formData.append('comment', comment);
-                files.forEach(file => formData.append('images', file));
-                
-                try {
-                  submitBtn.disabled = true;
-                  submitBtn.textContent = 'Đang gửi...';
-                  
-                  console.log('🚀 [SUBMIT] Submitting to:', {
-                    url: `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`,
-                    placeId: currentPlace.current.id,
-                    currentPlace: currentPlace.current
-                  });
-                  
-                  await axios.post(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                    withCredentials: true
-                  });
-                  alert('✅ Đã gửi đánh giá thành công!');
-                  commentInput.value = '';
-                  if (imageInput) imageInput.value = '';
-                  if (imagePreview) imagePreview.innerHTML = '';
-                  window.currentRating = 0;
-                  setNewRating(0);
-                  // Refresh reviews
-                  const res = await axios.get(`${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`);
-                  showPlaceDetail(currentPlace.current, res.data || []);
-                } catch (err) {
-                  console.error('Error submitting review:', err);
-                  alert('❌ Lỗi khi gửi đánh giá: ' + (err.response?.data?.message || err.message));
-                } finally {
-                  submitBtn.disabled = false;
-                  submitBtn.textContent = 'Gửi đánh giá';
-                }
-              });
-            }
-          } else {
-            // Attach login link handler
-            const loginLink = document.getElementById("login-to-review-link");
-            if (loginLink) {
-              loginLink.addEventListener("click", (e) => {
-                e.preventDefault();
-                console.log('🔗 Login link clicked');
-                // Trigger login modal or redirect
-                window.location.href = '/auth/login';
-              });
-            }
-          }
-        }
-      } catch (err) {
-        console.error('❌ [isAuthLoading=false] Error updating DOM:', err);
-      }
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [isAuthLoading, user?.userId, activeTab, newRating, newComment]);
-
-  /* ---------- KHỞI TẠO MAP ---------- */
+                <input type="file" id="review-images" accept="image
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -674,19 +214,18 @@ const MapPage = () => {
     mapInstance.current = map;
     map.fitBounds(DA_NANG_BOUNDS);
 
-    // ✅ TILE LAYER - sẽ được toggle bằng dark mode
     const lightTile = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
       attribution: "&copy; Google Maps",
       maxZoom: 20,
     });
-    
+
     tileLayerRef.current = lightTile;
     lightTile.addTo(map);
 
     dispatch(fetchMapLocations());
 
     axios
-      .get(`${BASE_URL}/categories`)
+      .get(`${ BASE_URL }/categories`)
       .then((res) => setCategories(res.data || []))
       .catch(console.error);
 
@@ -695,16 +234,13 @@ const MapPage = () => {
     };
   }, [dispatch]);
 
-  /* ---------- TOGGLE DARK/LIGHT MODE ---------- */
   useEffect(() => {
     if (!mapInstance.current || !tileLayerRef.current) return;
 
-    // Remove current tile layer
     mapInstance.current.removeLayer(tileLayerRef.current);
 
-    // Add new tile layer based on mode
     if (isDarkMode) {
-      // Dark mode - Google Maps dark style
+
       tileLayerRef.current = L.tileLayer(
         "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", // Hybrid dark
         {
@@ -713,7 +249,7 @@ const MapPage = () => {
         }
       );
     } else {
-      // Light mode - Standard Google Maps
+
       tileLayerRef.current = L.tileLayer(
         "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
         {
@@ -724,12 +260,10 @@ const MapPage = () => {
     }
 
     tileLayerRef.current.addTo(mapInstance.current);
-    
-    // Save preference
+
     localStorage.setItem("mapDarkMode", isDarkMode);
   }, [isDarkMode]);
 
-  /* ---------- ÁP DỤNG DARK MODE CHO SIDEBAR ---------- */
   useEffect(() => {
     if (sidebarRef.current) {
       sidebarRef.current.style.backgroundColor = isSidebarDark ? "#1a1a1a" : "#ffffff";
@@ -737,7 +271,6 @@ const MapPage = () => {
     }
   }, [isSidebarDark]);
 
-  /* ---------- FIX BLACK SCREEN ---------- */
   useEffect(() => {
     if (mapInstance.current) {
       const timer = setTimeout(() => mapInstance.current.invalidateSize(), 150);
@@ -745,7 +278,6 @@ const MapPage = () => {
     }
   }, []);
 
-  /* ---------- VẼ TẤT CẢ MARKER MỘT LẦN DUY NHẤT (KHÔNG BAO GIỜ XÓA) ---------- */
   useEffect(() => {
     if (!mapInstance.current || !places.length || allMarkersRef.current.size > 0) return;
 
@@ -775,7 +307,6 @@ const MapPage = () => {
     });
   }, [places]);
 
-  /* ---------- LỌC DANH MỤC → LÀM MỜ MARKER (KHÔNG XÓA) ---------- */
   useEffect(() => {
     if (!mapInstance.current || !places.length) return;
 
@@ -786,7 +317,7 @@ const MapPage = () => {
       const isVisible = selectedCategory === null || place.categoryId === selectedCategory;
 
       if (isVisible) {
-        // Hiển thị marker
+
         if (!mapInstance.current.hasLayer(marker)) {
           marker.addTo(mapInstance.current);
         }
@@ -795,7 +326,7 @@ const MapPage = () => {
           marker.getElement().style.filter = "";
         }
       } else {
-        // Ẩn hoàn toàn marker (xóa khỏi map)
+
         if (mapInstance.current.hasLayer(marker)) {
           mapInstance.current.removeLayer(marker);
         }
@@ -803,7 +334,6 @@ const MapPage = () => {
     });
   }, [selectedCategory, places]);
 
-  /* ---------- HIGHLIGHT MARKER (DÙNG setIcon → KHÔNG LỖI LAYOUT) ---------- */
   const highlightMarker = (placeId) => {
     allMarkersRef.current.forEach((marker, id) => {
       if (id === placeId) {
@@ -829,11 +359,9 @@ const MapPage = () => {
     });
   };
 
-  /* ---------- UI ELEMENTS (LEFT PANEL, TOP BAR, ...) ---------- */
   useEffect(() => {
     if (!mapInstance.current) return;
 
-    // === LEFT PANEL ===
     const leftPanel = L.DomUtil.create("div", "leaflet-left-panel");
     leftPanel.style.cssText = `
       position:fixed;top:0;left:0;width:100px;height:100vh;
@@ -845,14 +373,13 @@ const MapPage = () => {
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     </div>`;
     backBtn.onclick = () => (window.location.href = "/");
-    
+
     const savedBtn = L.DomUtil.create("div");
     savedBtn.innerHTML = `<div style="width:48px;height:48px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
     </div>`;
     savedBtn.onclick = () => showFavoritesSidebar();
-    
-    // ✅ NÚT DARK MODE CHO SIDEBAR
+
     const darkModeBtn = L.DomUtil.create("div");
     const updateDarkModeBtn = () => {
       const isDark = localStorage.getItem("sidebarDarkMode") === "true";
@@ -868,18 +395,16 @@ const MapPage = () => {
       setIsSidebarDark(prev => !prev);
       setTimeout(updateDarkModeBtn, 50);
     };
-    
+
     leftPanel.append(backBtn, savedBtn, darkModeBtn);
     document.body.appendChild(leftPanel);
 
-    // === TOP BAR ===
     const topBar = L.DomUtil.create("div", "leaflet-top-bar");
     topBar.style.cssText = `
       position:absolute;top:16px;left:116px;z-index:10001;
       display:flex;gap:12px;max-width:calc(100% - 132px);transition:left 0.3s ease, max-width 0.3s ease;
     `;
 
-    // === SEARCH + NÚT TÌM KIẾM ===
     const searchContainer = L.DomUtil.create("div");
     searchContainer.style.cssText = `position:relative;width:320px;display:flex;z-index:10003;`;
     const searchInput = L.DomUtil.create("input");
@@ -919,7 +444,6 @@ const MapPage = () => {
     searchContainer.append(searchInput, searchIcon, searchBtn, suggestionList);
     topBar.appendChild(searchContainer);
 
-    // === CATEGORIES ===
     const categoryContainer = L.DomUtil.create("div");
     categoryContainer.style.cssText = `
       display:flex;gap:8px;overflow-x:auto;padding:4px 0;flex:1;
@@ -963,7 +487,6 @@ const MapPage = () => {
 
     document.body.appendChild(topBar);
 
-    // === SIDEBAR ===
     const sidebar = L.DomUtil.create("div", "custom-sidebar");
     sidebar.style.cssText = `
       position:fixed;top:0;left:100px;width:380px;height:100vh;
@@ -973,7 +496,6 @@ const MapPage = () => {
     document.body.appendChild(sidebar);
     sidebarRef.current = sidebar;
 
-    // === FAVORITES SIDEBAR ===
     const favoritesSidebar = L.DomUtil.create("div", "favorites-sidebar");
     favoritesSidebar.style.cssText = `
       position:fixed;top:0;left:0;width:380px;height:100vh;
@@ -983,7 +505,6 @@ const MapPage = () => {
     document.body.appendChild(favoritesSidebar);
     favoritesSidebarRef.current = favoritesSidebar;
 
-    // === ZOOM + LOCATION CONTROLS ===
     const controlPanel = L.DomUtil.create("div", "custom-zoom-control");
     controlPanel.style.cssText = `
       position:fixed;bottom:16px;right:16px;background:white;
@@ -1060,7 +581,6 @@ const MapPage = () => {
     controlPanel.append(zoomInBtn, zoomOutBtn, locateBtn);
     document.body.appendChild(controlPanel);
 
-    // === UPDATE TOP BAR POSITION ===
     window.updateTopBarPosition = () => {
       const isDetailOpen = sidebarRef.current.style.display === "block";
       const isFavOpen = favoritesSidebarRef.current.style.display === "block";
@@ -1083,7 +603,6 @@ const MapPage = () => {
     };
   }, [mapInstance.current, categories, selectedCategory]);
 
-  /* ---------- TÌM KIẾM LOCAL + NÚT TÌM KIẾM ---------- */
   const searchLocal = useCallback((query) => {
     if (!query.trim()) {
       setLocalSuggestions([]);
@@ -1127,10 +646,10 @@ const MapPage = () => {
         lng: p.position[1],
         image: p.image,
         oldImage: p.oldImage,
-        match: 
+        match:
           (p.image || "").toLowerCase().includes(q) ? "ảnh hiện tại" :
-          (p.oldImage || "").toLowerCase().includes(q) ? "ảnh xưa" :
-          "tên / địa chỉ",
+            (p.oldImage || "").toLowerCase().includes(q) ? "ảnh xưa" :
+              "tên / địa chỉ",
       }));
 
     setLocalSuggestions(matches);
@@ -1178,7 +697,6 @@ const MapPage = () => {
           list.style.display = "none";
           showPlaceDetail(place, mapInstance.current);
 
-          // ÉP VẼ LẠI SAU KHI ZOOM
           setTimeout(() => mapInstance.current.invalidateSize(), 600);
         }
       };
@@ -1212,7 +730,6 @@ const MapPage = () => {
         document.querySelector(".suggestion-list").style.display = "none";
         showPlaceDetail(place, mapInstance.current);
 
-        // ÉP VẼ LẠI SAU KHI ZOOM
         setTimeout(() => mapInstance.current.invalidateSize(), 600);
       }
     };
@@ -1235,7 +752,6 @@ const MapPage = () => {
     return () => observer.disconnect();
   }, [searchLocal, localSuggestions, places, isSearching]);
 
-  /* ---------- CSS TOÀN CỤC CHO SEARCH INPUT ---------- */
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
@@ -1258,7 +774,6 @@ const MapPage = () => {
     };
   }, []);
 
-  /* ---------- HOVER POPUP ---------- */
   const showHoverPopup = (place, latlng) => {
     if (hoverPopupRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -1493,9 +1008,8 @@ const MapPage = () => {
               data-user="${submittedBy}"
               loading="lazy"
             />
-            <button class="save-photo-btn" data-photo-id="${submissionId}" style="position:absolute;top:12px;right:12px;border:none;border-radius:999px;padding:6px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;z-index:6;background:${
-              isSaved ? '#1a73e8' : 'rgba(15,23,42,0.85)'
-            };color:${isSaved ? '#fff' : '#f1f5f9'};">
+            <button class="save-photo-btn" data-photo-id="${submissionId}" style="position:absolute;top:12px;right:12px;border:none;border-radius:999px;padding:6px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;z-index:6;background:${isSaved ? '#1a73e8' : 'rgba(15,23,42,0.85)'
+          };color:${isSaved ? '#fff' : '#f1f5f9'};">
               ${isSaved ? '★ Đã lưu' : '☆ Lưu ảnh'}
             </button>
             <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.85),transparent 55%);border-radius:16px;pointer-events:none;"></div>
@@ -1527,8 +1041,7 @@ const MapPage = () => {
     dotsContainer.innerHTML = photos
       .map(
         (_, idx) =>
-          `<span data-idx="${idx}" style="width:8px;height:8px;border-radius:50%;background:${
-            idx === 0 ? '#1a73e8' : '#cbd5f5'
+          `<span data-idx="${idx}" style="width:8px;height:8px;border-radius:50%;background:${idx === 0 ? '#1a73e8' : '#cbd5f5'
           };display:inline-block;"></span>`,
       )
       .join('');
@@ -1551,7 +1064,6 @@ const MapPage = () => {
     container.querySelector('.next')?.addEventListener('click', () => updateActiveSlide(current + 1));
     dots.forEach((dot, idx) => dot.addEventListener('click', () => updateActiveSlide(idx)));
 
-    // Thiết lập pointer events ban đầu & gắn sự kiện click
     slidesEls.forEach((slide, idx) => {
       slide.style.cursor = 'pointer';
       slide.style.pointerEvents = idx === 0 ? 'auto' : 'none';
@@ -1599,7 +1111,6 @@ const MapPage = () => {
     }
   };
 
-  /* ---------- SHOW PLACE DETAIL ---------- */
   const showPlaceDetail = async (place, map) => {
     const isFavOpen = favoritesSidebarRef.current.style.display === "block";
     sidebarRef.current.style.left = isFavOpen ? "380px" : "100px";
@@ -1608,27 +1119,22 @@ const MapPage = () => {
     window.updateTopBarPosition();
     setTimeout(() => window.updateTopBarPosition(), 50);
 
-    // ✅ GLOBAL FUNCTION ĐỂ SET RATING (TỪ onclick trong HTML string)
-    // GIỮ NGUYÊN rating nếu đã có (không reset khi re-render)
     if (typeof window.currentRating === 'undefined') {
       window.currentRating = null; // ✅ ĐỔI 0 → null để validation chính xác
       console.log('🔢 Initialized window.currentRating: null');
     } else {
       console.log('✅ Keeping existing window.currentRating:', window.currentRating);
     }
-    
+
     window.setStarRating = (rating) => {
       console.log('⭐ setStarRating CALLED:', rating);
-      
-      // ✅ LƯU VÀO WINDOW TRƯỚC (ƯU TIÊN CAO NHẤT)
+
       window.currentRating = rating;
-      
-      // ✅ SAU ĐÓ MỚI CẬP NHẬT STATE
+
       setNewRating(rating);
-      
+
       console.log('✅ Rating saved - window:', window.currentRating, 'state will update to:', rating);
-      
-      // ✅ CẬP NHẬT MÀU CÁC SAO NGAY LẬP TỨC
+
       for (let i = 1; i <= 5; i++) {
         const star = document.getElementById(`star-${i}`);
         if (star) {
@@ -1636,8 +1142,7 @@ const MapPage = () => {
         }
       }
     };
-    
-    // ✅ Restore màu sao nếu đã có rating
+
     setTimeout(() => {
       const savedRating = window.currentRating ?? newRating ?? 0;
       if (savedRating > 0) {
@@ -1652,7 +1157,7 @@ const MapPage = () => {
     }, 100);
 
     let communityPhotos = [];
-    // Load reviews và ảnh cộng đồng
+
     try {
       const [reviewsRes, photosRes] = await Promise.all([
         axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`),
@@ -1744,15 +1249,15 @@ const MapPage = () => {
               <div style="width:100%;display:flex;gap:12px;margin-bottom:16px;align-items:flex-start;">
                 <div style="flex:1;">
                   ${(() => {
-                    const counts = [0,0,0,0,0];
-                    reviews.forEach(rv => { counts[5 - rv.rating] = (counts[5 - rv.rating] || 0) + 1; });
-                    const total = reviews.length || 1;
-                    return `
+        const counts = [0, 0, 0, 0, 0];
+        reviews.forEach(rv => { counts[5 - rv.rating] = (counts[5 - rv.rating] || 0) + 1; });
+        const total = reviews.length || 1;
+        return `
                       <div style="display:flex;flex-direction:column;gap:6px;">
-                        ${[5,4,3,2,1].map((star, idx) => {
-                          const num = reviews.filter(r => r.rating === star).length;
-                          const pct = Math.round((num / Math.max(reviews.length,1)) * 100);
-                          return `
+                        ${[5, 4, 3, 2, 1].map((star, idx) => {
+          const num = reviews.filter(r => r.rating === star).length;
+          const pct = Math.round((num / Math.max(reviews.length, 1)) * 100);
+          return `
                             <div style="display:flex;align-items:center;gap:8px;">
                               <div style="width:36px">${star}★</div>
                               <div style="flex:1;background:#eee;border-radius:6px;height:10px;overflow:hidden;">
@@ -1761,10 +1266,10 @@ const MapPage = () => {
                               <div style="width:36px;text-align:right;color:#666">${pct}%</div>
                             </div>
                           `;
-                        }).join('')}
+        }).join('')}
                       </div>
                     `;
-                  })()}
+      })()}
                 </div>
                 <div style="width:160px;">
                   <button id="write-review-btn" style="width:100%;padding:12px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Viết đánh giá</button>
@@ -1784,544 +1289,7 @@ const MapPage = () => {
                 <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
                 <div style="margin-bottom:8px;">
                   <label for="review-images" style="display:block;font-size:0.9rem;margin-bottom:4px;color:#555;">Thêm ảnh (tùy chọn, tối đa 5):</label>
-                  <input type="file" id="review-images" accept="image/*" multiple style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;" />
-                  <div id="image-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
-                </div>
-                <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
-              </div>
-              ` : `
-              <div style="width:100%;margin-bottom:16px;padding:16px;background:#fff3cd;border-radius:8px;text-align:center;">
-                <p style="margin:0;color:#856404;">Vui lòng <a href="/login" style="color:#1a73e8;text-decoration:none;font-weight:600;">đăng nhập</a> để đánh giá địa điểm này</p>
-              </div>
-              `}
-
-              <div id="reviews-list" style="width:100%;max-height:300px;overflow-y:auto;">
-                ${reviews.length > 0 ? reviews.map(r => `
-                  <div style="padding:12px;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:flex-start;">
-                    <img src="${r.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" />
-                    <div style="flex:1;">
-                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
-                        <div>
-                          <div style="font-weight:600;color:#333">${r.userName || 'Ẩn danh'}</div>
-                          <div style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px">
-                          <button class="like-btn" data-feedback-id="${r.FeedbackID || ''}" style="background:transparent;border:none;cursor:pointer;color:#666;display:flex;align-items:center;gap:6px">👍 <span class="like-count">${r.likes}</span></button>
-                        </div>
-                      </div>
-                      <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
-                      ${r.images && r.images.length > 0 && r.imagesApproved ? `
-                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-                          ${r.images.map(img => `<img src="${img.startsWith('http')?img:`${BASE_URL}${img}`}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eee"/>`).join('')}
-                        </div>
-                      ` : ''}
-                      <div style="font-size:0.8rem;color:#888;margin-top:8px;">${r.timestamp}</div>
-                    </div>
-                  </div>
-                `).join("") : '<p style="text-align:center;color:#999;padding:20px;">Chưa có đánh giá nào</p>'}
-              </div>
-            </div>
-          `}
-        </div>
-
-        <div id="view-detail-section" style="${activeTab === "overview" ? "" : "display:none;"}margin-top:20px;">
-          <div style="border:1px solid #e5e7eb;border-radius:12px;padding:18px;">
-            <button id="view-detail-btn" style="width:100%;padding:14px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem;margin-bottom:12px;">
-              Xem chi tiết
-            </button>
-            <div style="font-size:0.9rem;color:#555;line-height:1.6">
-              <div>Location: ${place.address || "Địa chỉ chưa có"}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    attachCommunityPhotoSection(place);
-
-    // Attach event listeners for tabs
-    const switchTab = (newTab) => {
-      console.log('🔄 Switching tab to:', newTab);
-      
-      // ✅ UPDATE REACT STATE
-      setActiveTab(newTab);
-      
-      // ✅ UPDATE DOM IMMEDIATELY (không đợi React re-render)
-      const overviewBtn = document.getElementById("overview-tab");
-      const reviewsBtn = document.getElementById("reviews-tab");
-      const contentArea = document.getElementById("content-area");
-      const detailSection = document.getElementById("view-detail-section");
-      
-      if (!contentArea) return;
-      if (detailSection) {
-        detailSection.style.display = newTab === "overview" ? "block" : "none";
-      }
-      
-      if (overviewBtn && reviewsBtn) {
-        if (newTab === "overview") {
-          overviewBtn.style.background = "#e8f0fe";
-          overviewBtn.style.color = "#1a73e8";
-          overviewBtn.style.fontWeight = "600";
-          reviewsBtn.style.background = "#f8f9fa";
-          reviewsBtn.style.color = "#333";
-          reviewsBtn.style.fontWeight = "normal";
-        } else {
-          reviewsBtn.style.background = "#e8f0fe";
-          reviewsBtn.style.color = "#1a73e8";
-          reviewsBtn.style.fontWeight = "600";
-          overviewBtn.style.background = "#f8f9fa";
-          overviewBtn.style.color = "#333";
-          overviewBtn.style.fontWeight = "normal";
-        }
-      }
-      
-      // Re-render content area
-      if (newTab === "overview") {
-        const latestPhotos = communityPhotosRef.current.get(place.id) || [];
-        contentArea.innerHTML = `
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-            <button id="get-directions-btn" style="padding:10px;border:1px solid #dadce0;border-radius:8px;background:#f8f9fa;color:#333;cursor:pointer;font-size:0.85rem;text-align:center">Đường đi</button>
-            <button id="share-location-btn" style="padding:10px;border:1px solid #dadce0;border-radius:8px;background:#f8f9fa;color:#333;cursor:pointer;font-size:0.85rem;text-align:center">Chia sẻ</button>
-            <button id="save-btn" style="padding:10px;border:1px solid #dadce0;border-radius:8px;background:#f8f9fa;color:#333;cursor:pointer;font-size:0.85rem;text-align:center">Lưu</button>
-            <button id="compare-btn" style="padding:10px;border:1px solid #dadce0;border-radius:8px;background:#f8f9fa;color:#333;cursor:pointer;font-size:0.85rem;text-align:center">So sánh</button>
-          </div>
-          <div id="route-details" style="display:none;font-size:0.9rem;color:#555;margin:16px 0;line-height:1.6"></div>
-          <div style="margin-top:20px;border-top:1px solid #e5e7eb;padding-top:16px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <h4 style="margin:0;font-size:1rem;color:#1a1c2b;">Ảnh cộng đồng</h4>
-              <button id="open-photo-modal" style="padding:8px 14px;border:1px solid #1a73e8;background:#fff;color:#1a73e8;border-radius:999px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-                <span>➕</span> Thêm ảnh
-              </button>
-            </div>
-            <div id="community-photo-carousel" data-location-id="${place.id}" style="width:100%;height:220px;">
-              ${latestPhotos.length ? '<!-- sẽ được cập nhật sau -->' : '<p style="margin:0;color:#777;font-size:0.9rem;">Chưa có ảnh nào được duyệt.</p>'}
-            </div>
-          </div>
-        `;
-        attachCommunityPhotoSection(place);
-        
-        // Re-attach overview buttons
-        document.getElementById("get-directions-btn")?.addEventListener("click", () => {
-          if (!userMarker.current) return alert("Vui lòng bật định vị!");
-          calculateRoute(userMarker.current.getLatLng(), place.position, map);
-        });
-        
-        document.getElementById("save-btn")?.addEventListener("click", () => {
-          if (!user || !user.userId) {
-            alert("Vui lòng đăng nhập để lưu địa điểm.");
-            return;
-          }
-          const fullPlace = places.find(p => p.id === place.id) || place;
-          const alreadySaved = getCurrentUserPlaceFavorites().some((f) => f.id === fullPlace.id);
-          if (alreadySaved) {
-            alert("Đã có trong yêu thích!");
-            return;
-          }
-          addPlaceToFavorites(fullPlace);
-          alert("Đã lưu!");
-        });
-        
-        document.getElementById("compare-btn")?.addEventListener("click", () => setComparePlace(place));
-        
-      } else {
-        // Reviews tab
-        contentArea.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
-            <div style="background:#f1f1f1;padding:16px;border-radius:8px;width:100%;margin-bottom:16px;text-align:center;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-weight:600;">${(reviews.reduce((sum, r) => sum + r.rating, 0) / Math.max(reviews.length, 1) || 0).toFixed(1)}</span>
-                <span style="color:#777;">${reviews.length} đánh giá</span>
-              </div>
-              <div style="margin-top:8px;">
-                <span style="color:#ffca28;">${"★".repeat(Math.floor(reviews.reduce((sum, r) => sum + r.rating, 0) / Math.max(reviews.length, 1) || 0))}${"☆".repeat(5 - Math.floor(reviews.reduce((sum, r) => sum + r.rating, 0) / Math.max(reviews.length, 1) || 0))}</span>
-              </div>
-            </div>
-
-            ${(() => {
-              // ✅ Đang loading auth → Hiển thị loading state
-              if (isAuthLoading) {
-                return `
-                  <div style="width:100%;margin-bottom:16px;padding:20px;text-align:center;">
-                    <div style="display:inline-block;width:24px;height:24px;border:3px solid #e0e0e0;border-top-color:#1a73e8;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-                    <style>@keyframes spin { to { transform: rotate(360deg); }}</style>
-                    <p style="margin:8px 0 0 0;color:#666;font-size:0.9rem;">Đang kiểm tra đăng nhập...</p>
-                  </div>
-                `;
-              }
-              
-              // ✅ Đã có user → Hiển thị form đánh giá
-              if (user && user.userId) {
-                return `
-                  <div style="width:100%;margin-bottom:16px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                      <span>Đánh giá của bạn: </span>
-                      <div id="star-rating" style="display:flex;gap:2px;">
-                        ${[1, 2, 3, 4, 5].map(i => {
-                          const currentRating = window.currentRating || 0;
-                          return `<span id="star-${i}" style="cursor:pointer;font-size:1.2rem;color:${i <= currentRating ? "#ffca28" : "#ccc"};" onclick="window.setStarRating(${i})">★</span>`;
-                        }).join("")}
-                      </div>
-                    </div>
-                    <textarea id="comment-input" placeholder="Viết bình luận..." style="width:100%;height:80px;padding:8px;border:1px solid #ccc;border-radius:4px;margin-bottom:8px;resize:vertical;">${newComment}</textarea>
-                    <button id="submit-review-btn" style="width:100%;padding:10px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Gửi đánh giá</button>
-                  </div>
-                `;
-              }
-              
-              // ✅ Chưa đăng nhập → Hiển thị prompt
-              return `
-                <div style="width:100%;margin-bottom:16px;padding:16px;background:#fff3cd;border-radius:8px;text-align:center;">
-                  <p style="margin:0;color:#856404;">Vui lòng <a href="#" id="login-to-review-link" style="color:#1a73e8;text-decoration:none;font-weight:600;">đăng nhập</a> để đánh giá địa điểm này</p>
-                </div>
-              `;
-            })()}
-
-            <div id="reviews-list" style="width:100%;max-height:300px;overflow-y:auto;">
-              ${reviews.length > 0 ? reviews.map(r => `
-                <div style="padding:12px;border-bottom:1px solid #eee;">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                    <span style="font-weight:600;color:#333;">${r.userName || 'Ẩn danh'}</span>
-                    <span style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</span>
-                  </div>
-                  <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
-                  <span style="font-size:0.8rem;color:#888;">${r.timestamp}</span>
-                </div>
-              `).join("") : '<p style="text-align:center;color:#999;padding:20px;">Chưa có đánh giá nào</p>'}
-            </div>
-          </div>
-        `;
-        
-        // Re-attach login link (CHỈ KHI USER CHƯA ĐĂNG NHẬP)
-        if (!user || !user.userId) {
-          document.getElementById("login-to-review-link")?.addEventListener("click", (e) => {
-            e.preventDefault();
-            // Lưu thông tin địa điểm hiện tại vào localStorage để sau khi login quay lại
-            localStorage.setItem('returnToPlace', JSON.stringify({
-              placeId: place.id,
-              placeTitle: place.title,
-              openReviewTab: true,
-              timestamp: Date.now()
-            }));
-            window.location.href = '/login';
-          });
-        }
-        
-        // Re-attach submit review button (CHỈ KHI USER ĐÃ ĐĂNG NHẬP)
-        const submitBtn = document.getElementById("submit-review-btn");
-        const imageInput = document.getElementById("review-images");
-        const imagePreview = document.getElementById("image-preview");
-        
-        if (submitBtn && user && user.userId) {
-          // ✅ Image input preview handler
-          if (imageInput) {
-            imageInput.addEventListener('change', (e) => {
-              const files = Array.from(e.target.files || []);
-              if (files.length > 5) {
-                alert('⚠️ Chỉ được chọn tối đa 5 ảnh!');
-                imageInput.value = '';
-                return;
-              }
-              
-              // Show preview
-              if (imagePreview) {
-                imagePreview.innerHTML = files.map((f, idx) => `
-                  <div style="position:relative;width:80px;height:80px;">
-                    <img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid #ccc" />
-                    <span style="position:absolute;top:-6px;right:-6px;background:#666;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer;" data-remove-idx="${idx}">✕</span>
-                  </div>
-                `).join('');
-                
-                // Attach remove handlers
-                imagePreview.querySelectorAll('[data-remove-idx]').forEach(btn => {
-                  btn.addEventListener('click', () => {
-                    const idx = parseInt(btn.getAttribute('data-remove-idx'));
-                    const dt = new DataTransfer();
-                    Array.from(imageInput.files).forEach((f, i) => {
-                      if (i !== idx) dt.items.add(f);
-                    });
-                    imageInput.files = dt.files;
-                    imageInput.dispatchEvent(new Event('change'));
-                  });
-                });
-              }
-            });
-          }
-          
-          // ✅ ATTACH STARS CLICK HANDLERS (quan trọng!)
-          for (let i = 1; i <= 5; i++) {
-            const star = document.getElementById(`star-${i}`);
-            if (star) {
-              star.addEventListener("click", () => {
-                console.log('⭐ Star clicked:', i);
-                window.setStarRating(i);
-              });
-            }
-          }
-          
-          submitBtn.addEventListener("click", async () => {
-            const commentInput = document.getElementById("comment-input");
-            const comment = commentInput?.value?.trim();
-            
-            // ✅ ĐỌC RATING TỪ WINDOW.CURRENTRATING (ƯU TIÊN) hoặc newRating state
-            const currentRating = window.currentRating ?? newRating;
-            
-            // ✅ DEBUG LOG CHI TIẾT
-            console.log('📊 [SUBMIT] Rating check:', {
-              'window.currentRating': window.currentRating,
-              'newRating state': newRating,
-              'final currentRating': currentRating,
-              'type': typeof currentRating,
-              'comment': comment?.substring(0, 30)
-            });
-            
-            // ✅ VALIDATION: rating phải là số từ 1-5 (KIỂM TRA CHÍNH XÁC)
-            if (currentRating === null || currentRating === undefined || currentRating < 1 || currentRating > 5) {
-              console.error('❌ Rating validation failed:', {
-                currentRating,
-                windowCurrentRating: window.currentRating,
-                newRatingState: newRating,
-                type: typeof currentRating,
-                isNull: currentRating === null,
-                isUndefined: currentRating === undefined
-              });
-              alert("🌟 Vui lòng chọn số sao (1-5 sao) trước khi gửi đánh giá!");
-              return;
-            }
-            if (!comment) {
-              alert("💬 Vui lòng nhập bình luận!");
-              return;
-            }
-            
-            try {
-              console.log('🚀 [SUBMIT] Sending to API:', {
-                userId: user.userId,
-                rating: currentRating,
-                comment: comment,
-                endpoint: `${BASE_URL}/map-locations/${place.id}/feedback`
-              });
-              
-              // ✅ Build FormData to send images + data
-              const formData = new FormData();
-              formData.append('userId', user.userId);
-              formData.append('rating', currentRating);
-              formData.append('comment', comment);
-              
-              // Add images if selected
-              if (imageInput?.files) {
-                Array.from(imageInput.files).forEach(file => {
-                  formData.append('images', file);
-                });
-              }
-              
-              await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-              });
-              
-              console.log('✅ [SUBMIT] Review submitted successfully!');
-              
-              // ✅ RESET FORM
-              setNewRating(null); // ✅ Reset thành null
-              setNewComment("");
-              window.currentRating = null; // ✅ Reset thành null
-              if (commentInput) commentInput.value = "";
-              if (imageInput) imageInput.value = "";
-              if (imagePreview) imagePreview.innerHTML = "";
-              
-              // ✅ RESET MÀU SAO VỀ MẶC ĐỊNH
-              for (let i = 1; i <= 5; i++) {
-                const star = document.getElementById(`star-${i}`);
-                if (star) {
-                  star.style.color = "#ccc";
-                }
-              }
-              
-              // ✅ RELOAD REVIEWS TỪ DATABASE
-              const reviewsRes = await axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`);
-              const newReviewsList = reviewsRes.data.map(r => ({
-                rating: r.Rating,
-                comment: r.Comment,
-                timestamp: new Date(r.CreatedAt).toLocaleDateString('vi-VN'),
-                userName: r.user?.FullName || 'Ẩn danh',
-                avatar: r.user?.profile?.Avatar || '/img/default-avatar.png',
-                likes: r.Likes || 0,
-                images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
-                imagesApproved: !!r.ImagesApproved,
-              }));
-
-              setReviews(newReviewsList);
-              
-              console.log('✅ [SUBMIT] Reviews updated:', newReviewsList.length, 'total reviews');
-              
-              // ✅ UPDATE REVIEWS LIST IN DOM IMMEDIATELY (with avatar + like)
-              const reviewsList = document.getElementById('reviews-list');
-              if (reviewsList) {
-                reviewsList.innerHTML = newReviewsList.length > 0 ? newReviewsList.map(r => `
-                  <div style="padding:12px;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:flex-start;">
-                    <img src="${r.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0" />
-                    <div style="flex:1;">
-                      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
-                        <div>
-                          <div style="font-weight:600;color:#333">${r.userName || 'Ẩn danh'}</div>
-                          <div style="color:#ffca28;">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px">
-                          <button class="like-btn" data-feedback-id="${r.FeedbackID || ''}" style="background:transparent;border:none;cursor:pointer;color:#666;display:flex;align-items:center;gap:6px">👍 <span class="like-count">${r.likes}</span></button>
-                        </div>
-                      </div>
-                      <p style="margin:4px 0;color:#555;line-height:1.4;">${r.comment}</p>
-                      ${r.images && r.images.length > 0 && r.imagesApproved ? `
-                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-                          ${r.images.map(img => `<img src="${img.startsWith('http')?img:`${BASE_URL}${img}`}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eee"/>`).join('')}
-                        </div>
-                      ` : ''}
-                      <div style="font-size:0.8rem;color:#888;margin-top:8px;">${r.timestamp}</div>
-                    </div>
-                  </div>
-                `).join("") : '<p style="text-align:center;color:#999;padding:20px;">Chưa có đánh giá nào</p>';
-
-                // attach like handlers
-                const likeButtons = reviewsList.querySelectorAll('.like-btn');
-                likeButtons.forEach(btn => {
-                  btn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const fid = btn.getAttribute('data-feedback-id');
-                    if (!fid) return;
-                    const countSpan = btn.querySelector('.like-count');
-                    const current = parseInt(countSpan.textContent || '0', 10) || 0;
-                    countSpan.textContent = (current + 1).toString();
-                    try {
-                      await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback/${fid}/like`);
-                    } catch (err) {
-                      console.error('Like failed', err);
-                      countSpan.textContent = current.toString();
-                      alert('Không thể like, thử lại sau');
-                    }
-                  });
-                });
-              }
-              
-              // ✅ SHOW SUCCESS MESSAGE (tốt hơn alert)
-              const successMsg = document.createElement('div');
-              successMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;';
-              successMsg.textContent = '✅ Đã gửi đánh giá thành công!';
-              document.body.appendChild(successMsg);
-              setTimeout(() => successMsg.remove(), 3000);
-            } catch (error) {
-              console.error("Error submitting review:", error);
-              alert(`Có lỗi khi gửi đánh giá: ${error.response?.data?.message || error.message}`);
-            }
-          });
-        }
-      }
-    };
-    
-    document.getElementById("overview-tab")?.addEventListener("click", () => switchTab("overview"));
-    document.getElementById("reviews-tab")?.addEventListener("click", () => switchTab("reviews"));
-
-    document.getElementById("view-detail-btn")?.addEventListener("click", () => showDetailModal(place));
-    
-    // ✅ TỰ ĐỘNG MỞ REVIEWS TAB NẾU USER ĐÃ LOGIN
-    if (user && user.userId && activeTab === "overview") {
-      console.log('📝 Auto-opening reviews tab for logged-in user');
-      switchTab("reviews"); // switchTab sẽ attach handlers trong nó
-    } else if (activeTab === "reviews" && user && user.userId) {
-      // ✅ NẾU ĐÃ RENDER REVIEWS TAB TỪ ĐẦU → ATTACH HANDLERS NGAY
-      console.log('📝 Initial reviews tab, attaching handlers');
-      setTimeout(() => {
-        // Attach stars
-        for (let i = 1; i <= 5; i++) {
-          const star = document.getElementById(`star-${i}`);
-          if (star) {
-            star.addEventListener("click", () => {
-              console.log('⭐ Star clicked (initial):', i);
-              window.setStarRating(i);
-            });
-          }
-        }
-        
-        // Attach submit button
-        const submitBtn = document.getElementById("submit-review-btn");
-        if (submitBtn) {
-          submitBtn.addEventListener("click", async () => {
-            const commentInput = document.getElementById("comment-input");
-            const comment = commentInput?.value?.trim();
-            const currentRating = window.currentRating ?? newRating;
-            
-            console.log('Gửi đi:', { rating: currentRating, comment });
-            
-            if (!currentRating || currentRating < 1 || currentRating > 5) {
-              console.error('❌ Rating validation failed');
-              return alert("🌟 Chọn sao đi! (1-5 sao)");
-            }
-            if (!comment) return alert("Vui lòng nhập bình luận!");
-            
-            try {
-              await axios.post(`${BASE_URL}/map-locations/${place.id}/feedback`, {
-                userId: user.userId,
-                rating: currentRating,
-                comment: comment
-              });
-              
-              setNewRating(null);
-              setNewComment("");
-              window.currentRating = null;
-              if (commentInput) commentInput.value = "";
-              
-              const reviewsRes = await axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`);
-              setReviews(reviewsRes.data.map(r => ({
-                rating: r.Rating,
-                comment: r.Comment,
-                timestamp: new Date(r.CreatedAt).toLocaleDateString('vi-VN'),
-                userName: r.user?.FullName || 'Ẩn danh'
-              })));
-              
-              alert("Đã gửi đánh giá thành công!");
-              switchTab("reviews");
-            } catch (error) {
-              console.error("Error:", error);
-              alert(`Lỗi: ${error.response?.data?.message || error.message}`);
-            }
-          });
-        }
-      }, 100);
-    }
-    
-    // Initialize handlers based on current tab
-    if (activeTab === "overview") {
-      document.getElementById("get-directions-btn")?.addEventListener("click", () => {
-        if (!userMarker.current) return alert("Vui lòng bật định vị!");
-        calculateRoute(userMarker.current.getLatLng(), place.position, map);
-      });
-
-      document.getElementById("save-btn")?.addEventListener("click", () => {
-        if (!user || !user.userId) {
-          alert("Vui lòng đăng nhập để lưu địa điểm.");
-          return;
-        }
-        const fullPlace = places.find(p => p.id === place.id) || place;
-        const alreadySaved = getCurrentUserPlaceFavorites().some((f) => f.id === fullPlace.id);
-        if (alreadySaved) {
-          alert("Đã có trong yêu thích!");
-          return;
-        }
-        addPlaceToFavorites(fullPlace);
-        alert("Đã lưu!");
-      });
-
-      document.getElementById("compare-btn")?.addEventListener("click", () => setComparePlace(place));
-
-      // Write review button
-      document.getElementById('write-review-btn')?.addEventListener('click', () => {
-        switchTab('reviews');
-        setTimeout(() => {
-          const commentInput = document.getElementById('comment-input');
-          if (commentInput) commentInput.focus();
-        }, 150);
-      });
-    }
-  };
-
-  /* ---------- MODAL CHI TIẾT ---------- */
+                  <input type="file" id="review-images" accept="image
   const showDetailModal = (place) => {
     if (modalRef.current) {
       document.body.removeChild(modalRef.current);
@@ -2329,33 +1297,33 @@ const MapPage = () => {
     }
 
     const overlay = L.DomUtil.create("div", "modal-overlay");
-    overlay.style.cssText = `position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);z-index:10001;cursor:pointer;`;
+    overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); backdrop - filter: blur(4px); z - index: 10001; cursor: pointer; `;
     document.body.appendChild(overlay);
     overlayRef.current = overlay;
 
     const modal = L.DomUtil.create("div", "detail-modal");
-    modal.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:700px;max-height:80vh;background:white;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);z-index:10002;font-family:system-ui;display:flex;flex-direction:column;`;
+    modal.style.cssText = `position: fixed; top: 50 %; left: 50 %; transform: translate(-50 %, -50 %); width: 90 %; max - width: 700px; max - height: 80vh; background: white; border - radius: 16px; overflow: hidden; box - shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z - index: 10002; font - family: system - ui; display: flex; flex - direction: column; `;
 
     modal.innerHTML = `
-      <div style="position:relative;">
+      < div style = "position:relative;" >
         <div onclick="window.closeDetailModal()" style="position:absolute;top:12px;right:12px;width:36px;height:36px;background:rgba(0,0,0,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">
           <span style="font-size:1.4rem;color:#666;">×</span>
         </div>
         <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/700xauto?text=Chưa+có+hình"}" style="width:100%;height:auto;object-fit:contain;border-radius:12px;" />
-      </div>
-      <div style="padding:20px;flex:1;overflow-y:auto;">
-        <h3 style="margin:0 0 12px;font-size:1.4rem;font-weight:600;color:#1a0dab;">${place.title}</h3>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;">
-          <span style="color:#d50000;font-weight:bold;">${place.rating || 0}</span>
-          ${"★".repeat(Math.floor(place.rating || 0))}${"☆".repeat(5 - Math.floor(place.rating || 0))}
-          <span style="color:#666;font-size:0.9rem;">(${place.reviews || 0} đánh giá)</span>
-        </div>
-        <p style="margin:0 0 20px;font-size:1rem;line-height:1.7;color:#333;">${place.fullDesc || "Chi tiết chưa có"}</p>
-        <div style="padding:16px;background:#f8f9fa;border-radius:8px;font-size:0.95rem;color:#555;">
-          <div style="margin-bottom:8px;"><strong>Địa chỉ:</strong> ${place.address || "Địa chỉ chưa có"}</div>
-        </div>
-      </div>
-    `;
+      </div >
+  <div style="padding:20px;flex:1;overflow-y:auto;">
+    <h3 style="margin:0 0 12px;font-size:1.4rem;font-weight:600;color:#1a0dab;">${place.title}</h3>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;">
+      <span style="color:#d50000;font-weight:bold;">${place.rating || 0}</span>
+      ${"★".repeat(Math.floor(place.rating || 0))}${"☆".repeat(5 - Math.floor(place.rating || 0))}
+      <span style="color:#666;font-size:0.9rem;">(${place.reviews || 0} đánh giá)</span>
+    </div>
+    <p style="margin:0 0 20px;font-size:1rem;line-height:1.7;color:#333;">${place.fullDesc || "Chi tiết chưa có"}</p>
+    <div style="padding:16px;background:#f8f9fa;border-radius:8px;font-size:0.95rem;color:#555;">
+      <div style="margin-bottom:8px;"><strong>Địa chỉ:</strong> ${place.address || "Địa chỉ chưa có"}</div>
+    </div>
+  </div>
+`;
 
     document.body.appendChild(modal);
     modalRef.current = modal;
@@ -2394,254 +1362,34 @@ const MapPage = () => {
     const modal = document.createElement('div');
     modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;max-width:420px;background:white;border-radius:20px;padding:24px;box-shadow:0 24px 60px rgba(15,23,42,0.25);z-index:10002;';
     modal.innerHTML = `
-      <button id="close-photo-modal" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:1.1rem;cursor:pointer;">×</button>
+  < button id = "close-photo-modal" style = "position:absolute;top:12px;right:12px;width:34px;height:34px;border:none;border-radius:50%;background:#f1f5f9;color:#475569;font-size:1.1rem;cursor:pointer;" >×</button >
       <h2 style="margin:0 0 8px;font-size:1.4rem;color:#1f2937;">Thêm ảnh cộng đồng</h2>
       <p style="margin:0 0 16px;color:#64748b;font-size:0.95rem;">Chia sẻ khoảnh khắc của bạn tại <strong>${place.title}</strong>. Ảnh sẽ được kiểm duyệt trước khi hiển thị.</p>
       ${
-        user && user.userId
-          ? `
+  user && user.userId
+    ? `
         <div style="display:flex;flex-direction:column;gap:12px;">
           <div>
             <label style="display:block;font-weight:600;margin-bottom:6px;color:#1f2937;">Chọn ảnh *</label>
-            <input type="file" id="photo-modal-file" accept="image/*" style="width:100%;padding:10px;border:1px solid #d0d7e2;border-radius:10px;" />
-          </div>
-          <div>
-            <label style="display:block;font-weight:600;margin-bottom:6px;color:#1f2937;">Năm chụp (tùy chọn)</label>
-            <input type="number" id="photo-modal-year" placeholder="Ví dụ: 1998" min="1800" max="${new Date().getFullYear() + 1}" style="width:100%;padding:10px;border:1px solid #d0d7e2;border-radius:10px;" />
-          </div>
-          <div style="border:1px dashed #cbd5f5;border-radius:12px;height:150px;display:flex;align-items:center;justify-content:center;color:#94a3b8;text-align:center;" id="photo-modal-preview">Chưa chọn ảnh</div>
-          <button id="photo-modal-submit" style="width:100%;padding:12px;border:none;border-radius:999px;background:#1a73e8;color:white;font-weight:600;font-size:1rem;cursor:pointer;">Gửi ảnh</button>
-          <p id="photo-modal-status" style="margin:0;color:#475569;font-size:0.9rem;"></p>
-        </div>
-      `
-          : `
-        <div style="padding:16px;border:1px solid #fee2e2;border-radius:12px;background:#fff1f2;text-align:center;color:#b91c1c;">
-          Bạn cần <a href="/login" id="photo-modal-login" style="color:#1a73e8;font-weight:600;">đăng nhập</a> để gửi ảnh.
-        </div>
-      `
-      }
-    `;
-    document.body.appendChild(modal);
-    uploadModalRef.current = modal;
-
-    modal.querySelector('#close-photo-modal')?.addEventListener('click', closePhotoUploadModal);
-
-    if (!user || !user.userId) {
-      modal.querySelector('#photo-modal-login')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.location.href = '/login';
-      });
-      return;
-    }
-
-    const fileInput = modal.querySelector('#photo-modal-file');
-    const previewBox = modal.querySelector('#photo-modal-preview');
-    const yearInput = modal.querySelector('#photo-modal-year');
-    const submitBtn = modal.querySelector('#photo-modal-submit');
-    const statusEl = modal.querySelector('#photo-modal-status');
-
-    fileInput?.addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (!file) {
-        previewBox.textContent = 'Chưa chọn ảnh';
-        return;
-      }
-      const previewUrl = URL.createObjectURL(file);
-      previewBox.innerHTML = `<img src="${previewUrl}" alt="Preview" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" />`;
-    });
-
-    submitBtn?.addEventListener('click', async () => {
-      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-        alert('Vui lòng chọn ảnh trước khi gửi.');
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('locationId', place.id);
-      formData.append('userId', user.userId);
-      if (yearInput?.value) {
-        formData.append('year', yearInput.value);
-      }
-      formData.append('image', fileInput.files[0]);
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Đang gửi...';
-      if (statusEl) statusEl.textContent = '';
-
-      try {
-        await axios.post(`${BASE_URL}/location-images`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        if (statusEl) statusEl.textContent = '✅ Ảnh đã được gửi, chờ duyệt.';
-        fileInput.value = '';
-        if (previewBox) previewBox.textContent = 'Chưa chọn ảnh';
-        if (yearInput) yearInput.value = '';
-        await refreshCommunityPhotos(place.id, place);
-        setTimeout(() => {
-          closePhotoUploadModal();
-        }, 800);
-      } catch (err) {
-        console.error('Gửi ảnh thất bại', err);
-        const msg = err?.response?.data?.message || 'Gửi ảnh thất bại, vui lòng thử lại.';
-        if (statusEl) statusEl.textContent = `❌ ${msg}`;
-        else alert(msg);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Gửi ảnh';
-      }
-    });
-  };
-
-  const openPhotoPreview = ({ photos = [], startIndex = 0 } = {}) => {
-    if (!Array.isArray(photos) || !photos.length) return;
-    let currentIndex = Math.min(Math.max(startIndex, 0), photos.length - 1);
-
-    const buildPhotoData = (idx) => {
-      const p = photos[idx] || {};
-      const rawSrc = p.ImagePath || p.imagePath || p.src || '';
-      const src = rawSrc?.startsWith('http') ? rawSrc : `${BASE_URL}${rawSrc}`;
-      return {
-        src: src || '',
-        year: p.Year || p.year || 'Chưa rõ năm',
-        userName: p.submittedBy || p.userName || 'Ẩn danh',
-      };
-    };
-
-    const getCurrentData = () => buildPhotoData(currentIndex);
-
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);backdrop-filter:blur(3px);z-index:10050;display:flex;align-items:center;justify-content:center;padding:24px;';
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) document.body.removeChild(overlay);
-    });
-
-    overlay.innerHTML = `
-      <div style="position:relative;width:100%;max-width:960px;max-height:92vh;background:#020617;border-radius:20px;padding:20px 20px 16px;box-shadow:0 30px 80px rgba(0,0,0,0.55);display:flex;flex-direction:column;gap:14px;font-family:system-ui;">
-        <button id="preview-close" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border:none;border-radius:50%;background:rgba(15,23,42,0.9);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-          <div style="display:flex;gap:10px;">
-            <button id="preview-prev" style="padding:8px 14px;border:none;border-radius:999px;background:#1e293b;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">‹ Ảnh trước</button>
-            <button id="preview-next" style="padding:8px 14px;border:none;border-radius:999px;background:#1a73e8;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">Ảnh tiếp ›</button>
-          </div>
-          <div style="display:flex;gap:10px;">
-            <button id="preview-zoom-out" style="padding:8px 14px;border:none;border-radius:999px;background:#1e293b;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">−</button>
-            <button id="preview-zoom-in" style="padding:8px 14px;border:none;border-radius:999px;background:#1a73e8;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">+</button>
-            <button id="preview-reset" style="padding:8px 14px;border:none;border-radius:999px;background:#334155;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">Reset</button>
-          </div>
-        </div>
-        <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:14px;background:#020617;position:relative;">
-          <img id="preview-image" src="" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:14px;transition:transform 0.2s ease;" />
-        </div>
-        <div style="margin-top:4px;padding:10px 4px 0;border-top:1px solid rgba(148,163,184,0.4);display:flex;justify-content:space-between;align-items:center;gap:12px;color:#e5e7eb;font-size:0.9rem;">
-          <div style="display:flex;flex-direction:column;gap:2px;max-width:70%;">
-            <span style="font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;color:#9ca3af;">Ảnh cộng đồng</span>
-            <span id="preview-user" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 </span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span id="preview-year" style="padding:6px 12px;border-radius:999px;background:#0f172a;color:#facc15;font-weight:600;font-size:0.85rem;white-space:nowrap;">📅 </span>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(overlay);
-
-    const img = overlay.querySelector('#preview-image');
-    const userLabel = overlay.querySelector('#preview-user');
-    const yearLabel = overlay.querySelector('#preview-year');
-    const zoomInBtn = overlay.querySelector('#preview-zoom-in');
-    const zoomOutBtn = overlay.querySelector('#preview-zoom-out');
-    const resetBtn = overlay.querySelector('#preview-reset');
-    const closeBtn = overlay.querySelector('#preview-close');
-    const prevBtn = overlay.querySelector('#preview-prev');
-    const nextBtn = overlay.querySelector('#preview-next');
-    let scale = 1;
-
-    const applyScale = () => {
-      img.style.transform = `scale(${scale})`;
-      img.style.cursor = scale > 1 ? 'grab' : 'default';
-    };
-
-    const renderPhoto = () => {
-      const data = getCurrentData();
-      if (!data.src) return;
-      img.src = data.src;
-      userLabel.textContent = `👤 ${data.userName || 'Ẩn danh'}`;
-      yearLabel.textContent = `📅 ${data.year || 'Chưa rõ năm'}`;
-      scale = 1;
-      applyScale();
-    };
-
-    renderPhoto();
-
-    zoomInBtn?.addEventListener('click', () => {
-      scale = Math.min(scale + 0.2, 3);
-      applyScale();
-    });
-
-    zoomOutBtn?.addEventListener('click', () => {
-      scale = Math.max(scale - 0.2, 0.5);
-      applyScale();
-    });
-
-    resetBtn?.addEventListener('click', () => {
-      scale = 1;
-      applyScale();
-    });
-
-    closeBtn?.addEventListener('click', () => {
-      document.body.removeChild(overlay);
-    });
-
-    const gotoPhoto = (nextIndex) => {
-      currentIndex = nextIndex;
-      if (currentIndex < 0) currentIndex = photos.length - 1;
-      if (currentIndex >= photos.length) currentIndex = 0;
-      renderPhoto();
-    };
-
-    prevBtn?.addEventListener('click', () => gotoPhoto(currentIndex - 1));
-    nextBtn?.addEventListener('click', () => gotoPhoto(currentIndex + 1));
-
-    if (photos.length <= 1) {
-      prevBtn?.setAttribute('disabled', 'true');
-      prevBtn.style.opacity = 0.4;
-      nextBtn?.setAttribute('disabled', 'true');
-      nextBtn.style.opacity = 0.4;
-    }
-
-    overlay.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') {
-        gotoPhoto(currentIndex + 1);
-      } else if (e.key === 'ArrowLeft') {
-        gotoPhoto(currentIndex - 1);
-      } else if (e.key === 'Escape') {
-        document.body.removeChild(overlay);
-      }
-    });
-    overlay.setAttribute('tabindex', '-1');
-    overlay.focus();
-  };
-
-  /* ---------- TÍNH ĐƯỜNG ĐI ---------- */
+            <input type="file" id="photo-modal-file" accept="image
   const calculateRoute = async (from, to, map) => {
     const url = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${from.lng},${from.lat};${to[1]},${to[0]}?overview=full&geometries=geojson`;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Không thể kết nối với máy chủ định tuyến");
-      const data = await res.json();
-      if (data.routes && data.routes[0]) {
-        const route = data.routes[0];
-        const coords = route.geometry.coordinates.map((c) => [c[1], c[0]]);
-        const polyline = L.polyline(coords, { color: "#4285f4", weight: 6, opacity: 0.9 }).addTo(map);
-        currentRouteLayer.current = polyline;
-        map.fitBounds(polyline.getBounds());
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Không thể kết nối với máy chủ định tuyến");
+    const data = await res.json();
+    if (data.routes && data.routes[0]) {
+      const route = data.routes[0];
+      const coords = route.geometry.coordinates.map((c) => [c[1], c[0]]);
+      const polyline = L.polyline(coords, { color: "#4285f4", weight: 6, opacity: 0.9 }).addTo(map);
+      currentRouteLayer.current = polyline;
+      map.fitBounds(polyline.getBounds());
 
-        const km = (route.distance / 1000).toFixed(1);
-        const mins = Math.round(route.duration / 60);
+      const km = (route.distance / 1000).toFixed(1);
+      const mins = Math.round(route.duration / 60);
 
-        const routeDetails = document.getElementById("route-details");
-        routeDetails.innerHTML = `
+      const routeDetails = document.getElementById("route-details");
+      routeDetails.innerHTML = `
           <h4 style="margin:16px 0 8px;font-size:1rem;color:#333;font-weight:600">Lộ trình</h4>
           <div style="padding:16px;background:#f8f9fa;border-radius:8px">
             <div style="font-weight:600;color:#333;margin-bottom:8px">
@@ -2649,19 +1397,18 @@ const MapPage = () => {
             </div>
           </div>
         `;
-        routeDetails.style.display = "block";
-      }
-    } catch (err) {
-      document.getElementById("route-details").innerHTML = `<div style="color:#d50000;padding:10px">Không thể tìm đường: ${err.message}</div>`;
-      document.getElementById("route-details").style.display = "block";
+      routeDetails.style.display = "block";
     }
-  };
+  } catch (err) {
+    document.getElementById("route-details").innerHTML = `<div style="color:#d50000;padding:10px">Không thể tìm đường: ${err.message}</div>`;
+    document.getElementById("route-details").style.display = "block";
+  }
+};
 
-  /* ---------- YÊU THÍCH ---------- */
-  const showFavoritesSidebar = () => {
-    const userPhotoFavorites = getCurrentUserPhotoFavorites();
-    const userPlaceFavorites = getCurrentUserPlaceFavorites();
-    favoritesSidebarRef.current.innerHTML = `
+const showFavoritesSidebar = () => {
+  const userPhotoFavorites = getCurrentUserPhotoFavorites();
+  const userPlaceFavorites = getCurrentUserPlaceFavorites();
+  favoritesSidebarRef.current.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
         <h3 style="margin:0;font-size:1.4rem;font-weight:600;color:white;">Mục yêu thích</h3>
         <div onclick="window.closeFavoritesSidebar()" style="width:36px;height:36px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
@@ -2679,19 +1426,19 @@ const MapPage = () => {
       <div id="favorites-list" style="color:white;"></div>
     `;
 
-    const photoContainer = document.getElementById("favorite-photos-container");
-    if (!user || !user.userId) {
-      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Đăng nhập để lưu và xem ảnh yêu thích.</div>`;
-    } else if (!userPhotoFavorites.length) {
-      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Chưa có ảnh nào được lưu.</div>`;
-    } else {
-      photoContainer.innerHTML = userPhotoFavorites
-        .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
-        .map((photo) => {
-          const src = photo.ImagePath?.startsWith('http')
-            ? photo.ImagePath
-            : `${BASE_URL}${photo.ImagePath || ''}`;
-          return `
+  const photoContainer = document.getElementById("favorite-photos-container");
+  if (!user || !user.userId) {
+    photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Đăng nhập để lưu và xem ảnh yêu thích.</div>`;
+  } else if (!userPhotoFavorites.length) {
+    photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Chưa có ảnh nào được lưu.</div>`;
+  } else {
+    photoContainer.innerHTML = userPhotoFavorites
+      .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
+      .map((photo) => {
+        const src = photo.ImagePath?.startsWith('http')
+          ? photo.ImagePath
+          : `${BASE_URL}${photo.ImagePath || ''}`;
+        return `
             <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #333;position:relative;cursor:pointer;" onclick="window.openFavoritePhoto('${photo.submissionId}')">
               <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;" alt="Ảnh yêu thích" />
               <div style="flex:1;">
@@ -2704,18 +1451,18 @@ const MapPage = () => {
               </div>
             </div>
           `;
-        })
-        .join("");
-    }
+      })
+      .join("");
+  }
 
-    const list = document.getElementById("favorites-list");
-    if (userPlaceFavorites.length === 0) {
-      list.innerHTML = `<div style="color:#aaa;text-align:center;padding:20px;">Chưa có địa điểm nào được lưu.</div>`;
-    } else {
-      list.innerHTML = userPlaceFavorites
-        .map((fav) => {
-          const place = places.find((p) => p.id === fav.id) || fav;
-          return `
+  const list = document.getElementById("favorites-list");
+  if (userPlaceFavorites.length === 0) {
+    list.innerHTML = `<div style="color:#aaa;text-align:center;padding:20px;">Chưa có địa điểm nào được lưu.</div>`;
+  } else {
+    list.innerHTML = userPlaceFavorites
+      .map((fav) => {
+        const place = places.find((p) => p.id === fav.id) || fav;
+        return `
             <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #444;position:relative;">
               <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/60x60?text=Chưa+có+hình"}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" />
               <div style="flex:1;cursor:pointer;" onclick="window.showPlaceFromFav(${place.id})">
@@ -2731,172 +1478,166 @@ const MapPage = () => {
               </div>
             </div>
           `;
-        })
-        .join("");
-    }
-
-    favoritesSidebarRef.current.style.display = "block";
-
-    if (sidebarRef.current.style.display === "block") {
-      sidebarRef.current.style.left = "380px";
-    }
-
-    window.updateTopBarPosition();
-    setTimeout(() => window.updateTopBarPosition(), 50);
-  };
-
-  window.closeFavoritesSidebar = () => {
-    favoritesSidebarRef.current.style.display = "none";
-
-    if (sidebarRef.current.style.display === "block") {
-      sidebarRef.current.style.left = "100px";
-    }
-
-    window.updateTopBarPosition();
-    setTimeout(() => window.updateTopBarPosition(), 50);
-  };
-
-  window.removeFromFavorites = (id) => {
-    removePlaceFromFavorites(id);
-    setTimeout(showFavoritesSidebar, 0);
-  };
-
-  window.removeFavoritePhoto = (submissionId) => {
-    if (!user || !user.userId) return;
-    const normalizedId = String(submissionId);
-    setFavoritePhotosByUser((prev) => {
-      const next = { ...prev };
-      const list = Array.isArray(next[user.userId])
-        ? next[user.userId].filter((item) => item.submissionId !== normalizedId)
-        : [];
-      next[user.userId] = list;
-      return next;
-    });
-    setTimeout(showFavoritesSidebar, 0);
-  };
-
-  window.openFavoritePhoto = (submissionId) => {
-    const list = getCurrentUserPhotoFavorites();
-    const index = list.findIndex((item) => item.submissionId === String(submissionId));
-    if (index !== -1) {
-      openPhotoPreview({ photos: list, startIndex: index });
-    }
-  };
-
-  window.showPlaceFromFav = (id) => {
-    const userPlaceFavorites = getCurrentUserPlaceFavorites();
-    const place = places.find((p) => p.id === id) || userPlaceFavorites.find((f) => f.id === id);
-    if (place) {
-      currentPlace.current = place;
-      clearCurrentRoute();
-      showPlaceDetail(place, mapInstance.current);
-      highlightMarker(place.id);
-      favoritesSidebarRef.current.style.display = "block";
-      sidebarRef.current.style.left = "380px";
-      sidebarRef.current.style.display = "block";
-    }
-  };
-
-  /* ---------- ĐÓNG SIDEBAR CHI TIẾT ---------- */
-  window.closeSidebar = () => {
-    sidebarRef.current.style.display = "none";
-    clearCurrentRoute();
-
-    window.updateTopBarPosition();
-    setTimeout(() => window.updateTopBarPosition(), 50);
-  };
-
-  // ❌ REMOVED: Duplicate definition that was overriding the correct one in showPlaceDetail()
-  // The correct window.setStarRating is defined inside showPlaceDetail() with proper window.currentRating update
-
-  /* ---------- ĐỊNH VỊ NGƯỜI DÙNG ---------- */
-  useEffect(() => {
-    if (!mapInstance.current || !navigator.geolocation) return;
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        if (userMarker.current) {
-          mapInstance.current.removeLayer(userMarker.current);
-        }
-
-        const icon = L.divIcon({
-          html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-          className: "user-location-marker",
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
-        });
-
-        userMarker.current = L.marker([lat, lng], { icon }).addTo(mapInstance.current);
-        userMarker.current.bindPopup('<b style="color:#4285f4">Vị trí của bạn</b>').openPopup();
-        mapInstance.current.setView([lat, lng], 14);
-      },
-      () => console.warn("Không thể lấy vị trí người dùng"),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
-  }, [mapInstance.current]);
-
-  /* ---------- RETURN JSX ---------- */
-  if (status === "failed") {
-    return <div style={{ color: "red", padding: "20px" }}>Lỗi: {error}</div>;
+      })
+      .join("");
   }
 
-  return (
-    <>
-      <div
-        ref={mapRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          zIndex: 9999,
-        }}
-      />
+  favoritesSidebarRef.current.style.display = "block";
 
-      {/* ✅ NÚT VỆ TINH - ngay trên zoom controls */}
-      <button
-        onClick={() => setIsDarkMode(!isDarkMode)}
-        style={{
-          position: "fixed",
-          bottom: "145px", // Ngay trên zoom controls (3 nút + padding)
-          right: "16px",
-          zIndex: 10001,
-          width: "40px",
-          height: "40px",
-          borderRadius: "12px",
-          border: "2px solid rgba(0,0,0,0.2)",
-          backgroundColor: "#fff",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "20px",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
-          transition: "all 0.2s ease",
-        }}
-        title={isDarkMode ? "Bản đồ thường" : "Chế độ vệ tinh"}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#f0f0f0";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "#fff";
-        }}
-      >
-        🛰️
-      </button>
+  if (sidebarRef.current.style.display === "block") {
+    sidebarRef.current.style.left = "380px";
+  }
 
-      {/* SO SÁNH ẢNH MODAL */}
-      {comparePlace &&
-        ReactDOM.createPortal(
-          <CompareModal place={comparePlace} onClose={() => setComparePlace(null)} />,
-          document.body
-        )}
-    </>
+  window.updateTopBarPosition();
+  setTimeout(() => window.updateTopBarPosition(), 50);
+};
+
+window.closeFavoritesSidebar = () => {
+  favoritesSidebarRef.current.style.display = "none";
+
+  if (sidebarRef.current.style.display === "block") {
+    sidebarRef.current.style.left = "100px";
+  }
+
+  window.updateTopBarPosition();
+  setTimeout(() => window.updateTopBarPosition(), 50);
+};
+
+window.removeFromFavorites = (id) => {
+  removePlaceFromFavorites(id);
+  setTimeout(showFavoritesSidebar, 0);
+};
+
+window.removeFavoritePhoto = (submissionId) => {
+  if (!user || !user.userId) return;
+  const normalizedId = String(submissionId);
+  setFavoritePhotosByUser((prev) => {
+    const next = { ...prev };
+    const list = Array.isArray(next[user.userId])
+      ? next[user.userId].filter((item) => item.submissionId !== normalizedId)
+      : [];
+    next[user.userId] = list;
+    return next;
+  });
+  setTimeout(showFavoritesSidebar, 0);
+};
+
+window.openFavoritePhoto = (submissionId) => {
+  const list = getCurrentUserPhotoFavorites();
+  const index = list.findIndex((item) => item.submissionId === String(submissionId));
+  if (index !== -1) {
+    openPhotoPreview({ photos: list, startIndex: index });
+  }
+};
+
+window.showPlaceFromFav = (id) => {
+  const userPlaceFavorites = getCurrentUserPlaceFavorites();
+  const place = places.find((p) => p.id === id) || userPlaceFavorites.find((f) => f.id === id);
+  if (place) {
+    currentPlace.current = place;
+    clearCurrentRoute();
+    showPlaceDetail(place, mapInstance.current);
+    highlightMarker(place.id);
+    favoritesSidebarRef.current.style.display = "block";
+    sidebarRef.current.style.left = "380px";
+    sidebarRef.current.style.display = "block";
+  }
+};
+
+window.closeSidebar = () => {
+  sidebarRef.current.style.display = "none";
+  clearCurrentRoute();
+
+  window.updateTopBarPosition();
+  setTimeout(() => window.updateTopBarPosition(), 50);
+};
+
+useEffect(() => {
+  if (!mapInstance.current || !navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+
+      if (userMarker.current) {
+        mapInstance.current.removeLayer(userMarker.current);
+      }
+
+      const icon = L.divIcon({
+        html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+        className: "user-location-marker",
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      });
+
+      userMarker.current = L.marker([lat, lng], { icon }).addTo(mapInstance.current);
+      userMarker.current.bindPopup('<b style="color:#4285f4">Vị trí của bạn</b>').openPopup();
+      mapInstance.current.setView([lat, lng], 14);
+    },
+    () => console.warn("Không thể lấy vị trí người dùng"),
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
   );
+}, [mapInstance.current]);
+
+if (status === "failed") {
+  return <div style={{ color: "red", padding: "20px" }}>Lỗi: {error}</div>;
+}
+
+return (
+  <>
+    <div
+      ref={mapRef}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        zIndex: 9999,
+      }}
+    />
+
+    { }
+    <button
+      onClick={() => setIsDarkMode(!isDarkMode)}
+      style={{
+        position: "fixed",
+        bottom: "145px", // Ngay trên zoom controls (3 nút + padding)
+        right: "16px",
+        zIndex: 10001,
+        width: "40px",
+        height: "40px",
+        borderRadius: "12px",
+        border: "2px solid rgba(0,0,0,0.2)",
+        backgroundColor: "#fff",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "20px",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
+        transition: "all 0.2s ease",
+      }}
+      title={isDarkMode ? "Bản đồ thường" : "Chế độ vệ tinh"}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "#f0f0f0";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "#fff";
+      }}
+    >
+      🛰️
+    </button>
+
+    { }
+    {comparePlace &&
+      ReactDOM.createPortal(
+        <CompareModal place={comparePlace} onClose={() => setComparePlace(null)} />,
+        document.body
+      )}
+  </>
+);
 };
 
 export default MapPage;

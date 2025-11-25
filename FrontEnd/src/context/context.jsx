@@ -1,7 +1,6 @@
 import React, { createContext, useEffect, useState, useMemo, useRef } from 'react';
 import { setupTokenGetters } from '../services/api'
 
-// Banner images and locations - only used in this context
 const BANNER_IMAGES = [
   'https://www.agoda.com/wp-content/uploads/2024/08/son-tra-da-nang-vietnam-featured.jpg',
   'https://danangfantasticity.com/wp-content/uploads/2022/02/BA-NA-MO-CUA.jpg'
@@ -47,7 +46,6 @@ export const AppProvider = ({ children }) => {
     return () => clearInterval(id);
   }, [locations]);
 
-  // --- CompareCard global drag registry & global listeners ---
   const compareHandlersRef = useRef({}); // id -> { onMove, onUp }
   const draggingIdRef = useRef(null);
   const listenersAttachedRef = useRef(false);
@@ -136,9 +134,6 @@ export const AppProvider = ({ children }) => {
     setIsSidebarOpen,
   };
 
-  // Wire api client token getters so axios will attach Authorization header
-  // ⚠️ DEPRECATED: Giờ dùng HttpOnly cookie, không cần accessToken state nữa
-  // Giữ lại để backward compatible
   useEffect(() => {
     try {
       setupTokenGetters(() => accessToken, setAccessToken)

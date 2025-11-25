@@ -15,11 +15,7 @@ const ContentModeration = () => {
   const fetchArticles = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with real API
-      // const response = await apiClient.get(`/admin/articles?status=${filter}`);
-      // setArticles(response.data);
 
-      // Mock data
       const mockArticles = [
         {
           id: 1,
@@ -88,8 +84,7 @@ const ContentModeration = () => {
 
   const handleApprove = async (articleId) => {
     try {
-      // await apiClient.patch(`/admin/articles/${articleId}/approve`);
-      
+
       setArticles(articles.map(a => 
         a.id === articleId ? { ...a, status: 'approved' } : a
       ));
@@ -104,8 +99,7 @@ const ContentModeration = () => {
     if (!reason) return;
 
     try {
-      // await apiClient.patch(`/admin/articles/${articleId}/reject`, { reason });
-      
+
       setArticles(articles.map(a => 
         a.id === articleId ? { ...a, status: 'rejected' } : a
       ));
@@ -119,8 +113,7 @@ const ContentModeration = () => {
     if (!window.confirm('Bạn có chắc muốn xóa bài viết này?')) return;
 
     try {
-      // await apiClient.delete(`/admin/articles/${articleId}`);
-      
+
       setArticles(articles.filter(a => a.id !== articleId));
       toast.success('✅ Đã xóa bài viết');
     } catch (error) {
@@ -134,7 +127,7 @@ const ContentModeration = () => {
 
   return (
     <div>
-      {/* Header Stats */}
+      {}
       <div className="stats-grid" style={{ marginBottom: '2rem' }}>
         <div className="stats-card">
           <div className="stats-card-header">
@@ -169,12 +162,12 @@ const ContentModeration = () => {
         </div>
       </div>
 
-      {/* Content Table */}
+      {}
       <div className="data-table-container">
         <div className="table-header">
           <h2 className="table-title">Quản lý nội dung</h2>
           <div className="table-actions">
-            {/* Filter */}
+            {}
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}

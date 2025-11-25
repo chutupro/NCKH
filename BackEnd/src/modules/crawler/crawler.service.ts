@@ -129,14 +129,13 @@ export class CrawlerService {
     return text.replace(/\s+/g, ' ').trim();
   }
 
-  // ===== Kiểm tra URL hợp lệ =====
   private async verifyUrl(url: string): Promise<string | null> {
     try {
       const resp = await axios.head(url, { maxRedirects: 5 });
       if (resp.status === 200) return url;
       if (resp.request?.res?.responseUrl) return resp.request.res.responseUrl;
     } catch (err) {
-      // thử bỏ .html nếu có
+
       if (url.endsWith('.html')) {
         const alt = url.replace(/\.html$/, '');
         try {
@@ -149,7 +148,6 @@ export class CrawlerService {
     return null;
   }
 
-  // ================== DANANG FANTASTICITY HISTORY ==================
   private async crawlFantasticityHistory(): Promise<CrawledEvent[]> {
     const api = 'https://danangfantasticity.com/wp-json/wp/v2/posts?search=history&per_page=55';
     const events: CrawledEvent[] = [];
@@ -196,7 +194,6 @@ export class CrawlerService {
     }
   }
 
-  // ================== DANANG FANTASTICITY SITES ==================
   private async crawlFantasticitySites(): Promise<CrawledEvent[]> {
     const url = 'https://danangfantasticity.com/he-thong-di-tich-lich-su-quoc-gia-da-nang';
     const events: CrawledEvent[] = [];
@@ -219,7 +216,6 @@ export class CrawlerService {
 
         const category = this.detectCategory(title, descRaw);
 
-        // tạo anchor link nếu có id
         let sourceUrl = url;
         const idAnchor = $(el).attr('id');
         if (idAnchor) sourceUrl = url + '#' + idAnchor;
@@ -245,7 +241,6 @@ export class CrawlerService {
     }
   }
 
-  // ================== RUN ==================
   async run() {
     await this.ensureCategories();
 

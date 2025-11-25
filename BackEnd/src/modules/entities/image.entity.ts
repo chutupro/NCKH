@@ -18,7 +18,6 @@ export class Images {
   @Column({ type: 'varchar', length: 20, nullable: true })
   Type: string;
 
-  // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.images)
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;

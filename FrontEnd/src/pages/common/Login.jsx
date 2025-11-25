@@ -18,8 +18,7 @@ const Login = () => {
 
   const onSubmit = async (e) => {
     e.preventDefault()
-    
-    // Validation
+
     if (!email.trim() || !password.trim()) {
       setError('Không được để trống.')
       toast.error('Không được để trống.', {
@@ -32,7 +31,6 @@ const Login = () => {
       return
     }
 
-    // Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
       setError('Email không hợp lệ.')
@@ -43,7 +41,6 @@ const Login = () => {
       return
     }
 
-    // Password length validation
     if (password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự.')
       toast.error('Mật khẩu phải có ít nhất 6 ký tự.', {
@@ -53,14 +50,12 @@ const Login = () => {
       return
     }
 
-    // Clear error và bắt đầu request
     setError('')
     setLoading(true)
 
     try {
       const response = await authService.login(email, password, rememberMe)
-      
-      // Normalize user data
+
       const normalizedUser = {
         userId: response?.user?.userId ?? response?.user?.UserID ?? null,
         email: response?.user?.email ?? response?.user?.Email ?? email,
@@ -70,33 +65,29 @@ const Login = () => {
         avatar: response?.user?.profile?.avatar ?? response?.user?.avatar ?? '/img/default-avatar.png',
       };
 
-      // 🔥 KHÔNG set accessToken nữa - dùng HttpOnly cookie
       setUser(normalizedUser);
       setIsAuthenticated(true);
-      
-      // Dispatch event để notify Header component
+
       window.dispatchEvent(new Event('userLoggedIn'))
-      
-      // Kiểm tra xem có địa điểm cần quay lại không (từ map review)
+
       const returnToPlaceData = localStorage.getItem('returnToPlace');
-      
-      // Redirect sau 500ms để user thấy toast
+
       setTimeout(() => {
         if (returnToPlaceData) {
-          // Nếu có returnToPlace, redirect về map (không xóa localStorage, để MapPage xử lý)
+
           navigate('/map');
         } else if (normalizedUser.Role === 'Admin') {
-          // Nếu là Admin, redirect về trang admin
+
           navigate('/admin');
         } else {
-          // Nếu không, redirect về trang chủ
+
           navigate('/');
         }
       }, 500)
     } catch (err) {
-      // Xử lý error message từ backend
+
       const errorMessage = err?.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.'
-      
+
       setError(errorMessage)
       toast.error(errorMessage, {
         position: 'top-right',
@@ -112,30 +103,28 @@ const Login = () => {
   }
 
   const onGoogle = () => {
-    // Generate random state for CSRF protection
+
     const state = crypto.randomUUID ? crypto.randomUUID() : 
                   Math.random().toString(36).substring(2) + Date.now().toString(36);
     sessionStorage.setItem('oauth_state', state);
-    
-    // REDIRECT TO GOOGLE OAUTH
+
     window.location.href = `http://localhost:3000/auth/google?state=${state}`;
   }
 
   const onFacebook = () => {
-    // Generate random state for CSRF protection
+
     const state = crypto.randomUUID ? crypto.randomUUID() : 
                   Math.random().toString(36).substring(2) + Date.now().toString(36);
     sessionStorage.setItem('oauth_state', state);
-    
-    // REDIRECT TO FACEBOOK OAUTH
+
     window.location.href = `http://localhost:3000/auth/facebook?state=${state}`;
   }
 
   return (
     <div className="auth-page-split">
-      {/* Container chứa 2 cột nổi lên trên background */}
+      {}
       <div className="auth-container">
-        {/* Left Side: Logo & Branding */}
+        {}
         <div className="auth-left">
           <div className="auth-logo-large">
             <div className="dragon-icon">🐉🪱</div>
@@ -144,12 +133,12 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right Side: Form */}
+        {}
         <div className="auth-right">
           <div className="auth-form-wrapper">
             <h2 className="auth-title">Đăng nhập</h2>
 
-        {/* Error Message */}
+        {}
         {error && (
           <div style={{
             padding: '12px 16px',
@@ -164,7 +153,7 @@ const Login = () => {
           </div>
         )}
 
-        {/* Form */}
+        {}
         <form className="auth-form" onSubmit={onSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
@@ -175,7 +164,7 @@ const Login = () => {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                // ✅ Clear error khi người dùng bắt đầu sửa
+
                 if (error) setError('');
               }}
               required
@@ -191,7 +180,7 @@ const Login = () => {
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
-                // ✅ Clear error khi người dùng bắt đầu sửa
+
                 if (error) setError('');
               }}
               required
@@ -215,12 +204,12 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Divider */}
+        {}
         <div className="divider">
           <span>hoặc</span>
         </div>
 
-        {/* Social Buttons */}
+        {}
         <div className="social-buttons">
           <button className="btn-social" onClick={onGoogle}>
             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -237,7 +226,7 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Sign up link */}
+        {}
         <p className="auth-footer">
           Bạn mới biết đến Đà Nẵng History? <Link to="/register" className="link-primary">Đăng ký</Link>
         </p>

@@ -1,4 +1,4 @@
-// src/app.module.ts
+
 import { Module } from '@nestjs/common';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -20,7 +20,7 @@ import { LocationImagesModule } from './modules/location-images/location-images.
 
 @Module({
   imports: [
-    // 👇 Cho phép truy cập file ảnh qua URL
+
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',

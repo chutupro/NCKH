@@ -12,16 +12,12 @@ import passport from 'passport';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // --- Enable Cookie Parser ---
   app.use(cookieParser());
 
-  // --- Initialize passport (required for AuthGuard strategies) ---
   app.use(passport.initialize());
 
-  // --- Global Exception Filter ---
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // --- Global Validation Pipe ---
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -30,19 +26,17 @@ async function bootstrap() {
     }),
   );
 
-  // --- Cấu hình CORS ---
   app.enableCors({
     origin: ['http://localhost:3000', 'http://localhost:5173'], // Cho phép FE truy cập
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
-  // --- Cấu hình Swagger ---
   const config = new DocumentBuilder()
     .setTitle('API Example')                 // tiêu đề API
     .setDescription('API description')       // mô tả
     .setVersion('1.0')                       // version
-    // 👇 thêm phần Bearer Auth để có nút "Authorize"
+
     .addBearerAuth(
       {
         type: 'http',
@@ -59,12 +53,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // --- Serve static files from uploads ---
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
 
-  // --- Listen server ---
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   log(`🚀 Server running: http://localhost:${port}/api`);

@@ -22,7 +22,7 @@ const PostActions = ({
       toast.success('Đã sao chép link!')
       setShowShareMenu(false)
     } catch {
-      // Fallback nếu clipboard API không hoạt động
+
       const textArea = document.createElement('textarea')
       textArea.value = `${window.location.origin}/community?post=${postId}`
       textArea.style.position = 'fixed'

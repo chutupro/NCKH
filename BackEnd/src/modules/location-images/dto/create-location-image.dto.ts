@@ -4,5 +4,3 @@ export class CreateLocationImageDto {
   year?: number;
 }
 
-
-

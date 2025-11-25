@@ -9,24 +9,20 @@ const Personal = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  
-  // Form state
+
   const [fullName, setFullName] = useState('');
   const [bio, setBio] = useState('');
   const [avatar, setAvatar] = useState('');
-  
-  // Tab state for posts section
+
   const [activeTab, setActiveTab] = useState('my-posts'); // 'my-posts' or 'liked-posts'
-  
-  // Stats state - tính toán động từ bài viết
+
   const [totalPosts, setTotalPosts] = useState(0);
   const [totalLikes, setTotalLikes] = useState(0);
 
-  // Fetch user profile
   useEffect(() => {
-    // Fetch profile on mount and when accessToken changes (if using header-based auth)
+
     fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [accessToken]);
 
   const fetchProfile = async () => {
@@ -85,14 +81,12 @@ const Personal = () => {
       setProfile(data);
       setEditing(false);
 
-      // ✅ Cập nhật user trong Context để header và các component khác hiển thị avatar mới
       setUser({
         ...user,
         fullName: data.fullName,
         avatar: data.profile?.avatar || avatar,
       });
 
-      // ✅ Dispatch event để UserPosts component re-fetch
       window.dispatchEvent(new Event('profileUpdated'));
 
       toast.success('Cập nhật profile thành công!', {
@@ -138,7 +132,7 @@ const Personal = () => {
     }}>
       <h1 style={{ marginBottom: '30px' }}>Thông tin cá nhân</h1>
 
-      {/* Profile Info */}
+      {}
       {!editing ? (
         <div>
           <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -245,92 +239,10 @@ const Personal = () => {
             <div style={{ marginBottom: '10px' }}>
               <input
                 type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    try {
-                      const { uploadAvatar } = await import('../../services/mediaService');
-                      const url = await uploadAvatar(file);
-                      setAvatar(url);
-                    } catch (error) {
-                      console.error('Error uploading avatar:', error);
-                      toast.error('Không thể tải ảnh lên');
-                    }
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  border: '1px solid #ddd',
-                  borderRadius: '6px',
-                  fontSize: '15px',
-                  backgroundColor: 'white',
-                  color: '#000'
-                }}
-              />
-            </div>
-            {avatar && (
-              <img 
-                src={avatar} 
-                alt="Preview" 
-                style={{ 
-                  marginTop: '10px', 
-                  width: '80px', 
-                  height: '80px', 
-                  borderRadius: '50%',
-                  objectFit: 'cover'
-                }}
-                onError={(e) => e.target.style.display = 'none'}
-              />
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              type="submit"
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}
-            >
-              💾 Lưu thay đổi
-            </button>
-            <button 
-              type="button"
-              onClick={() => {
-                setEditing(false);
-                setFullName(profile.fullName || '');
-                setBio(profile.profile.bio || '');
-                setAvatar(profile.profile.avatar || '/img/default-avatar.png');
-              }}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}
-            >
-              ❌ Hủy
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* Posts Section - Only show when not editing */}
+                accept="image}
       {!editing && (
         <div style={{ marginTop: '40px' }}>
-          {/* Tab Navigation */}
+          {}
           <div style={{ 
             display: 'flex', 
             gap: '10px', 
@@ -394,7 +306,7 @@ const Personal = () => {
             </button>
           </div>
 
-          {/* Tab Content */}
+          {}
           <div style={{ minHeight: '200px' }}>
             {activeTab === 'my-posts' && <UserPosts onStatsUpdate={(stats) => {
               setTotalPosts(stats.totalPosts);

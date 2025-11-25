@@ -14,8 +14,8 @@ const CommentThread = ({ comment, user, onDelete, onReply }) => {
         onDelete={onDelete}
         onReply={onReply}
       />
-      
-      {/* Show replies toggle button */}
+
+      {}
       {comment.replies && comment.replies.length > 0 && (
         <button 
           className="view-replies-btn"
@@ -28,8 +28,8 @@ const CommentThread = ({ comment, user, onDelete, onReply }) => {
           }
         </button>
       )}
-      
-      {/* Replies */}
+
+      {}
       {comment.replies && comment.replies.length > 0 && expanded && (
         <div className="replies-list">
           {comment.replies.map((reply) => (

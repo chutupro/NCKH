@@ -1,4 +1,4 @@
-// src/modules/maplocations/map-locations.service.ts
+
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -142,7 +142,6 @@ export class MapLocationsService {
     const location = await this.mapLocationsRepository.findOneBy({ LocationID: locationId });
     if (!location) throw new BadRequestException('Location not found');
 
-    // ✅ Convert imageUrls array to JSON string
     const imageUrlsJson = feedbackDto.imageUrls && feedbackDto.imageUrls.length > 0
       ? JSON.stringify(feedbackDto.imageUrls)
       : undefined;
@@ -168,7 +167,6 @@ export class MapLocationsService {
     return savedFeedback;
   }
 
-  // ✅ Like feedback
   async likeFeedback(feedbackId: number) {
     const feedback = await this.feedbackRepository.findOneBy({ FeedbackID: feedbackId });
     if (!feedback) {
@@ -184,7 +182,6 @@ export class MapLocationsService {
     };
   }
 
-  // ✅ Unlike feedback
   async unlikeFeedback(feedbackId: number) {
     const feedback = await this.feedbackRepository.findOneBy({ FeedbackID: feedbackId });
     if (!feedback) {

@@ -31,7 +31,6 @@ export class CommentService {
     private readonly articleRepo: Repository<Articles>,
   ) {}
 
-  // ---- CREATE COMMENT ----
   async createComment(dto: CreateCommentDto) {
     const user = await this.userRepo.findOne({ 
       where: { UserID: dto.userId },
@@ -42,7 +41,6 @@ export class CommentService {
     if (!user) throw new BadRequestException('User not found');
     if (!article) throw new BadRequestException('Article not found');
 
-    // ✅ Cho phép reply comment
     const commentData: Partial<Comments> = {
       Content: dto.content,
       UserID: dto.userId,
@@ -69,7 +67,6 @@ export class CommentService {
     };
   }
 
-  // ---- GET COMMENTS BY ARTICLE ----
   async getCommentsByArticle(articleId: number): Promise<CommentData[]> {
     const comments = await this.commentRepo.find({
       where: { ArticleID: articleId },
@@ -77,11 +74,9 @@ export class CommentService {
       order: { CreatedAt: 'ASC' },
     });
 
-    // ✅ Trả về cấu trúc nested với replies
     const commentMap = new Map<number, CommentData>();
     const rootComments: CommentData[] = [];
 
-    // Tạo map của tất cả comments
     comments.forEach((c) => {
       const commentData: CommentData = {
         id: c.CommentID,
@@ -99,12 +94,11 @@ export class CommentService {
       commentMap.set(c.CommentID, commentData);
     });
 
-    // Tổ chức comments thành cây và set replyToName
     commentMap.forEach((comment) => {
       if (comment.parentCommentId) {
         const parent = commentMap.get(comment.parentCommentId);
         if (parent) {
-          // Set tên người được trả lời
+
           comment.replyToName = parent.author.fullName;
           parent.replies.push(comment);
         }
@@ -116,15 +110,13 @@ export class CommentService {
     return rootComments;
   }
 
-  // ---- UPDATE COMMENT ----
   async updateComment(commentId: number, content: string, userId: number) {
     const comment = await this.commentRepo.findOne({ 
       where: { CommentID: commentId },
       relations: ['user', 'user.profile'], // ✅ Load profile để lấy avatar
     });
     if (!comment) throw new BadRequestException('Comment not found');
-    
-    // Kiểm tra quyền sở hữu
+
     if (comment.UserID !== userId) {
       throw new BadRequestException('You can only edit your own comments');
     }
@@ -144,28 +136,24 @@ export class CommentService {
     };
   }
 
-  // ---- DELETE COMMENT ----
   async deleteComment(commentId: number, userId: number) {
     const comment = await this.commentRepo.findOne({ 
       where: { CommentID: commentId },
     });
     if (!comment) throw new BadRequestException('Comment not found');
-    
-    // Kiểm tra quyền sở hữu
+
     if (comment.UserID !== userId) {
       throw new BadRequestException('You can only delete your own comments');
     }
 
-    // Xóa tất cả replies trước (nếu có)
     const replies = await this.commentRepo.find({
       where: { ParentCommentID: commentId },
     });
-    
+
     if (replies.length > 0) {
       await this.commentRepo.remove(replies);
     }
 
-    // Xóa comment chính
     await this.commentRepo.remove(comment);
     return { message: 'Comment deleted successfully' };
   }

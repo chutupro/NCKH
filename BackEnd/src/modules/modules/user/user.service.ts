@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from 'src/modules/entities/user.entity';
@@ -14,14 +14,9 @@ export class UserService {
     private readonly profileRepo: Repository<UserProfiles>,
   ) {}
 
-  /**
-   * 🔐 BẢO MẬT: Loại bỏ các trường nhạy cảm trước khi trả về client
-   * TỤYỆT ĐỐI KHÔNG ĐƯỢC TRẢ PasswordHash về frontend!
-   */
   private sanitizeUser(user: Users | null): any {
     if (!user) return null;
 
-    // ✅ Dùng destructuring để loại bỏ PasswordHash
     const { PasswordHash, ...safeUser } = user;
 
     return safeUser;
@@ -29,7 +24,7 @@ export class UserService {
 
   async createUser(email: string, password: string, fullName?: string, role?: string) {
     const existing = await this.userRepo.findOne({ where: { Email: email } });
-    if (existing) throw new Error('Email đã được sử dụng.');
+    if (existing) throw new Error('Email �? ��?c s? d?ng.');
 
     const hash = await bcrypt.hash(password, 10);
     const user = this.userRepo.create({
@@ -60,20 +55,18 @@ export class UserService {
 
   async findById(id: number) {
     const user = await this.userRepo.findOne({ where: { UserID: id } });
-    
-    // 🔐 BẢO MẬT: Loại bỏ PasswordHash trước khi return
+
     return this.sanitizeUser(user);
   }
 
-  // ✅ Lấy thông tin User Profile đầy đủ
   async getUserProfile(userId: number) {
     const user = await this.userRepo.findOne({
       where: { UserID: userId },
-      relations: ['profile'], // Load cả UserProfile
+      relations: ['profile'], // Load c? UserProfile
     });
 
     if (!user) {
-      throw new Error('User không tồn tại');
+      throw new Error('User kh�ng t?n t?i');
     }
 
     return {
@@ -92,7 +85,6 @@ export class UserService {
     };
   }
 
-  // ✅ Cập nhật User Profile
   async updateUserProfile(
     userId: number,
     data: {
@@ -101,22 +93,21 @@ export class UserService {
       fullName?: string;
     }
   ) {
-    // Update User info (fullName)
+
     if (data.fullName) {
       await this.userRepo.update({ UserID: userId }, { FullName: data.fullName });
     }
 
-    // Update Profile info (avatar, bio)
     const profile = await this.profileRepo.findOne({ where: { UserID: userId } });
-    
+
     if (!profile) {
-      throw new Error('Profile không tồn tại');
+      throw new Error('Profile kh�ng t?n t?i');
     }
 
     if (data.avatar !== undefined) {
       profile.Avatar = data.avatar;
     }
-    
+
     if (data.bio !== undefined) {
       profile.Bio = data.bio;
     }

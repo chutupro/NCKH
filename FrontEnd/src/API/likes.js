@@ -64,7 +64,7 @@ export async function getArticleLikesList(articleId, token = null) {
   try {
     const opts = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
     const res = await apiClient.get(`/articles_post/${articleId}/likes`, opts)
-    // controller returns { count, userIds }
+
     return res.data
   } catch (err) {
     const server = err?.response?.data || err?.response

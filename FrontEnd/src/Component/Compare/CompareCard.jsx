@@ -75,7 +75,7 @@ const CompareCard = ({ item }) => {
   };
 
   const handleCardClick = (e) => {
-    // Don't navigate if user is dragging or clicking on the slider
+
     if (dragging || e.target.closest('.cc-divider')) {
       return;
     }

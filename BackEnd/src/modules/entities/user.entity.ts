@@ -40,11 +40,9 @@ export class Users {
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
-  // Email Verification Fields
   @Column({ type: 'boolean', default: false })
   IsEmailVerified: boolean;
 
-  // --- RELATIONS ---
   @OneToOne(() => UserProfiles, (profile) => profile.user)
   profile: UserProfiles;
 

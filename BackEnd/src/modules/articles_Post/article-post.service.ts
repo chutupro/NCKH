@@ -36,7 +36,6 @@ export class ArticleService {
     private likeRepo: Repository<Likes>,
   ) {}
 
-  // --- GET ALL ARTICLES ---
   async getAllArticles() {
     const articles = await this.articleRepo
       .createQueryBuilder('article')
@@ -68,7 +67,6 @@ export class ArticleService {
     }));
   }
 
-  // --- CREATE NEW ARTICLE ---
   async createArticle(dto: CreateArticleDto) {
     const user = await this.userRepo.findOne({ where: { UserID: dto.userId } });
     const category = await this.categoryRepo.findOne({ where: { CategoryID: dto.categoryId } });
@@ -111,9 +109,8 @@ export class ArticleService {
     };
   }
 
-  // --- DELETE ARTICLE ---
 async deleteArticle(articleId: number) {
-  // Tìm bài viết theo ID
+
   const article = await this.articleRepo.findOne({
     where: { ArticleID: articleId },
     relations: ['images', 'analytics', 'likes'], // load luôn quan hệ
@@ -121,7 +118,6 @@ async deleteArticle(articleId: number) {
 
   if (!article) throw new Error('Article not found');
 
-  // Xóa dữ liệu liên quan
   if (article.images?.length) {
     await this.imageRepo.remove(article.images);
   }
@@ -132,7 +128,6 @@ async deleteArticle(articleId: number) {
     await this.likeRepo.remove(article.likes);
   }
 
-  // Xóa bài viết
   await this.articleRepo.remove(article);
 
   return { message: 'Article and related data deleted successfully' };
@@ -145,7 +140,6 @@ async deleteArticle(articleId: number) {
 
   if (!article) throw new Error('Article not found');
 
-  // Update title, content, category nếu có
   if (dto.title !== undefined) article.Title = dto.title;
   if (dto.content !== undefined) article.Content = dto.content;
 
@@ -158,7 +152,6 @@ async deleteArticle(articleId: number) {
 
   await this.articleRepo.save(article);
 
-  // Update image nếu có
   if (dto.imagePath) {
     let image = article.images?.[0];
     if (image) {
@@ -185,6 +178,5 @@ async deleteArticle(articleId: number) {
     imageDescription: article.images?.[0]?.AltText || null,
   };
 }
-
 
 }

@@ -143,5 +143,3 @@ const PhotoModeration = () => {
 
 export default PhotoModeration;
 
-
-

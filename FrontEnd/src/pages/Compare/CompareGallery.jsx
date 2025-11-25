@@ -38,9 +38,8 @@ const CompareGallery = () => {
     return () => { mounted = false; ac.abort(); };
   }, []);
 
-  // derive categories from data (keeps in sync with DB)
   const CATEGORIES = useMemo(() => {
-    // derive known category codes from data; include 'other' if unknowns exist
+
     const codes = new Set(['all']);
     (items || []).forEach(c => {
       const code = getCodeFromName(c.category || '');

@@ -14,7 +14,6 @@ const CompareDetail = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // fetch item from API
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
 

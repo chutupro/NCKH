@@ -6,7 +6,6 @@ import ContributeCall from "../../Component/home/ContributeCall";
 import ContributeImpact from "../../Component/home/ContributeImpact";
 import '../../Styles/home/HomeAnimations.css';
 
-
 const Home = () => {
   const sectionsRef = useRef([]);
 

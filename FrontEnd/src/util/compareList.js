@@ -1,35 +1,4 @@
-/**
- * =============================================================================
- * COMPARE LIST - Dữ liệu cho trang SO SÁNH XƯA - NAY
- * =============================================================================
- * Sử dụng trong:
- * - FrontEnd/src/Component/Compare/CompareGallery.jsx (Gallery hiển thị tất cả ảnh so sánh)
- * - FrontEnd/src/pages/Compare/CompareDetail.jsx (Chi tiết từng ảnh so sánh)
- * - FrontEnd/src/pages/gallery/ImageLibraryInformation.jsx (Phần "Related Compare")
- * 
- * Mỗi item bao gồm:
- * - id: ID duy nhất
- * - title: Tên địa điểm/công trình
- * - oldSrc: URL ảnh XƯA
- * - newSrc: URL ảnh NAY
- * - yearOld: Năm chụp ảnh cũ
- * - yearNew: Năm chụp ảnh mới
- * - category: Thể loại (Văn hóa, Kiến trúc, Du lịch, Thiên nhiên)
- * - description: Mô tả chi tiết
- * - historicalNote: Ghi chú lịch sử
- * - culturalValue: Giá trị văn hóa
- * =============================================================================
- */
-/**
- * Compare list aligned with DB (ImageComparisons + Images + Articles)
- * Fields kept for frontend convenience:
- * - id: local id (kept for existing components)
- * - ComparisonID: PK from ImageComparisons
- * - HistoricalImageID, ModernImageID: FK to images table
- * - ArticleID: related article
- * - oldSrc/newSrc: image URLs (from Images.FilePath)
- * - yearOld/yearNew, location, likes, category, description...
- */
+
 const compareList = [
   {
     id: 1,
@@ -82,7 +51,7 @@ const compareList = [
     historicalNote: "Từ hoang sơ tới điểm nóng du lịch.",
     culturalValue: "Thể hiện phát triển du lịch bền vững."
   },
-  // thêm item khác nếu cần...
+
 ];
 
 export default compareList;
