@@ -135,8 +135,15 @@ const Contribute = () => {
         return
       }
       if (aiConfig.gates?.historical && isHistorical === false) {
-        blockAndNotify('Ảnh này không phải ảnh lịch sử, vui lòng chọn ảnh khác')
-        return
+        setLoading(false)
+        setMessage('Ảnh này không phải ảnh lịch sử, vui lòng chọn ảnh khác')
+        const userChoice = window.confirm('Ảnh này không phải ảnh lịch sử. Bạn có muốn tiếp tục đóng góp ảnh này không?')
+        if (!userChoice) {
+          clearFile({ preserveMessage: true })
+          setAnalysis(null)
+          return
+        }
+        // User chose to continue, proceed with the image
       }
       const label = Array.isArray(json?.activeLabels) && json.activeLabels.length ? json.activeLabels[0] : null
       // map AI labels to frontend category names in both EN and VI

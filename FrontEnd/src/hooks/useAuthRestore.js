@@ -55,7 +55,6 @@ export const useAuthRestore = () => {
           avatar: user?.profile?.avatar || user?.avatar || '/img/default-avatar.png',
         };
         
-        console.log('🔐 [AuthRestore] Normalized user:', normalizedUser);
 
         // 🔥 KHÔNG set accessToken vì đã trong cookie
         setUser(normalizedUser);

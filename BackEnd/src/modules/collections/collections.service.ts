@@ -70,4 +70,52 @@ export class CollectionsService {
       articles: (c.collectionArticles || []).map((ca) => ca.article),
     };
   }
+
+  async update(id: number, payload: { Name?: string; Title?: string; Description?: string; ImagePath?: string; ImageDescription?: string; CategoryID?: number; ArticleIDs?: number[] }) {
+    const collection = await this.collectionRepo.findOne({ where: { CollectionID: id } });
+    if (!collection) {
+      throw new Error('Collection not found');
+    }
+
+    // Update basic fields
+    if (payload.Name !== undefined) collection.Name = payload.Name;
+    if (payload.Title !== undefined) collection.Title = payload.Title;
+    if (payload.Description !== undefined) collection.Description = payload.Description;
+    if (payload.ImagePath !== undefined) collection.ImagePath = payload.ImagePath;
+    if (payload.ImageDescription !== undefined) collection.ImageDescription = payload.ImageDescription;
+    if (payload.CategoryID !== undefined) collection.CategoryID = payload.CategoryID;
+
+    await this.collectionRepo.save(collection as any);
+
+    // Update article mappings if provided
+    if (payload.ArticleIDs !== undefined) {
+      // Remove old mappings
+      await this.collectionArticleRepo.delete({ CollectionID: id });
+      
+      // Add new mappings
+      if (payload.ArticleIDs.length > 0) {
+        const mappings = payload.ArticleIDs.map((aid) =>
+          this.collectionArticleRepo.create({ CollectionID: id, ArticleID: aid }),
+        );
+        await this.collectionArticleRepo.save(mappings as any);
+      }
+    }
+
+    return this.findOne(id);
+  }
+
+  async remove(id: number) {
+    const collection = await this.collectionRepo.findOne({ where: { CollectionID: id } });
+    if (!collection) {
+      throw new Error('Collection not found');
+    }
+
+    // Delete related collection-article mappings first
+    await this.collectionArticleRepo.delete({ CollectionID: id });
+    
+    // Delete the collection
+    await this.collectionRepo.delete({ CollectionID: id });
+
+    return { message: 'Collection deleted successfully', CollectionID: id };
+  }
 }

@@ -82,7 +82,8 @@ const Headers = () => {
                     <div className="dropdown-name">{user.fullName || 'User'}</div>
                     <div className="dropdown-email">{user.email}</div>
                   </div>
-                  <div className="dropdown-divider"></div>
+
+                  {/* Personal is intentionally placed above language per user request */}
                   <Link to="/Personal" className="dropdown-item" onClick={() => setShowDropdown(false)}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -90,7 +91,39 @@ const Headers = () => {
                     </svg>
                     Trang cá nhân
                   </Link>
+
                   <div className="dropdown-divider"></div>
+
+                  <div className="dropdown-language">
+                    <button
+                      type="button"
+                      className="dropdown-item"
+                      onClick={() => {
+                        // debug + robust navigation: close dropdown then navigate
+                        console.log('User clicked language in dropdown')
+                        setShowDropdown(false)
+                        try {
+                          navigate('/language')
+                        } catch (e) {
+                          console.warn('navigate failed, falling back to location.href', e)
+                          window.location.href = '/language'
+                        }
+                        setTimeout(() => {
+                          if (typeof window !== 'undefined' && window.location.pathname !== '/language') {
+                            window.location.href = '/language'
+                          }
+                        }, 150)
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 8 }}>
+                        <path d="M12 2v20M2 12h20" />
+                      </svg>
+                      Ngôn ngữ
+                    </button>
+                  </div>
+
+                  <div className="dropdown-divider"></div>
+
                   <button className="dropdown-item logout-btn" onClick={handleLogout}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>

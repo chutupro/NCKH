@@ -1,0 +1,73 @@
+/* LanguageSettings page styles */
+.language-settings-page {
+  padding: 48px 16px;
+  display: flex;
+  justify-content: center;
+  min-height: calc(100vh - 72px);
+  margin-top: 50px;
+  margin-bottom: 80px;
+}
+
+.language-settings-card {
+  width: 100%;
+  max-width: 820px;
+  background: linear-gradient(180deg, #0b1220aa, rgba(255,255,255,0.02));
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(2,6,23,0.7);
+  border: 1px solid rgba(255,255,255,0.04);
+  color: #e6f3ef;
+}
+
+.language-settings-header {
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.language-settings-header h1 {
+  font-size:22px;
+  margin:0;
+  color: #fff;
+}
+.language-settings-sub { color: #cfeee2; margin-top:8px }
+
+.language-settings-main {
+  margin-top:18px;
+  display:flex;
+  gap:20px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+
+.language-card {
+  flex:1 1 360px;
+  background: rgba(255,255,255,0.02);
+  padding:16px;
+  border-radius:10px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.language-card strong{ color:#fff }
+
+.language-actions { margin-top:16px; display:flex; gap:12px }
+
+.nav-buttonThamGia {
+  background: linear-gradient(90deg,#10b981,#06b6d4);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(3,102,76,0.2);
+}
+
+.nav-buttonThamGia:hover { transform: translateY(-2px) }
+
+/* Make LanguageSwitcher buttons slightly bigger in this page */
+.language-settings-card .language-switcher { gap: 10px }
+.language-settings-card .lang-btn { width:64px; height:44px; border-radius:10px; font-size:16px }
+
+@media (max-width:768px){
+  .language-settings-main{ flex-direction:column }
+}

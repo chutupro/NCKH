@@ -36,8 +36,8 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
     {
       section: 'Management',
       items: [
-        { path: '/admin/users', icon: '👥', label: 'Người dùng', badge: '12' },
-        { path: '/admin/content', icon: '📰', label: 'Nội dung', badge: '5' },
+        { path: '/admin/users', icon: '👥', label: 'Người dùng', badge: null },
+        { path: '/admin/content', icon: '📚', label: 'Bộ sưu tập', badge: null },
         { path: '/admin/photos', icon: '🖼️', label: 'Ảnh người dùng', badge: null },
         { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: pendingCount > 0 ? String(pendingCount) : null },
         { path: '/admin/comments', icon: '💬', label: 'Bình luận', badge: '3' },

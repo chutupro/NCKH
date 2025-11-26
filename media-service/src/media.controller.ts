@@ -73,15 +73,15 @@ export class MediaController {
       throw new BadRequestException('Type không được để trống (avatar hoặc post)');
     }
 
-    // 3. Validation: Authorization
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new BadRequestException('Thiếu Authorization header (Bearer token)');
-    }
+    // 3. Validation: Authorization (DISABLED FOR DEVELOPMENT)
+    // if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    //   throw new BadRequestException('Thiếu Authorization header (Bearer token)');
+    // }
 
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      throw new BadRequestException('Token không hợp lệ');
-    }
+    const token = authHeader?.split(' ')[1] || 'dev-token';
+    // if (!token) {
+    //   throw new BadRequestException('Token không hợp lệ');
+    // }
 
     // 4. Validation: Category (bắt buộc nếu type = post)
     if (type === 'post' && !category) {

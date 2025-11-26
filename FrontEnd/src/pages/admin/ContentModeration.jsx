@@ -1,16 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { apiClient } from '../../services/api';
-import { toast } from 'react-toastify';
+import React from 'react';
 import '../../Styles/Admin/AdminDashboard.css';
+import CollectionManagement from './CollectionManagement';
 
 const ContentModeration = () => {
-  const [articles, setArticles] = useState([]);
-  const [filter, setFilter] = useState('all'); // all, pending, approved, rejected
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetchArticles();
-  }, [filter]);
 
   const fetchArticles = async () => {
     setLoading(true);
@@ -134,8 +126,51 @@ const ContentModeration = () => {
 
   return (
     <div>
-      {/* Header Stats */}
-      <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+      {/* Tab Navigation */}
+      <div style={{ marginBottom: '2rem', borderBottom: '2px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button
+            onClick={() => setActiveTab('articles')}
+            style={{
+              padding: '1rem 2rem',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'articles' ? '3px solid #10b981' : '3px solid transparent',
+              color: activeTab === 'articles' ? '#10b981' : '#6b7280',
+              fontWeight: activeTab === 'articles' ? '600' : '400',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            📰 Bài viết
+          </button>
+          <button
+            onClick={() => setActiveTab('collections')}
+            style={{
+              padding: '1rem 2rem',
+              background: 'none',
+              border: 'none',
+              borderBottom: activeTab === 'collections' ? '3px solid #10b981' : '3px solid transparent',
+              color: activeTab === 'collections' ? '#10b981' : '#6b7280',
+              fontWeight: activeTab === 'collections' ? '600' : '400',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            📚 Bộ sưu tập
+          </button>
+        </div>
+      </div>
+
+      {/* Render Active Tab Content */}
+      {activeTab === 'collections' ? (
+        <CollectionManagement />
+      ) : (
+        <>
+          {/* Header Stats */}
+          <div className="stats-grid" style={{ marginBottom: '2rem' }}>
         <div className="stats-card">
           <div className="stats-card-header">
             <div className="stats-card-icon primary">📰</div>
@@ -284,6 +319,8 @@ const ContentModeration = () => {
           </table>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 };

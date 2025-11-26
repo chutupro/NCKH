@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import Lauput from "../layout/Lauput";
 import Personal from "../pages/common/Personal";
 import UserProfile from "../pages/common/UserProfile"; // ✅ USER PROFILE
+import LanguageSettings from "../pages/common/LanguageSettings";
 import Timeline from "../pages/Timeline/Timeline";
 import TimelineDetail from "../pages/Timeline/TimelineDetail"; // khác → giữ thêm
 import Home from "../pages/common/Home";
@@ -32,7 +33,7 @@ import { fetchMapLocations } from "../pages/map/mapLocationsSlice";
 import AdminLayout from "../Component/admin/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import UserManagement from "../pages/admin/UserManagement";
-import ContentModeration from "../pages/admin/ContentModeration";
+import CollectionManagement from "../pages/admin/CollectionManagement";
 import AIModels from "../pages/admin/AIModels";
 import SystemMonitor from "../pages/admin/SystemMonitor";
 import RolePermissions from "../pages/admin/RolePermissions";
@@ -65,6 +66,7 @@ const Routee = () => {
           path="/contributeinformation"
           element={<ContributeInformation />}
         />
+        <Route path="/language" element={<LanguageSettings />} />
 
         {/* Gallery */}
         <Route path="/ImageLibrary" element={<ImageLibrary />} />
@@ -85,20 +87,20 @@ const Routee = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} /> {/* ✅ FORGOT PASSWORD */}
-  <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {/* ✅ GOOGLE CALLBACK */}
-  <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
-      
+      <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {/* ✅ GOOGLE CALLBACK */}
+      <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
+
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
-      
+
       {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/EDITOR */}
-      <Route 
-        path="/map/admin" 
+      <Route
+        path="/map/admin"
         element={
           <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
             <MapAdmin />
           </ProtectedRoute>
-        } 
+        }
       />
 
       {/* ADMIN DASHBOARD: CHỈ ADMIN */}
@@ -106,13 +108,13 @@ const Routee = () => {
         path="/admin"
         element={
           <ProtectedRoute allowedRoles={['Admin']}>
-            <AdminLayout /> 
+            <AdminLayout />
           </ProtectedRoute>
         }
       >
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<UserManagement />} />
-        <Route path="content" element={<ContentModeration />} />
+        <Route path="content" element={<CollectionManagement />} />
         <Route path="photos" element={<PhotoModeration />} />
         <Route path="contributions" element={<AdminContributions />} />
         <Route path="ai-models" element={<AIModels />} />

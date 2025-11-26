@@ -55,26 +55,7 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Các danh mục (lấy động từ util/categoryMap) */}
-            <div className="footer-section">
-              <h4 className="footer-title">{t('footer.categories')}</h4>
-              <ul className="footer-links">
-                {['all', ...KNOWN_CODES].map(code => (
-                  <li key={code}>
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        // navigate to ImageLibrary with category query param
-                        navigate({ pathname: '/ImageLibrary', search: `?category=${encodeURIComponent(code)}` });
-                      }}
-                    >
-                      {labelFor(code, t)}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Categories removed per request: "bỏ danh mục ở footer" */}
 
             {/* Thông tin liên hệ */}
             <div className="footer-section">

@@ -38,13 +38,6 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     'User'
   );
   
-  console.log('🔐 [ProtectedRoute] Checking access:', {
-    path: location.pathname,
-    user: user?.email,
-    roleId,
-    userRole,
-    allowedRoles,
-  });
 
   // Nếu đã đăng nhập nhưng không có quyền → redirect về trang chủ với thông báo
   if (allowedRoles.length > 0) {
