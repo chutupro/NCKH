@@ -5,15 +5,19 @@ const defaultAiConfig = {
   featureFlags: {
     analyze: false,
     moderateComment: false,
-    generateTitle: false,
+    moderateArticle: false,
+    gemini: false,
   },
   endpoints: {
     analyze: '/fast-analyze',
-    fastAnalyze: '/fast-analyze',
-    generateTitle: '/generate-title',
-    nsfwCheck: '/nsfw-check',
     moderateComment: '/moderate-comment',
+    moderateArticle: '/moderate-article',
+    geminiGenerate: '/gemini/generate',
   },
+  // Gates: Các cổng kiểm tra để tự động chặn nội dung vi phạm
+  // - nsfw: true = chặn ảnh không phù hợp (NSFW content)
+  // - manipulation: true = chặn ảnh đã chỉnh sửa/giả mạo
+  // - historical: true = chỉ chấp nhận ảnh lịch sử (chặn ảnh không phải lịch sử)
   gates: {
     nsfw: true,
     manipulation: true,
