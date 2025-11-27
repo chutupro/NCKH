@@ -33,7 +33,7 @@ import { LocationImagesModule } from './modules/location-images/location-images.
     ArticleModule,
     CommentModule,
     GalleryModule,
-    UploadModule, 
+    UploadModule,
     CrawlerModule,
     CollectionsModule,
     ImageComparisonsModule,

@@ -1,18 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import adminUsersService from '../../services/adminUsersService';
-import '../../Styles/Admin/Logs.css';
+import React, { useEffect, useState } from "react";
+import adminUsersService from "../../services/adminUsersService";
+import "../../Styles/Admin/Logs.css";
 
 const Logs = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterRole, setFilterRole] = useState('all');
-  const [sortBy, setSortBy] = useState('newest'); // newest, oldest, name
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
+  const [sortBy, setSortBy] = useState("newest"); // newest, oldest, name
   const [selectedUser, setSelectedUser] = useState(null);
   const [loginHistory, setLoginHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyStats, setHistoryStats] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -21,22 +26,22 @@ const Logs = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const params = { 
-        page: pagination.page, 
+      const params = {
+        page: pagination.page,
         limit: pagination.limit,
       };
       if (searchQuery) params.search = searchQuery;
-      if (filterRole !== 'all') params.role = filterRole;
-      
+      if (filterRole !== "all") params.role = filterRole;
+
       const response = await adminUsersService.getUsers(params);
       setUsers(response.data);
-      setPagination(prev => ({ 
-        ...prev, 
-        total: response.pagination.total, 
-        totalPages: response.pagination.totalPages 
+      setPagination((prev) => ({
+        ...prev,
+        total: response.pagination.total,
+        totalPages: response.pagination.totalPages,
       }));
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       setUsers([]);
     } finally {
       setLoading(false);
@@ -46,13 +51,13 @@ const Logs = () => {
   const getSortedUsers = () => {
     let sorted = [...users];
     switch (sortBy) {
-      case 'newest':
+      case "newest":
         sorted.sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
         break;
-      case 'oldest':
+      case "oldest":
         sorted.sort((a, b) => new Date(a.CreatedAt) - new Date(b.CreatedAt));
         break;
-      case 'name':
+      case "name":
         sorted.sort((a, b) => a.FullName.localeCompare(b.FullName));
         break;
       default:
@@ -62,93 +67,94 @@ const Logs = () => {
   };
 
   const getRoleName = (roleId) => {
-    const roles = { 1: 'Admin', 2: 'User', 3: 'Editor' };
-    return roles[roleId] || 'Unknown';
+    const roles = { 1: "Admin", 2: "User", 3: "Editor" };
+    return roles[roleId] || "Unknown";
   };
 
   const getRoleBadgeClass = (roleId) => {
-    const classes = { 1: 'role-admin', 2: 'role-user', 3: 'role-editor' };
-    return classes[roleId] || 'role-user';
+    const classes = { 1: "role-admin", 2: "role-user", 3: "role-editor" };
+    return classes[roleId] || "role-user";
   };
 
   const formatDate = (date) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+    if (!date) return "N/A";
+    return new Date(date).toLocaleString("vi-VN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   };
 
   const handleViewDetails = async (user) => {
     setSelectedUser(user);
     setLoadingHistory(true);
-    
+
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     // Mock login history data
     const mockHistory = [
       {
         LoginTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
         LogoutTime: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-        IPAddress: '192.168.1.100',
-        UserAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        DeviceType: 'Desktop',
-        Browser: 'Chrome',
-        OS: 'Windows',
-        SessionDuration: 60
+        IPAddress: "192.168.1.100",
+        UserAgent:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        DeviceType: "Desktop",
+        Browser: "Chrome",
+        OS: "Windows",
+        SessionDuration: 60,
       },
       {
         LoginTime: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
         LogoutTime: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
-        IPAddress: '192.168.1.101',
-        UserAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1)',
-        DeviceType: 'Mobile',
-        Browser: 'Safari',
-        OS: 'iOS',
-        SessionDuration: 120
+        IPAddress: "192.168.1.101",
+        UserAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1)",
+        DeviceType: "Mobile",
+        Browser: "Safari",
+        OS: "iOS",
+        SessionDuration: 120,
       },
       {
         LoginTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
         LogoutTime: new Date(Date.now() - 23 * 60 * 60 * 1000),
-        IPAddress: '192.168.1.100',
-        UserAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        DeviceType: 'Desktop',
-        Browser: 'Edge',
-        OS: 'Windows',
-        SessionDuration: 45
+        IPAddress: "192.168.1.100",
+        UserAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        DeviceType: "Desktop",
+        Browser: "Edge",
+        OS: "Windows",
+        SessionDuration: 45,
       },
       {
         LoginTime: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
         LogoutTime: new Date(Date.now() - 46 * 60 * 60 * 1000),
-        IPAddress: '10.0.0.50',
-        UserAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-        DeviceType: 'Desktop',
-        Browser: 'Firefox',
-        OS: 'macOS',
-        SessionDuration: 90
+        IPAddress: "10.0.0.50",
+        UserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        DeviceType: "Desktop",
+        Browser: "Firefox",
+        OS: "macOS",
+        SessionDuration: 90,
       },
       {
         LoginTime: new Date(Date.now() - 72 * 60 * 60 * 1000), // 3 days ago
         LogoutTime: null, // Still active
-        IPAddress: '192.168.1.105',
-        UserAgent: 'Mozilla/5.0 (Linux; Android 11)',
-        DeviceType: 'Mobile',
-        Browser: 'Chrome',
-        OS: 'Android',
-        SessionDuration: null
-      }
+        IPAddress: "192.168.1.105",
+        UserAgent: "Mozilla/5.0 (Linux; Android 11)",
+        DeviceType: "Mobile",
+        Browser: "Chrome",
+        OS: "Android",
+        SessionDuration: null,
+      },
     ];
 
     // Mock stats
     const mockStats = {
       totalLogins: mockHistory.length,
       avgSessionDuration: 78,
-      lastLogin: mockHistory[0].LoginTime
+      lastLogin: mockHistory[0].LoginTime,
     };
 
     setLoginHistory(mockHistory);
@@ -164,21 +170,32 @@ const Logs = () => {
 
   const handleExport = () => {
     const csv = [
-      ['ID', 'Email', 'Họ Tên', 'Vai Trò', 'Ngày Đăng Ký', 'Email Xác Thực'].join(','),
-      ...users.map(u => [
-        u.UserID,
-        u.Email,
-        u.FullName,
-        getRoleName(u.RoleID),
-        formatDate(u.CreatedAt),
-        u.IsEmailVerified ? 'Đã xác thực' : 'Chưa xác thực'
-      ].join(','))
-    ].join('\n');
+      [
+        "ID",
+        "Email",
+        "Họ Tên",
+        "Vai Trò",
+        "Ngày Đăng Ký",
+        "Email Xác Thực",
+      ].join(","),
+      ...users.map((u) =>
+        [
+          u.UserID,
+          u.Email,
+          u.FullName,
+          getRoleName(u.RoleID),
+          formatDate(u.CreatedAt),
+          u.IsEmailVerified ? "Đã xác thực" : "Chưa xác thực",
+        ].join(",")
+      ),
+    ].join("\n");
 
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `user_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `user_logs_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
   };
 
@@ -209,21 +226,27 @@ const Logs = () => {
           <div className="stat-icon">🔵</div>
           <div className="stat-info">
             <p className="stat-label">Users</p>
-            <p className="stat-value">{users.filter(u => u.RoleID === 2).length}</p>
+            <p className="stat-value">
+              {users.filter((u) => u.RoleID === 2).length}
+            </p>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">✏️</div>
           <div className="stat-info">
             <p className="stat-label">Editors</p>
-            <p className="stat-value">{users.filter(u => u.RoleID === 3).length}</p>
+            <p className="stat-value">
+              {users.filter((u) => u.RoleID === 3).length}
+            </p>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">👑</div>
           <div className="stat-info">
             <p className="stat-label">Admins</p>
-            <p className="stat-value">{users.filter(u => u.RoleID === 1).length}</p>
+            <p className="stat-value">
+              {users.filter((u) => u.RoleID === 1).length}
+            </p>
           </div>
         </div>
       </div>
@@ -241,7 +264,10 @@ const Logs = () => {
 
         <div className="filter-group">
           <label>Vai trò:</label>
-          <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
+          <select
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+          >
             <option value="all">Tất cả</option>
             <option value="1">Admin</option>
             <option value="2">User</option>
@@ -299,14 +325,26 @@ const Logs = () => {
                       <td className="email-cell">{user.Email}</td>
                       <td className="name-cell">{user.FullName}</td>
                       <td>
-                        <span className={`role-badge ${getRoleBadgeClass(user.RoleID)}`}>
+                        <span
+                          className={`role-badge ${getRoleBadgeClass(
+                            user.RoleID
+                          )}`}
+                        >
                           {getRoleName(user.RoleID)}
                         </span>
                       </td>
-                      <td className="date-cell">{formatDate(user.CreatedAt)}</td>
+                      <td className="date-cell">
+                        {formatDate(user.CreatedAt)}
+                      </td>
                       <td>
-                        <span className={`verify-badge ${user.IsEmailVerified ? 'verified' : 'unverified'}`}>
-                          {user.IsEmailVerified ? '✓ Đã xác thực' : '✗ Chưa xác thực'}
+                        <span
+                          className={`verify-badge ${
+                            user.IsEmailVerified ? "verified" : "unverified"
+                          }`}
+                        >
+                          {user.IsEmailVerified
+                            ? "✓ Đã xác thực"
+                            : "✗ Chưa xác thực"}
                         </span>
                       </td>
                       <td>
@@ -329,17 +367,21 @@ const Logs = () => {
             <div className="logs-pagination">
               <button
                 disabled={pagination.page === 1}
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                onClick={() =>
+                  setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+                }
               >
                 ← Trước
               </button>
               <span>
-                Trang {pagination.page} / {pagination.totalPages} 
+                Trang {pagination.page} / {pagination.totalPages}
                 <small> ({pagination.total} users)</small>
               </span>
               <button
                 disabled={pagination.page === pagination.totalPages}
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                onClick={() =>
+                  setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+                }
               >
                 Sau →
               </button>
@@ -352,42 +394,54 @@ const Logs = () => {
       {selectedUser && (
         <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={handleCloseModal}>×</button>
-            
+            <button className="modal-close" onClick={handleCloseModal}>
+              ×
+            </button>
+
             <h2>Chi tiết tài khoản</h2>
-            
+
             <div className="user-detail">
               <div className="detail-row">
                 <strong>🆔 User ID:</strong>
                 <span>#{selectedUser.UserID}</span>
               </div>
-              
+
               <div className="detail-row">
                 <strong>📧 Email:</strong>
                 <span>{selectedUser.Email}</span>
               </div>
-              
+
               <div className="detail-row">
                 <strong>👤 Họ và Tên:</strong>
                 <span>{selectedUser.FullName}</span>
               </div>
-              
+
               <div className="detail-row">
                 <strong>🎭 Vai Trò:</strong>
-                <span className={`role-badge ${getRoleBadgeClass(selectedUser.RoleID)}`}>
+                <span
+                  className={`role-badge ${getRoleBadgeClass(
+                    selectedUser.RoleID
+                  )}`}
+                >
                   {getRoleName(selectedUser.RoleID)}
                 </span>
               </div>
-              
+
               <div className="detail-row">
                 <strong>📅 Ngày Đăng Ký:</strong>
                 <span>{formatDate(selectedUser.CreatedAt)}</span>
               </div>
-              
+
               <div className="detail-row">
                 <strong>✉️ Trạng Thái Email:</strong>
-                <span className={`verify-badge ${selectedUser.IsEmailVerified ? 'verified' : 'unverified'}`}>
-                  {selectedUser.IsEmailVerified ? '✓ Đã xác thực' : '✗ Chưa xác thực'}
+                <span
+                  className={`verify-badge ${
+                    selectedUser.IsEmailVerified ? "verified" : "unverified"
+                  }`}
+                >
+                  {selectedUser.IsEmailVerified
+                    ? "✓ Đã xác thực"
+                    : "✗ Chưa xác thực"}
                 </span>
               </div>
 
@@ -396,15 +450,15 @@ const Logs = () => {
                   <hr />
                   <div className="detail-row">
                     <strong>📝 Bio:</strong>
-                    <span>{selectedUser.profile.Bio || 'Chưa có bio'}</span>
+                    <span>{selectedUser.profile.Bio || "Chưa có bio"}</span>
                   </div>
-                  
+
                   <div className="detail-row">
                     <strong>🖼️ Avatar:</strong>
                     {selectedUser.profile.Avatar ? (
-                      <img 
-                        src={selectedUser.profile.Avatar} 
-                        alt="Avatar" 
+                      <img
+                        src={selectedUser.profile.Avatar}
+                        alt="Avatar"
                         className="detail-avatar"
                       />
                     ) : (
@@ -416,7 +470,7 @@ const Logs = () => {
 
               <hr />
               <h3>🔐 Lịch sử đăng nhập</h3>
-              
+
               {loadingHistory ? (
                 <div className="loading-history">
                   <div className="spinner-small"></div>
@@ -466,11 +520,17 @@ const Logs = () => {
                             )}
                           </div>
                           <div className="history-meta">
-                            <span className="meta-chip">💻 {history.DeviceType}</span>
-                            <span className="meta-chip">🌐 {history.Browser}</span>
+                            <span className="meta-chip">
+                              💻 {history.DeviceType}
+                            </span>
+                            <span className="meta-chip">
+                              🌐 {history.Browser}
+                            </span>
                             <span className="meta-chip">🖥️ {history.OS}</span>
                             {history.IPAddress && (
-                              <span className="meta-chip">🌍 {history.IPAddress}</span>
+                              <span className="meta-chip">
+                                🌍 {history.IPAddress}
+                              </span>
                             )}
                           </div>
                         </div>
