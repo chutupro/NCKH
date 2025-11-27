@@ -1,10 +1,12 @@
 // src/pages/map/MapAdmin.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { fetchMapLocations } from "./mapLocationsSlice";
 import axios from "axios";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import PhotoModeration from "../admin/PhotoModeration";
 
 const HERE_API_KEY = import.meta.env.VITE_HERE_API_KEY;
 const BASE_URL = "http://localhost:3000";
@@ -21,7 +23,9 @@ const defaultIcon = L.icon({
 
 const MapAdmin = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { places, status } = useSelector((state) => state.mapLocations);
+  const [activeTab, setActiveTab] = useState('map'); // 'map' hoặc 'photos'
   const [form, setForm] = useState({
     id: null,
     title: "",
@@ -326,8 +330,49 @@ const MapAdmin = () => {
 
   return (
     <div style={{ padding: "40px", maxWidth: "1400px", margin: "0 auto", background: "#f5f5f5", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: "600", color: "#333", marginBottom: "30px", textAlign: "center" }}>
-        Quản lý Địa điểm Lịch sử Đà Nẵng
+      {/* Header với Tab Navigation */}
+      <div style={{ marginBottom: "30px" }}>
+        <div style={{ display: "flex", gap: "10px", borderBottom: "2px solid #e0e0e0" }}>
+          <button
+            onClick={() => setActiveTab('map')}
+            style={{
+              padding: "12px 24px",
+              border: "none",
+              background: activeTab === 'map' ? '#1a73e8' : 'transparent',
+              color: activeTab === 'map' ? 'white' : '#666',
+              fontSize: "1rem",
+              fontWeight: "600",
+              cursor: "pointer",
+              borderRadius: "8px 8px 0 0",
+              transition: "all 0.3s ease",
+            }}
+          >
+            🗺️ Bảng Đồ
+          </button>
+          <button
+            onClick={() => setActiveTab('photos')}
+            style={{
+              padding: "12px 24px",
+              border: "none",
+              background: activeTab === 'photos' ? '#1a73e8' : 'transparent',
+              color: activeTab === 'photos' ? 'white' : '#666',
+              fontSize: "1rem",
+              fontWeight: "600",
+              cursor: "pointer",
+              borderRadius: "8px 8px 0 0",
+              transition: "all 0.3s ease",
+            }}
+          >
+            🖼️ Ảnh người dùng
+          </button>
+        </div>
+      </div>
+
+      {/* Render theo tab */}
+      {activeTab === 'map' ? (
+        <div>
+          <h2 style={{ fontSize: "2rem", fontWeight: "600", color: "#333", marginBottom: "30px", textAlign: "center" }}>
+            Quản lý Địa điểm Lịch sử Đà Nẵng
       </h2>
 
       <div style={{ display: "flex", gap: "30px" }}>
@@ -481,7 +526,11 @@ const MapAdmin = () => {
         </div>
       </div>
 
-      {status === "failed" && <div style={{ color: "red", marginTop: "20px", textAlign: "center" }}>Lỗi: {status}</div>}
+          {status === "failed" && <div style={{ color: "red", marginTop: "20px", textAlign: "center" }}>Lỗi: {status}</div>}
+        </div>
+      ) : (
+        <PhotoModeration />
+      )}
     </div>
   );
 };

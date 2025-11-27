@@ -50,10 +50,7 @@ const CompareSlider = ({ item }) => {
         <h2>{t('compareDetail.compareTitle')}</h2>
         <div className="cd-year-labels">
           <span className="cd-year-old">
-            <FontAwesomeIcon icon={faClock} /> {item.yearOld || t('compareCommon.oldShort')}
-          </span>
-          <span className="cd-year-new">
-            <FontAwesomeIcon icon={faClock} /> {item.yearNew || t('compareCommon.newShort')}
+            📅 Năm: {item.yearOld || t('compareCommon.oldShort')}
           </span>
         </div>
       </div>

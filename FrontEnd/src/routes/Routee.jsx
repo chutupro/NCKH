@@ -39,6 +39,7 @@ import SystemMonitor from "../pages/admin/SystemMonitor";
 import RolePermissions from "../pages/admin/RolePermissions";
 import PhotoModeration from "../pages/admin/PhotoModeration";
 import AdminContributions from "../Component/admin/AdminContributions";
+import MapManagement from "../pages/admin/MapManagement";
 import ProtectedRoute from "../Component/common/ProtectedRoute";
 
 const Routee = () => {
@@ -117,6 +118,7 @@ const Routee = () => {
         <Route path="content" element={<CollectionManagement />} />
         <Route path="photos" element={<PhotoModeration />} />
         <Route path="contributions" element={<AdminContributions />} />
+        <Route path="map-management" element={<MapManagement />} />
         <Route path="ai-models" element={<AIModels />} />
         <Route path="system-monitor" element={<SystemMonitor />} />
         <Route path="permissions" element={<RolePermissions />} />

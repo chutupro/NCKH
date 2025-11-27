@@ -28,6 +28,8 @@ export class MapLocationsService {
       'loc.Address',
       'loc.Image',
       'loc.OldImage',
+      'loc.ImageYear',
+      'loc.OldImageYear',
       'loc.ArticleID',
       'loc.TimelineID',
       'loc.CategoryID',
@@ -47,6 +49,8 @@ export class MapLocationsService {
     Address: loc.loc_Address,
     Image: loc.loc_Image,
     OldImage: loc.loc_OldImage,
+    imageYear: loc.loc_ImageYear,
+    oldImageYear: loc.loc_OldImageYear,
     description: loc.description,              // ← Alias từ addSelect
     fullDescription: loc.fullDescription,      // ← Alias từ addSelect
     CategoryID: loc.loc_CategoryID,

@@ -1502,8 +1502,8 @@ const MapPage = () => {
             <div style="position:absolute;left:12px;right:12px;bottom:12px;color:#e5e7eb;font-size:0.8rem;display:flex;flex-direction:column;gap:4px;pointer-events:none;">
               <span style="font-size:0.8rem;letter-spacing:0.08em;text-transform:uppercase;opacity:0.9;">📷 Ảnh cộng đồng</span>
               <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">👤 ${submittedBy}</span>
-                <span style="padding:4px 10px;border-radius:999px;background:rgba(15,23,42,0.9);color:#facc15;font-weight:600;">📅 ${yearLabel}</span>
+                ${photo.submittedBy ? `<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">👤 ${submittedBy}</span>` : ''}
+                <span style="padding:4px 10px;border-radius:999px;background:rgba(15,23,42,0.9);color:#facc15;font-weight:600;${!photo.submittedBy ? 'margin-left:auto;' : ''}">📅 ${yearLabel}</span>
               </div>
             </div>
           </div>
@@ -1686,12 +1686,17 @@ const MapPage = () => {
 
         <img src="${place.image ? `${BASE_URL}${place.image}` : "https://via.placeholder.com/360x180?text=Chưa+có+hình"}" style="width:100%;height:180px;object-fit:cover;border-radius:12px;margin-bottom:16px" />
 
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
-          <h3 style="margin:0;font-size:1.2rem;color:#1a0dab;font-weight:600;flex:1;line-height:1.4;">
-            ${place.title}
-          </h3>
-          <div style="background:#e8f0fe;padding:6px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;color:#1a73e8;white-space:nowrap;flex-shrink:0;">
-            ${categoryName}
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <h3 style="margin:0;font-size:1.2rem;color:#1a0dab;font-weight:600;line-height:1.4;flex:1;">
+              ${place.title}
+            </h3>
+            <div style="background:#e8f0fe;padding:6px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;color:#1a73e8;white-space:nowrap;margin-left:8px;">
+              ${categoryName}
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            ${place.oldImageYear ? `<span style="background:#fee2e2;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:600;color:#991b1b;white-space:nowrap;">📅 Năm: ${place.oldImageYear}</span>` : ''}
           </div>
         </div>
 
