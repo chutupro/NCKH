@@ -94,11 +94,11 @@ const Routee = () => {
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
 
-      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/EDITOR */}
+      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/MODERATOR */}
       <Route
         path="/map/admin"
         element={
-          <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
+          <ProtectedRoute allowedRoles={['Admin', 'Moderator']}>
             <MapAdmin />
           </ProtectedRoute>
         }

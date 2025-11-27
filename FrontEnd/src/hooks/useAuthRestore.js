@@ -1,16 +1,14 @@
 import { useEffect, useContext, useRef } from 'react';
 import AppContext from '../context/context';
-import authService from '../services/authService';
+import axios from 'axios';
 
 /**
  * Hook để restore authentication sau khi refresh (F5)
  * 
  * Flow:
- * 1. App mount → Kiểm tra HttpOnly cookie (refresh_token)
- * 2. Gọi /auth/refresh để lấy cookie mới
- * 3. Gọi /users/me để lấy user info
- * 4. Nếu thành công → restore user session
- * 5. Nếu thất bại → giữ trạng thái logout (KHÔNG retry)
+ * 1. App mount → Gọi /users/me (backend tự đọc access_token từ cookie)
+ * 2. Nếu thành công → restore user session
+ * 3. Nếu 401 → user chưa đăng nhập hoặc token hết hạn
  */
 export const useAuthRestore = () => {
   const { setUser, setIsAuthenticated, setIsAuthLoading } = useContext(AppContext);
@@ -22,46 +20,51 @@ export const useAuthRestore = () => {
     hasAttemptedRestore.current = true;
 
     const restoreSession = async () => {
-      const timeoutId = setTimeout(() => {
-        setIsAuthLoading(false);
-      }, 5000);
-
       try {
-        // 🔥 GỌI /auth/refresh + /users/me
-        const response = await authService.refreshToken();
+        setIsAuthLoading(true);
 
-        clearTimeout(timeoutId);
+        // 🔥 GỌI /users/me - Backend tự đọc access_token từ HttpOnly cookie
+        const response = await axios.get('http://localhost:3000/users/me', {
+          withCredentials: true, // Quan trọng: Gửi cookie
+          timeout: 5000,
+        });
 
-        if (!response?.user) {
-          setIsAuthLoading(false);
-          return;
-        }
+        const user = response.data;
 
-        const { user } = response;
-        
-        const roleId = user?.roleId || user?.RoleID || null;
-        const roleName = user?.role || user?.Role || (
+        // ✅ Normalize user data (backend trả về PascalCase hoặc camelCase)
+        const roleId = user?.RoleID || user?.roleId || null;
+        const roleName = user?.Role || user?.role || (
           roleId === 1 ? 'Admin' : 
+          roleId === 3 ? 'Moderator' :
           roleId === 4 ? 'Editor' : 
           'User'
         );
         
         const normalizedUser = {
-          userId: user?.userId || user?.UserID || null,
-          email: user?.email || user?.Email || '',
-          fullName: user?.fullName || user?.FullName || '',
+          userId: user?.UserID || user?.userId || null,
+          email: user?.Email || user?.email || '',
+          fullName: user?.FullName || user?.fullName || '',
           roleId: roleId,
           Role: roleName,
-          avatar: user?.profile?.avatar || user?.avatar || '/img/default-avatar.png',
+          avatar: user?.profile?.Avatar || user?.profile?.avatar || user?.Avatar || user?.avatar || '/img/default-avatar.png',
         };
-        
 
-        // 🔥 KHÔNG set accessToken vì đã trong cookie
+        // ✅ Set user state → isAuthenticated = true
         setUser(normalizedUser);
         setIsAuthenticated(true);
-        setIsAuthenticated(true);
+
+        console.log('✅ [useAuthRestore] Session restored:', normalizedUser.email);
       } catch (error) {
-        clearTimeout(timeoutId);
+        // ❌ 401 = Chưa đăng nhập hoặc token hết hạn
+        if (error.response?.status === 401) {
+          console.log('⚠️ [useAuthRestore] Not authenticated (401)');
+        } else {
+          console.error('❌ [useAuthRestore] Error:', error.message);
+        }
+
+        // Clear state
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
         setIsAuthLoading(false);
       }

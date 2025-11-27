@@ -26,7 +26,7 @@ export class AdminPermissionsService {
         content: ['read', 'create', 'edit', 'delete', 'approve'],
         users: ['read', 'create', 'edit', 'delete'],
       },
-      Editor: {
+      Moderator: {
         content: ['read', 'create', 'edit'],
         users: ['read'],
       },
@@ -115,13 +115,13 @@ export class AdminPermissionsService {
       // Đếm theo RoleID
       const stats = {
         Admin: 0,
-        Editor: 0,
+        Moderator: 0,
         User: 0,
       };
 
       users.forEach(user => {
         if (user.RoleID === 1) stats.Admin++;
-        else if (user.RoleID === 4) stats.Editor++;
+        else if (user.RoleID === 4) stats.Moderator++;
         else if (user.RoleID === 2) stats.User++;
       });
 
@@ -138,7 +138,7 @@ export class AdminPermissionsService {
       // Fallback
       return {
         success: true,
-        data: { Admin: 0, Editor: 0, User: 0 },
+        data: { Admin: 0, Moderator: 0, User: 0 },
         cached: false,
       };
     }
