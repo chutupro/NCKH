@@ -35,7 +35,7 @@ import { LocationImagesModule } from './modules/location-images/location-images.
     GalleryModule,
     UploadModule, 
     CrawlerModule,
-  CollectionsModule,
+    CollectionsModule,
     ImageComparisonsModule,
     LocationImagesModule,
     CategoriesModule,
