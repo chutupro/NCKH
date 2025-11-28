@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../../context/useAppContext';
 import adminPermissionsService from '../../services/adminPermissionsService';
 import { toast } from 'react-toastify';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const RolePermissions = () => {
+  const navigate = useNavigate();
   const { user } = useAppContext();
 
-  const [roleStats, setRoleStats] = useState({ Admin: 0, Editor: 0, User: 0 });
+  // ⛔ Moderator không được xem trang này
+  useEffect(() => {
+    const isModerator = user?.role === 'Moderator' || user?.Role === 'Moderator';
+    if (isModerator) {
+      navigate('/admin/contributions', { replace: true });
+      return;
+    }
+  }, [user, navigate]);
+
+  const [roleStats, setRoleStats] = useState({ Admin: 0, Moderator: 0, User: 0 });
 
   const roles = [
     {
@@ -16,8 +27,8 @@ const RolePermissions = () => {
       color: '#ef4444',
     },
     {
-      name: 'Editor',
-      description: 'Tạo và chỉnh sửa nội dung',
+      name: 'Moderator',
+      description: 'Duyệt ảnh và quản lý bản đồ',
       color: '#3b82f6',
     },
     {

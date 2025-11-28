@@ -41,8 +41,7 @@ export const useAuthRestore = () => {
         const roleId = user?.RoleID || user?.roleId || null;
         const roleName = user?.Role || user?.role || (
           roleId === 1 ? 'Admin' : 
-          roleId === 3 ? 'Moderator' :
-          roleId === 4 ? 'Editor' : 
+          roleId === 3 ? 'Moderator' : 
           'User'
         );
         

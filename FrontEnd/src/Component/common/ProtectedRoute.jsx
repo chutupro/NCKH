@@ -30,14 +30,17 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   // Map RoleID sang RoleName nếu chưa có Role field
-  // RoleID: 1=Admin, 2=User, 4=Editor
+  // RoleID: 1=Admin, 2=User, 3=Moderator
   const roleId = user?.roleId || user?.RoleID || null;
   const userRole = user?.Role || user?.role || (
     roleId === 1 ? 'Admin' : 
-    roleId === 4 ? 'Editor' : 
+    roleId === 3 ? 'Moderator' : 
     'User'
   );
   
+  // DEBUG: Log user data
+  console.log('🔍 [ProtectedRoute] Full user object:', user);
+  console.log('🔍 [ProtectedRoute] Extracted role:', { roleId, userRole, allowedRoles });
 
   // Nếu đã đăng nhập nhưng không có quyền → redirect về trang chủ với thông báo
   if (allowedRoles.length > 0) {

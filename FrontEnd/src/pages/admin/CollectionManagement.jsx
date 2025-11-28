@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../context/useAppContext';
 import { toast } from 'react-toastify';
 import { getCollections, getCategories } from '../../API/collections';
 import { apiClient } from '../../services/api';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const CollectionManagement = () => {
+  const navigate = useNavigate();
+  const { user } = useAppContext();
   const [collections, setCollections] = useState([]);
   const [categories, setCategories] = useState([]);
   const [filteredCollections, setFilteredCollections] = useState([]);
@@ -25,8 +29,15 @@ const CollectionManagement = () => {
   const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
+    // ⛔ Moderator không được xem trang này
+    const isModerator = user?.role === 'Moderator' || user?.Role === 'Moderator';
+    if (isModerator) {
+      navigate('/admin/contributions', { replace: true });
+      return;
+    }
+
     fetchData();
-  }, []);
+  }, [user, navigate]);
 
   useEffect(() => {
     filterCollections();

@@ -64,7 +64,7 @@ const Login = () => {
       const roleId = response?.user?.roleId ?? response?.user?.RoleID ?? null;
       const roleName = response?.user?.role ?? response?.user?.Role ?? (
         roleId === 1 ? 'Admin' : 
-        roleId === 4 ? 'Editor' : 
+        roleId === 3 ? 'Moderator' : 
         'User'
       );
       

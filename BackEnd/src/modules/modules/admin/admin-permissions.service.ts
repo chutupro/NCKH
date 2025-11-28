@@ -7,6 +7,8 @@ import { Users } from '../../entities/user.entity';
 interface RolePermissions {
   content: string[];
   users: string[];
+  images?: string[];
+  map?: string[];
 }
 
 @Injectable()
@@ -19,24 +21,31 @@ export class AdminPermissionsService {
 
   /**
    * Default permissions cho từng role
+   * Moderator: Chỉ có quyền duyệt ảnh (review) và quản lý bản đồ
    */
   private getDefaultPermissions(role: string): RolePermissions {
     const defaults: Record<string, RolePermissions> = {
       Admin: {
         content: ['read', 'create', 'edit', 'delete', 'approve'],
         users: ['read', 'create', 'edit', 'delete'],
+        images: ['read', 'review', 'delete'],
+        map: ['read', 'create', 'edit', 'delete'],
       },
-      Editor: {
-        content: ['read', 'create', 'edit'],
-        users: ['read'],
+      Moderator: {
+        content: [],
+        users: [],
+        images: ['read', 'review'], // Chỉ quyền duyệt ảnh
+        map: ['read', 'create', 'edit', 'delete'], // Quản lý bản đồ
       },
       User: {
         content: [],
         users: [],
+        images: [],
+        map: [],
       },
     };
 
-    return defaults[role] || { content: [], users: [] };
+    return defaults[role] || { content: [], users: [], images: [], map: [] };
   }
 
   /**
@@ -115,13 +124,13 @@ export class AdminPermissionsService {
       // Đếm theo RoleID
       const stats = {
         Admin: 0,
-        Editor: 0,
+        Moderator: 0,
         User: 0,
       };
 
       users.forEach(user => {
         if (user.RoleID === 1) stats.Admin++;
-        else if (user.RoleID === 4) stats.Editor++;
+        else if (user.RoleID === 3) stats.Moderator++;
         else if (user.RoleID === 2) stats.User++;
       });
 
@@ -138,7 +147,7 @@ export class AdminPermissionsService {
       // Fallback
       return {
         success: true,
-        data: { Admin: 0, Editor: 0, User: 0 },
+        data: { Admin: 0, Moderator: 0, User: 0 },
         cached: false,
       };
     }

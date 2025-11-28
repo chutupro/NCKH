@@ -1,6 +1,7 @@
 // src/pages/admin/MapManagement.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useAppContext } from "../../context/useAppContext";
 import { fetchMapLocations } from "../map/mapLocationsSlice";
 import axios from "axios";
 import L from "leaflet";
@@ -22,7 +23,9 @@ const defaultIcon = L.icon({
 
 const MapManagement = () => {
   const dispatch = useDispatch();
+  const { user } = useAppContext();
   const { places, status } = useSelector((state) => state.mapLocations);
+  // ✅ Moderator được phép xem trang này (quản lý bản đồ)
   const [activeTab, setActiveTab] = useState('map'); // 'map' hoặc 'photos'
   const [form, setForm] = useState({
     id: null,

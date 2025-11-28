@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useAppContext } from '../../context/useAppContext';
 import axios from 'axios';
 import '../../Styles/Admin/AdminContributions.css';
 
 const AdminContributions = () => {
+  const { user } = useAppContext();
+  // ✅ Moderator được phép xem trang này (duyệt ảnh, bài viết)
   const [activeTab, setActiveTab] = useState('pending'); // pending, approved, rejected
   const [pendingArticles, setPendingArticles] = useState([]);
   const [approvedArticles, setApprovedArticles] = useState([]);

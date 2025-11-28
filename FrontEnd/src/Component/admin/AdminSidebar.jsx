@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useAppContext } from '../../context/useAppContext';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const AdminSidebar = ({ collapsed, onToggle }) => {
   const location = useLocation();
+  const { user } = useAppContext();
   const [pendingCount, setPendingCount] = useState(0);
 
   const isActive = (path) => location.pathname === path;
+  
+  // Check if user is Moderator
+  const isModerator = user?.role === 'Moderator' || user?.Role === 'Moderator';
 
   useEffect(() => {
     fetchPendingCount();
@@ -25,7 +30,8 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
     }
   };
 
-  const menuItems = [
+  // Menu items for Admin only
+  const adminMenuItems = [
     {
       section: 'Main',
       items: [
@@ -59,6 +65,20 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
       ],
     },
   ];
+
+  // Menu items for Moderator only (2 items)
+  const moderatorMenuItems = [
+    {
+      section: 'Moderation',
+      items: [
+        { path: '/admin/contributions', icon: '📝', label: 'Duyệt Ảnh', badge: pendingCount > 0 ? String(pendingCount) : null },
+        { path: '/admin/map-management', icon: '🗺️', label: 'Quản Lý Bản Đồ', badge: null },
+      ],
+    },
+  ];
+
+  // Use appropriate menu based on role
+  const menuItems = isModerator ? moderatorMenuItems : adminMenuItems;
 
   return (
     <aside className={`admin-sidebar ${collapsed ? 'collapsed' : ''}`}>

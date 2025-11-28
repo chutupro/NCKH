@@ -97,24 +97,25 @@ const Routee = () => {
       {/* ✅ FACEBOOK CALLBACK */}
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
-      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/EDITOR */}
+      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/MODERATOR */}
       <Route
         path="/map/admin"
         element={
-          <ProtectedRoute allowedRoles={["Admin", "Editor"]}>
+          <ProtectedRoute allowedRoles={["Admin", "Moderator"]}>
             <MapAdmin />
           </ProtectedRoute>
         }
       />
-      {/* ADMIN DASHBOARD: CHỈ ADMIN */}
+      {/* ADMIN DASHBOARD: CHỈ ADMIN VÀ MODERATOR */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute allowedRoles={["Admin"]}>
+          <ProtectedRoute allowedRoles={["Admin", "Moderator"]}>
             <AdminLayout />
           </ProtectedRoute>
         }
       >
+        {/* All routes - individual permissions handled in components */}
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="content" element={<CollectionManagement />} />
