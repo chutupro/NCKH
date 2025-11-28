@@ -418,10 +418,15 @@ const MapPage = () => {
                   `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`
                 );
                 const newReviewsList = reviewsRes.data.map((r) => ({
+                  FeedbackID: r.FeedbackID,
                   rating: r.Rating,
                   comment: r.Comment,
                   timestamp: new Date(r.CreatedAt).toLocaleDateString("vi-VN"),
                   userName: r.user?.FullName || "Ẩn danh",
+                  avatar: r.user?.profile?.Avatar || "/img/default-avatar.png",
+                  likes: r.Likes || 0,
+                  images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
+                  imagesApproved: !!r.ImagesApproved,
                 }));
 
                 setReviews(newReviewsList);
@@ -518,13 +523,7 @@ const MapPage = () => {
                   });
                 }
 
-                // Show success message
-                const successMsg = document.createElement("div");
-                successMsg.style.cssText =
-                  "position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;";
-                successMsg.textContent = "✅ Đã gửi đánh giá thành công!";
-                document.body.appendChild(successMsg);
-                setTimeout(() => successMsg.remove(), 3000);
+                // ✅ No success message (user doesn't want it)
               } catch (error) {
                 console.error("Error submitting review:", error);
                 alert(
@@ -773,7 +772,7 @@ const MapPage = () => {
                       withCredentials: true,
                     }
                   );
-                  alert("✅ Đã gửi đánh giá thành công!");
+                  
                   commentInput.value = "";
                   if (imageInput) imageInput.value = "";
                   if (imagePreview) imagePreview.innerHTML = "";
@@ -1923,24 +1922,25 @@ const MapPage = () => {
     }, 100);
 
     let communityPhotos = [];
+    let reviewsData = []; // ✅ Lưu reviews từ API trước khi setReviews (async)
     // Load reviews và ảnh cộng đồng
     try {
       const [reviewsRes, photosRes] = await Promise.all([
         axios.get(`${BASE_URL}/map-locations/${place.id}/feedback`),
         axios.get(`${BASE_URL}/location-images/location/${place.id}`),
       ]);
-      setReviews(
-        reviewsRes.data.map((r) => ({
-          rating: r.Rating,
-          comment: r.Comment,
-          timestamp: new Date(r.CreatedAt).toLocaleDateString("vi-VN"),
-          userName: r.user?.FullName || "Ẩn danh",
-          avatar: r.user?.profile?.Avatar || "/img/default-avatar.png",
-          likes: r.Likes || 0,
-          images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
-          imagesApproved: !!r.ImagesApproved,
-        }))
-      );
+      reviewsData = reviewsRes.data.map((r) => ({
+        FeedbackID: r.FeedbackID,
+        rating: r.Rating,
+        comment: r.Comment,
+        timestamp: new Date(r.CreatedAt).toLocaleDateString("vi-VN"),
+        userName: r.user?.FullName || "Ẩn danh",
+        avatar: r.user?.profile?.Avatar || "/img/default-avatar.png",
+        likes: r.Likes || 0,
+        images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
+        imagesApproved: !!r.ImagesApproved,
+      }));
+      setReviews(reviewsData);
       communityPhotos = photosRes.data || [];
     } catch (error) {
       console.error("Error loading reviews/photos:", error);
@@ -2046,22 +2046,22 @@ const MapPage = () => {
               <div style="background:#f1f1f1;padding:16px;border-radius:8px;width:100%;margin-bottom:16px;text-align:center;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                   <span style="font-weight:600;">${(
-                    reviews.reduce((sum, r) => sum + r.rating, 0) /
-                      Math.max(reviews.length, 1) || 0
+                    reviewsData.reduce((sum, r) => sum + r.rating, 0) /
+                      Math.max(reviewsData.length, 1) || 0
                   ).toFixed(1)}</span>
-                  <span style="color:#777;">${reviews.length} đánh giá</span>
+                  <span style="color:#777;">${reviewsData.length} đánh giá</span>
                 </div>
                 <div style="margin-top:8px;">
                   <span style="color:#ffca28;">${"★".repeat(
                     Math.floor(
-                      reviews.reduce((sum, r) => sum + r.rating, 0) /
-                        Math.max(reviews.length, 1) || 0
+                      reviewsData.reduce((sum, r) => sum + r.rating, 0) /
+                        Math.max(reviewsData.length, 1) || 0
                     )
                   )}${"☆".repeat(
                   5 -
                     Math.floor(
-                      reviews.reduce((sum, r) => sum + r.rating, 0) /
-                        Math.max(reviews.length, 1) || 0
+                      reviewsData.reduce((sum, r) => sum + r.rating, 0) /
+                        Math.max(reviewsData.length, 1) || 0
                     )
                 )}</span>
                 </div>
@@ -2072,19 +2072,19 @@ const MapPage = () => {
                 <div style="flex:1;">
                   ${(() => {
                     const counts = [0, 0, 0, 0, 0];
-                    reviews.forEach((rv) => {
+                    reviewsData.forEach((rv) => {
                       counts[5 - rv.rating] = (counts[5 - rv.rating] || 0) + 1;
                     });
-                    const total = reviews.length || 1;
+                    const total = reviewsData.length || 1;
                     return `
                       <div style="display:flex;flex-direction:column;gap:6px;">
                         ${[5, 4, 3, 2, 1]
                           .map((star, idx) => {
-                            const num = reviews.filter(
+                            const num = reviewsData.filter(
                               (r) => r.rating === star
                             ).length;
                             const pct = Math.round(
-                              (num / Math.max(reviews.length, 1)) * 100
+                              (num / Math.max(reviewsData.length, 1)) * 100
                             );
                             return `
                             <div style="display:flex;align-items:center;gap:8px;">
@@ -2144,8 +2144,8 @@ const MapPage = () => {
 
               <div id="reviews-list" style="width:100%;max-height:300px;overflow-y:auto;">
                 ${
-                  reviews.length > 0
-                    ? reviews
+                  reviewsData.length > 0
+                    ? reviewsData
                         .map(
                           (r) => `
                   <div style="padding:12px;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:flex-start;">
@@ -2326,22 +2326,22 @@ const MapPage = () => {
             <div style="background:#f1f1f1;padding:16px;border-radius:8px;width:100%;margin-bottom:16px;text-align:center;">
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-weight:600;">${(
-                  reviews.reduce((sum, r) => sum + r.rating, 0) /
-                    Math.max(reviews.length, 1) || 0
+                  reviewsData.reduce((sum, r) => sum + r.rating, 0) /
+                    Math.max(reviewsData.length, 1) || 0
                 ).toFixed(1)}</span>
-                <span style="color:#777;">${reviews.length} đánh giá</span>
+                <span style="color:#777;">${reviewsData.length} đánh giá</span>
               </div>
               <div style="margin-top:8px;">
                 <span style="color:#ffca28;">${"★".repeat(
                   Math.floor(
-                    reviews.reduce((sum, r) => sum + r.rating, 0) /
-                      Math.max(reviews.length, 1) || 0
+                    reviewsData.reduce((sum, r) => sum + r.rating, 0) /
+                      Math.max(reviewsData.length, 1) || 0
                   )
                 )}${"☆".repeat(
           5 -
             Math.floor(
-              reviews.reduce((sum, r) => sum + r.rating, 0) /
-                Math.max(reviews.length, 1) || 0
+              reviewsData.reduce((sum, r) => sum + r.rating, 0) /
+                Math.max(reviewsData.length, 1) || 0
             )
         )}</span>
               </div>
@@ -2392,8 +2392,8 @@ const MapPage = () => {
 
             <div id="reviews-list" style="width:100%;max-height:300px;overflow-y:auto;">
               ${
-                reviews.length > 0
-                  ? reviews
+                reviewsData.length > 0
+                  ? reviewsData
                       .map(
                         (r) => `
                 <div style="padding:12px;border-bottom:1px solid #eee;">
@@ -2594,6 +2594,7 @@ const MapPage = () => {
                 `${BASE_URL}/map-locations/${place.id}/feedback`
               );
               const newReviewsList = reviewsRes.data.map((r) => ({
+                FeedbackID: r.FeedbackID,
                 rating: r.Rating,
                 comment: r.Comment,
                 timestamp: new Date(r.CreatedAt).toLocaleDateString("vi-VN"),
@@ -2697,13 +2698,7 @@ const MapPage = () => {
                 });
               }
 
-              // ✅ SHOW SUCCESS MESSAGE (tốt hơn alert)
-              const successMsg = document.createElement("div");
-              successMsg.style.cssText =
-                "position:fixed;top:20px;right:20px;background:#4caf50;color:white;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:10000;font-weight:600;";
-              successMsg.textContent = "✅ Đã gửi đánh giá thành công!";
-              document.body.appendChild(successMsg);
-              setTimeout(() => successMsg.remove(), 3000);
+              // ✅ No success message (user doesn't want it)
             } catch (error) {
               console.error("Error submitting review:", error);
               alert(
@@ -2783,14 +2778,19 @@ const MapPage = () => {
               );
               setReviews(
                 reviewsRes.data.map((r) => ({
+                  FeedbackID: r.FeedbackID,
                   rating: r.Rating,
                   comment: r.Comment,
                   timestamp: new Date(r.CreatedAt).toLocaleDateString("vi-VN"),
                   userName: r.user?.FullName || "Ẩn danh",
+                  avatar: r.user?.profile?.Avatar || "/img/default-avatar.png",
+                  likes: r.Likes || 0,
+                  images: r.ImageUrls ? JSON.parse(r.ImageUrls) : [],
+                  imagesApproved: !!r.ImagesApproved,
                 }))
               );
 
-              alert("Đã gửi đánh giá thành công!");
+              // ✅ No success message (user doesn't want it)
               switchTab("reviews");
             } catch (error) {
               console.error("Error:", error);
