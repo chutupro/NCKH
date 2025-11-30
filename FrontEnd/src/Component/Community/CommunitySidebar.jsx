@@ -14,6 +14,7 @@ import {
   faSearch
 } from '@fortawesome/free-solid-svg-icons'
 import { getArticlesPosts } from '../../API/articlesPost'
+import { getCategories } from '../../API/collections'
 import { getCodeFromName, CODE_TO_VN, KNOWN_CODES } from '../../util/categoryMap'
 
 const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
@@ -21,19 +22,67 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
   const [searchQuery, setSearchQuery] = useState('')
 
   const [posts, setPosts] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loadingCategories, setLoadingCategories] = useState(false)
+  const [categoriesError, setCategoriesError] = useState(null)
 
-  const filters = [
-    { id: 'all', label: t('sidebar.all'), icon: null },
-    { id: 'văn hóa', label: t('sidebar.culture'), icon: null },
-    { id: 'kiến trúc', label: t('sidebar.architecture'), icon: null },
-    { id: 'du lịch', label: t('sidebar.tourism'), icon: null },
-    { id: 'thiên nhiên', label: t('sidebar.nature'), icon: null }
-  ]
+  // Helper to get a safe display label: prefer provided label, then translation, then humanized id, then fallback
+  const getDisplayLabel = (label, id) => {
+    if (label && String(label).trim() && !/^sidebar\./i.test(String(label).trim())) return String(label)
+    if (id && String(id).trim()) {
+      const key = `sidebar.${id}`
+      const translated = t(key)
+      if (translated && translated !== key && !/^sidebar\./i.test(translated)) return translated
+      // Humanize id (replace separators, capitalize words)
+      return String(id).replace(/[-_.]/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase())
+    }
+    return t('sidebar.unknown') || 'Không xác định'
+  }
 
-  // Compute trending topics from fetched posts (count by category)
+  // Build filters from categories API when available; otherwise fall back to static list
+  const filters = (() => {
+    const base = [{ id: 'all', label: t('sidebar.all'), icon: null }]
+    if (Array.isArray(categories) && categories.length > 0) {
+      const cats = categories
+        .map(c => {
+          const rawId = (c.slug || c.name || c.Name || c.CategoryID || c.id || '')
+          const id = String(rawId).toLowerCase()
+          const label = getDisplayLabel(c.Name || c.name || c.title || c.slug || (c.CategoryID ? String(c.CategoryID) : ''), id)
+          return { id, label, icon: null }
+        })
+        .filter(c => c.id && c.id !== 'undefined')
+      return base.concat(cats)
+    }
+    return base.concat([
+      { id: 'văn hóa', label: t('sidebar.culture'), icon: null },
+      { id: 'kiến trúc', label: t('sidebar.architecture'), icon: null },
+      { id: 'du lịch', label: t('sidebar.tourism'), icon: null },
+      { id: 'thiên nhiên', label: t('sidebar.nature'), icon: null }
+    ])
+  })()
+
+  // Compute trending topics using categories API (if available) or fall back to known codes
   const trendingTopics = (() => {
-    const counts = {};
-    // initialize counts for known codes
+    // count posts per normalized category key
+    const postCounts = {}
+    posts.forEach(p => {
+      const key = (p.category || p.categoryName || p.category_vi || p.category_en || '').toString().toLowerCase()
+      if (!key) return
+      postCounts[key] = (postCounts[key] || 0) + 1
+    })
+
+    if (Array.isArray(categories) && categories.length > 0) {
+      return categories
+        .map(c => {
+          const id = (c.slug || c.name || c.Name || c.CategoryID || '').toString().toLowerCase()
+          const count = (c.count ?? c.postCount ?? postCounts[id] ?? 0)
+          return { id, label: c.Name || c.name || c.title || id, count }
+        })
+        .sort((a, b) => b.count - a.count)
+    }
+
+    // fallback to old logic using known codes
+    const counts = {}
     KNOWN_CODES.forEach(c => (counts[c] = 0));
     posts.forEach(p => {
       const catName = p.category || p.categoryName || p.category_en || p.category_vi || '';
@@ -41,7 +90,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
       if (KNOWN_CODES.includes(code)) counts[code] = (counts[code] || 0) + 1;
     });
     return Object.keys(counts)
-      .map(code => ({ code, count: counts[code] }))
+      .map(code => ({ id: code, label: t(`sidebar.${code}`), count: counts[code] }))
       .sort((a, b) => b.count - a.count);
   })();
 
@@ -56,6 +105,29 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
         setPosts(Array.isArray(data) ? data : (data.items || []))
       } catch (err) {
         console.error('Failed to load articles for sidebar:', err)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
+
+  // Load categories for filters/trending
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      setLoadingCategories(true)
+      try {
+        const data = await getCategories()
+        if (!mounted) return
+        const items = Array.isArray(data) ? data : (data.items || data.categories || [])
+        setCategories(items)
+        setCategoriesError(null)
+      } catch (err) {
+        console.error('Failed to load categories:', err)
+        if (!mounted) return
+        setCategoriesError(err)
+      } finally {
+        if (mounted) setLoadingCategories(false)
       }
     }
     load()
@@ -112,7 +184,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
             {t('sidebar.search')}
         </h3>
         <div className="search-input-wrapper">
-          <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <FontAwesomeIcon className="search-icon" />
           <input
             type="text"
             className="search-input"
@@ -130,15 +202,18 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
             {t('sidebar.filters')}
         </h3>
         <div className="filter-buttons">
-          {filters.map(filter => (
-            <button
-              key={filter.id}
-              className={`filter-btn ${activeFilter === filter.id ? 'active' : ''}`}
-              onClick={() => onFilterChange(filter.id)}
-            >
-              {filter.label}
-            </button>
-          ))}
+          {filters.map(filter => {
+            if (!filter.id || String(filter.id).trim() === '') return null
+            return (
+              <button
+                key={filter.id}
+                className={`filter-btn ${activeFilter === filter.id ? 'active' : ''}`}
+                onClick={() => onFilterChange(filter.id)}
+              >
+                {getDisplayLabel(filter.label, filter.id)}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -149,12 +224,15 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
             {t('sidebar.trending')}
         </h3>
         <div className="trending-list">
-          {trendingTopics.map((topic, index) => (
-            <div key={index} className="trending-item">
-              <span className="trending-tag">#{t(`sidebar.${topic.code}`)}</span>
-                <span className="trending-count">{topic.count} {t('sidebar.posts')}</span>
-            </div>
-          ))}
+          {trendingTopics.map((topic, index) => {
+            if (!topic.id || String(topic.id).trim() === '') return null
+            return (
+              <div key={topic.id || index} className="trending-item">
+                <span className="trending-tag">#{getDisplayLabel(topic.label, topic.id)}</span>
+                <span className="trending-count">{topic.count ?? 0} {t('sidebar.posts')}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
 

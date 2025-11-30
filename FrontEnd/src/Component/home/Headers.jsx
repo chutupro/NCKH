@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '../common/LanguageSwitcher';
+// LanguageSwitcher removed from header per request
 import authService from '../../services/authService';
 import { useAppContext } from '../../context/useAppContext';
 import "../../Styles/Home/Header.css";
@@ -60,8 +60,6 @@ const Headers = () => {
           <Link to="/ImageLibrary" className="nav-link">{t('nav.collection')}</Link>
         </div>
         <div className="nav-buttons">
-          <LanguageSwitcher />
-          
           {user ? (
             <div className="user-menu" ref={dropdownRef}>
               <div 

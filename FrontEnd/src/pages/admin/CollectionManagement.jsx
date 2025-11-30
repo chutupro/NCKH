@@ -467,6 +467,9 @@ const CollectionManagement = () => {
               padding: '2rem',
               maxWidth: '500px',
               width: '100%',
+              // Ensure modal content can scroll when viewport is small
+              maxHeight: 'calc(100vh - 80px)',
+              overflowY: 'auto',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
             }}
             onClick={(e) => e.stopPropagation()}
