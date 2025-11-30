@@ -370,13 +370,28 @@ const ContributeInformation = () => {
         userId: appCtx?.user?.userId || appCtx?.user?.UserID || 1,
         email: appCtx?.user?.email || appCtx?.user?.Email || email,
         imagePath: imgToSend,
-        imageDescription: alt || ((aiFormData?.language === 'vi') ? ai.title_vi : ai.title_en) || ai.title_en || ai.title_vi || ''
+        // imageDescription should come only from the explicit alt field (or AI-generated alt),
+        // do NOT fallback to the title — title and image description are separate.
+        imageDescription: alt || ''
       }
       await createArticlePost(payload)
       navigate('/community')
     } catch (err) {
       const serverMsg = err?.message || String(err)
-      alert('Lỗi khi gửi: ' + serverMsg)
+      console.debug && console.debug('[Contribute] submit error', err)
+      // If blocked by moderation, clear the recently entered fields as requested
+      if (err && err.isModeration) {
+        // clear title (ai state), content, and alt input
+        setAi(prev => ({ ...prev, title_en: '', title_vi: '' }))
+        setContent('')
+        setAlt('')
+        // also clear selected category and uploaded path so form appears empty
+        setSelectedCategoryId(null)
+        setUploadedPath(null)
+        alert(err.message || 'Bài đóng góp bị chặn bởi hệ thống kiểm duyệt')
+      } else {
+        alert('Lỗi khi gửi: ' + serverMsg)
+      }
     }
   }
 

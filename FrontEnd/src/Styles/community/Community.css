@@ -225,6 +225,12 @@
   font-size: 15px;
   line-height: 1.45;
 }
+/* Ensure very long words or repeated characters in post text wrap instead of overflowing */
+.post-text {
+  white-space: pre-wrap; /* preserve newlines but allow wrapping */
+  overflow-wrap: anywhere; /* break long words when needed */
+  word-break: break-word; /* fallback for older browsers */
+}
 .meta .name {
   font-size: 15px;
 }

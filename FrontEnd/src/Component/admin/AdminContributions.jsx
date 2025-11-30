@@ -154,6 +154,9 @@ const AdminContributions = () => {
         <div className="contribution-header-info">
           <div className="contribution-title-section">
             <h3 className="contribution-item-title">{article.title}</h3>
+            {article.moderation && article.moderation.label === 'hate' && (
+              <span className="moderation-flag" title="Bị gắn nhãn hate">❗</span>
+            )}
             <span className="contribution-badge">{article.category}</span>
           </div>
           <div className="contribution-meta">

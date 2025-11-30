@@ -55,6 +55,8 @@ const CommentsSection = ({ postId, user, isAuthenticated, onCommentCountChange }
     } catch (err) {
       // If blocked by moderation, show specific message
       if (err && err.isModeration) {
+        // Clear the input immediately as requested
+        setCommentText('')
         toast.error(err.message || 'Bình luận bị chặn bởi hệ thống kiểm duyệt')
       } else {
         toast.error(err?.response?.data?.message || 'Không thể thêm bình luận')
@@ -130,6 +132,9 @@ const CommentsSection = ({ postId, user, isAuthenticated, onCommentCountChange }
       setReplyingTo(null)
     } catch (err) {
       if (err && err.isModeration) {
+        // Clear the reply input immediately
+        setReplyText('')
+        setReplyingTo(null)
         toast.error(err.message || 'Trả lời bị chặn bởi hệ thống kiểm duyệt')
       } else {
         toast.error(err?.response?.data?.message || 'Không thể thêm trả lời')

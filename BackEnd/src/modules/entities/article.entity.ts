@@ -52,6 +52,9 @@ export class Articles {
   @Column({ type: 'bit', default: false })
   Rejected: boolean;
 
+  @Column({ type: 'simple-json', nullable: true })
+  Moderation: any;
+
   // --- RELATIONS ---
   @ManyToOne(() => Users, (user) => user.articles)
   @JoinColumn({ name: 'UserID' })
