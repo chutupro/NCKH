@@ -542,7 +542,13 @@ const ContributeInformation = () => {
 
             <div className="ai-modal-header">
               <div className="ai-header-icon">
-                <img src="/img/ai-icon.png" alt="AI Icon" style={{ width: 40, height: 40, display: 'block', margin: '0 auto' }} />
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="24" height="24" rx="6" fill="#10b981" />
+                  <g transform="translate(6,6)">
+                    <circle cx="6" cy="4" r="2" fill="#fff" />
+                    <rect x="2" y="9" width="8" height="4" rx="1" fill="#fff" />
+                  </g>
+                </svg>
               </div>
               <h3>AI Hỗ trợ Sáng tạo</h3>
               <p className="ai-subtitle">Chọn nội dung bạn muốn AI tạo tự động</p>
@@ -653,7 +659,13 @@ const ContributeInformation = () => {
             </button>
             <div className="ai-modal-header">
               <div className="ai-header-icon">
-                <img src="/img/ai-icon.png" alt="AI Icon" style={{ width: 40, height: 40, display: 'block', margin: '0 auto' }} />
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0" y="0" width="24" height="24" rx="6" fill="#10b981" />
+                  <g transform="translate(6,6)">
+                    <circle cx="6" cy="4" r="2" fill="#fff" />
+                    <rect x="2" y="9" width="8" height="4" rx="1" fill="#fff" />
+                  </g>
+                </svg>
               </div>
               <h3>Tùy chỉnh AI</h3>
               <p className="ai-subtitle">Điều chỉnh cách AI tạo nội dung cho bạn</p>
@@ -709,8 +721,7 @@ const ContributeInformation = () => {
               <div className="ai-form-field">
                 <label>Mô tả</label>
                 <div style={{ position: 'relative' }}>
-                  <input className="ai-form-input ai-form-input-desc" placeholder="Nhập mô tả cho nội dung AI tạo" value={aiFormData.description || ''} onChange={e => setAiFormData({ ...aiFormData, description: e.target.value })} style={{ paddingLeft: 40, borderRadius: 8, border: '1px solid #10b981', minHeight: 40 }} />
-                  <img src="/img/ai-icon.png" alt="AI" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', width: 24, height: 24, opacity: 0.7 }} />
+                  <input className="ai-form-input ai-form-input-desc" placeholder="Nhập mô tả cho nội dung AI tạo" value={aiFormData.description || ''} onChange={e => setAiFormData({ ...aiFormData, description: e.target.value })} style={{ paddingLeft: 12, borderRadius: 8, border: '1px solid #10b981', minHeight: 40 }} />
                 </div>
               </div>
               <div className="ai-form-field">
