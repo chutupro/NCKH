@@ -36,6 +36,38 @@ const DA_NANG_BOUNDS = [
   [16.25, 108.4],
 ];
 
+// Helper: call AI moderation endpoint and normalize result
+const moderateText = async (text) => {
+  if (!text) return null;
+  const aiConfig = getAiFeatureConfig();
+  const moderateEnabled = aiConfig?.featureFlags?.moderateComment !== false;
+  if (!moderateEnabled) return null;
+
+  const moderateEndpoint = getAiEndpointUrl("moderateComment");
+  if (!moderateEndpoint) return null;
+
+  const res = await axios.post(
+    moderateEndpoint,
+    { text },
+    { timeout: 5000 }
+  );
+
+  const data = res.data || {};
+
+  // If the AI already returns action/label, trust it
+  if (data.action || data.label) return data;
+
+  // Fallback mapping from older AI shape (toxicity/categories)
+  const toxicity = data.toxicity ?? 0;
+  const categories = data.categories || [];
+
+  if (toxicity > 0.6) return { action: "block", label: "toxic", detail: data };
+  if (categories.includes("hate") || categories.includes("violence"))
+    return { action: "allow", label: "hate", detail: data };
+  if (toxicity > 0.4) return { action: "allow", label: "non_toxic", warn: true, detail: data };
+  return { action: "allow", label: "non_toxic", detail: data };
+};
+
 /* ---------- COMPONENT ---------- */
 const MapPage = () => {
   const dispatch = useDispatch();
@@ -453,99 +485,41 @@ const MapPage = () => {
                   endpoint: `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`,
                 });
 
-                // ✅ AI MODERATE COMMENT trước khi submit
-                console.log("🔍 [DEBUG #1] Bắt đầu kiểm tra AI moderation...");
-                const aiConfig = getAiFeatureConfig();
-                console.log("🔍 [DEBUG #1] aiConfig:", aiConfig);
-                const moderateEnabled =
-                  aiConfig?.featureFlags?.moderateComment !== false;
-                console.log("🔍 [DEBUG #1] moderateEnabled:", moderateEnabled);
-                console.log("🔍 [DEBUG #1] comment:", comment);
-
+                // ✅ AI MODERATE COMMENT (standardized)
                 let aiAnalysis = null;
-                if (moderateEnabled && comment) {
-                  console.log(
-                    "🚀 [DEBUG #1] Điều kiện AI PASS - Bắt đầu gọi API..."
-                  );
-                  try {
-                    const moderateEndpoint =
-                      getAiEndpointUrl("moderateComment");
-                    console.log(
-                      "🔍 [DEBUG #1] moderateEndpoint:",
-                      moderateEndpoint
-                    );
-                    if (moderateEndpoint) {
-                      console.log("🤖 [AI] Analyzing comment...");
-                      const aiRes = await axios.post(
-                        moderateEndpoint,
-                        {
-                          text: comment,
-                        },
-                        {
-                          timeout: 5000,
-                        }
+                let moderationForSend = null;
+                try {
+                  const mod = await moderateText(comment);
+                  aiAnalysis = mod?.detail || mod;
+                  if (mod) {
+                    if (mod.action === "block" || mod.label === "toxic") {
+                      alert(
+                        "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!"
                       );
-
-                      aiAnalysis = aiRes.data;
-                      console.log("✅ [AI] Analysis result:", aiAnalysis);
-
-                      // Hiển thị kết quả phân tích cho user
-                      if (aiAnalysis) {
-                        const sentiment = aiAnalysis.sentiment || "neutral";
-                        const toxicity = aiAnalysis.toxicity || 0;
-                        const categories = aiAnalysis.categories || [];
-
-                        console.log(
-                          `🧠 [AI] Toxicity: ${toxicity}, Sentiment: ${sentiment}, Categories:`,
-                          categories
-                        );
-
-                        let warningMsg = "";
-                        let shouldBlock = false;
-
-                        // Chặn nếu toxic cao (giảm từ 0.7 xuống 0.6)
-                        if (toxicity > 0.6) {
-                          warningMsg =
-                            "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!";
-                          shouldBlock = true;
-                        } else if (toxicity > 0.4) {
-                          warningMsg =
-                            "⚠️ Bình luận có thể không phù hợp. Bạn có chắc muốn gửi?";
-                          const confirmSend = confirm(warningMsg);
-                          if (!confirmSend) return;
-                        }
-
-                        // Cảnh báo nếu có categories vi phạm
-                        if (
-                          categories.includes("hate") ||
-                          categories.includes("violence")
-                        ) {
-                          warningMsg =
-                            "⚠️ Bình luận chứa nội dung vi phạm (hate/violence). Không thể gửi!";
-                          shouldBlock = true;
-                        }
-
-                        if (shouldBlock) {
-                          alert(warningMsg);
-                          return;
-                        }
-
-                        // Hiển thị sentiment cho user (optional)
-                        if (sentiment === "negative" && toxicity > 0.3) {
-                          console.log(
-                            "💭 [AI] Comment has negative sentiment, but allowed"
-                          );
-                        }
-                      }
+                      const commentInput = document.getElementById("comment-input");
+                      if (commentInput) commentInput.value = "";
+                      setNewComment("");
+                      return;
                     }
-                  } catch (aiError) {
-                    console.error("❌ [AI] Moderate error:", aiError.message);
-                    alert(
-                      "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
-                        aiError.message
-                    );
-                    return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
+
+                    if (mod.warn) {
+                      const confirmSend = confirm(
+                        "⚠️ Bình luận có thể không phù hợp. Bạn có chắc muốn gửi?"
+                      );
+                      if (!confirmSend) return;
+                    }
+
+                    if (mod.label === "hate") {
+                      moderationForSend = mod.detail || mod;
+                    }
                   }
+                } catch (aiError) {
+                  console.error("❌ [AI] Moderate error:", aiError?.message || aiError);
+                  alert(
+                    "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
+                      (aiError?.message || aiError)
+                  );
+                  return;
                 }
 
                 // ✅ Build FormData to send images + data
@@ -553,6 +527,9 @@ const MapPage = () => {
                 formData.append("userId", user.userId);
                 formData.append("rating", currentRating);
                 formData.append("comment", comment);
+                if (moderationForSend) {
+                  formData.append("moderation", JSON.stringify(moderationForSend));
+                }
 
                 // Add images if selected
                 if (imageInput?.files) {
@@ -697,7 +674,7 @@ const MapPage = () => {
                             }</span></button>
                           </div>
                         </div>
-                        <p style="margin:4px 0;color:#555;line-height:1.4;">${
+                        <p style="margin:4px 0;color:#555;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;">${
                           r.comment
                         }</p>
                         ${
@@ -1043,91 +1020,50 @@ const MapPage = () => {
                   }
 
                   // ✅ AI MODERATE COMMENT trước khi submit
-                  console.log(
-                    "🔍 [DEBUG #2] Bắt đầu kiểm tra AI moderation..."
-                  );
-                  const aiConfig = getAiFeatureConfig();
-                  console.log("🔍 [DEBUG #2] aiConfig:", aiConfig);
-                  const moderateEnabled =
-                    aiConfig?.featureFlags?.moderateComment !== false;
-                  console.log(
-                    "🔍 [DEBUG #2] moderateEnabled:",
-                    moderateEnabled
-                  );
-                  console.log("🔍 [DEBUG #2] comment:", comment);
+                  console.log("🔍 [DEBUG #2] Starting AI moderation (map review)...");
+                  let moderationForSend = null;
+                  try {
+                    const mod = await moderateText(comment);
+                    const aiAnalysis = mod?.detail || mod;
+                    console.log("✅ [AI] Analysis result:", aiAnalysis);
 
-                  if (moderateEnabled && comment) {
-                    console.log(
-                      "🚀 [DEBUG #2] Điều kiện AI PASS - Bắt đầu gọi API..."
-                    );
-                    try {
-                      const moderateEndpoint =
-                        getAiEndpointUrl("moderateComment");
-                      console.log(
-                        "🔍 [DEBUG #2] moderateEndpoint:",
-                        moderateEndpoint
-                      );
-                      if (moderateEndpoint) {
-                        console.log("🤖 [AI] Analyzing comment...");
-                        const aiRes = await axios.post(
-                          moderateEndpoint,
-                          {
-                            text: comment,
-                          },
-                          {
-                            timeout: 5000,
-                          }
+                    if (mod) {
+                      if (mod.action === "block" || mod.label === "toxic") {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Gửi đánh giá";
+                        alert(
+                          "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!"
                         );
+                        const commentInput = document.getElementById("comment-input");
+                        if (commentInput) commentInput.value = "";
+                        setNewComment("");
+                        return;
+                      }
 
-                        const aiAnalysis = aiRes.data;
-                        console.log("✅ [AI] Analysis result:", aiAnalysis);
-
-                        if (aiAnalysis) {
-                          const toxicity = aiAnalysis.toxicity || 0;
-                          const categories = aiAnalysis.categories || [];
-
-                          console.log(
-                            `🧠 [AI] Toxicity: ${toxicity}, Categories:`,
-                            categories
-                          );
-
-                          // Block nếu toxic cao hoặc có categories vi phạm (giảm từ 0.7 xuống 0.6)
-                          if (
-                            toxicity > 0.6 ||
-                            categories.includes("hate") ||
-                            categories.includes("violence")
-                          ) {
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = "Gửi đánh giá";
-                            alert(
-                              "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!"
-                            );
-                            return;
-                          }
-
-                          // Cảnh báo nếu toxic trung bình
-                          if (toxicity > 0.4) {
-                            const confirmSend = confirm(
-                              "⚠️ Bình luận có thể không phù hợp. Bạn có chắc muốn gửi?"
-                            );
-                            if (!confirmSend) {
-                              submitBtn.disabled = false;
-                              submitBtn.textContent = "Gửi đánh giá";
-                              return;
-                            }
-                          }
+                      if (mod.warn) {
+                        const confirmSend = confirm(
+                          "⚠️ Bình luận có thể không phù hợp. Bạn có chắc muốn gửi?"
+                        );
+                        if (!confirmSend) {
+                          submitBtn.disabled = false;
+                          submitBtn.textContent = "Gửi đánh giá";
+                          return;
                         }
                       }
-                    } catch (aiError) {
-                      console.error("❌ [AI] Moderate error:", aiError.message);
-                      alert(
-                        "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
-                          aiError.message
-                      );
-                      submitBtn.disabled = false;
-                      submitBtn.textContent = "Gửi đánh giá";
-                      return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
+
+                      if (mod.label === "hate") {
+                        moderationForSend = mod.detail || mod;
+                      }
                     }
+                  } catch (aiError) {
+                    console.error("❌ [AI] Moderate error:", aiError?.message || aiError);
+                    alert(
+                      "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
+                        (aiError?.message || aiError)
+                    );
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Gửi đánh giá";
+                    return;
                   }
 
                   submitBtn.textContent = "Đang gửi...";
@@ -1136,6 +1072,9 @@ const MapPage = () => {
                   formData.append("userId", user.userId);
                   formData.append("rating", currentRating);
                   formData.append("comment", comment);
+                  if (moderationForSend) {
+                    formData.append("moderation", JSON.stringify(moderationForSend));
+                  }
                   files.forEach((file) => formData.append("images", file));
 
                   console.log("🚀 [SUBMIT] Submitting to:", {
@@ -2571,7 +2510,7 @@ const MapPage = () => {
                           }</span></button>
                         </div>
                       </div>
-                      <p style="margin:4px 0;color:#555;line-height:1.4;">${
+                      <p style="margin:4px 0;color:#555;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;">${
                         r.comment
                       }</p>
                       ${
@@ -2847,7 +2786,7 @@ const MapPage = () => {
                       r.rating
                     )}${"☆".repeat(5 - r.rating)}</span>
                   </div>
-                  <p style="margin:4px 0;color:#555;line-height:1.4;">${
+                  <p style="margin:4px 0;color:#555;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;">${
                     r.comment
                   }</p>
                   <span style="font-size:0.8rem;color:#888;">${
@@ -2984,55 +2923,29 @@ const MapPage = () => {
               return;
             }
 
-            // ✅ AI MODERATION CHECK
-            const aiConfig = getAiFeatureConfig();
-            console.log("🔧 [DEBUG] AI Config:", aiConfig);
-            console.log(
-              "🔧 [DEBUG] moderateComment flag:",
-              aiConfig.featureFlags.moderateComment
-            );
-            console.log(
-              "🔧 [DEBUG] AI URL:",
-              `${aiConfig.baseUrls[0]}${aiConfig.endpoints.moderateComment}`
-            );
+            // ✅ AI MODERATION CHECK (standardized)
+            let moderationForSend = null;
+            try {
+              const mod = await moderateText(comment);
+              const aiAnalysis = mod?.detail || mod;
+              console.log("🤖 [AI MODERATION] Result:", aiAnalysis);
 
-            if (aiConfig.featureFlags.moderateComment) {
-              try {
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Đang kiểm tra AI...";
-
-                console.log("🚀 [AI] Calling moderation API...");
-                const moderationResponse = await axios.post(
-                  `${aiConfig.baseUrls[0]}${aiConfig.endpoints.moderateComment}`,
-                  { text: comment },
-                  { timeout: 8000 }
-                );
-
-                console.log(
-                  "✅ [AI] Response received:",
-                  moderationResponse.data
-                );
-                const { toxicity, categories } = moderationResponse.data;
-                console.log("🤖 [AI MODERATION] Result:", {
-                  toxicity,
-                  categories,
-                  comment,
-                });
-
-                if (toxicity > 0.6) {
+              if (mod) {
+                if (mod.action === "block" || mod.label === "toxic") {
                   alert(
-                    `⚠️ Bình luận có khả năng vi phạm (${(
-                      toxicity * 100
-                    ).toFixed(1)}%). Vui lòng viết lại!`
+                    `⚠️ Bình luận có nội dung không phù hợp. Vui lòng viết lại!`
                   );
                   submitBtn.disabled = false;
                   submitBtn.textContent = "Gửi đánh giá";
+                  const commentInput = document.getElementById("comment-input");
+                  if (commentInput) commentInput.value = "";
+                  setNewComment("");
                   return;
-                } else if (toxicity > 0.4) {
+                }
+
+                if (mod.warn) {
                   const confirmSend = confirm(
-                    `⚠️ AI phát hiện có thể vi phạm (${(toxicity * 100).toFixed(
-                      1
-                    )}%). Bạn có chắc muốn gửi?`
+                    `⚠️ AI phát hiện có thể vi phạm. Bạn có chắc muốn gửi?`
                   );
                   if (!confirmSend) {
                     submitBtn.disabled = false;
@@ -3040,19 +2953,21 @@ const MapPage = () => {
                     return;
                   }
                 }
-                console.log("✅ [AI] Comment passed moderation check");
-                submitBtn.textContent = "Gửi đánh giá";
-                submitBtn.disabled = false;
-              } catch (aiError) {
-                console.error("❌ [AI MODERATION] Error:", aiError.message);
-                console.error("❌ [AI MODERATION] Full error:", aiError);
-                alert(
-                  `❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: ${aiError.message}`
-                );
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Gửi đánh giá";
-                return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
+
+                if (mod.label === "hate") {
+                  moderationForSend = mod.detail || mod;
+                }
               }
+            } catch (aiError) {
+              console.error("❌ [AI MODERATION] Error:", aiError?.message || aiError);
+              alert(
+                `❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: ${
+                  aiError?.message || aiError
+                }`
+              );
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Gửi đánh giá";
+              return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
             }
 
             try {
@@ -3214,7 +3129,7 @@ const MapPage = () => {
                           }</span></button>
                         </div>
                       </div>
-                      <p style="margin:4px 0;color:#555;line-height:1.4;">${
+                      <p style="margin:4px 0;color:#555;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;">${
                         r.comment
                       }</p>
                       ${
@@ -3401,13 +3316,16 @@ const MapPage = () => {
             }
 
             try {
+              const payload = {
+                userId: user.userId,
+                rating: currentRating,
+                comment: comment,
+              };
+              if (moderationForSend) payload.moderation = moderationForSend;
+
               await axios.post(
                 `${BASE_URL}/map-locations/${place.id}/feedback`,
-                {
-                  userId: user.userId,
-                  rating: currentRating,
-                  comment: comment,
-                }
+                payload
               );
 
               setNewRating(null);
