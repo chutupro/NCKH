@@ -5,10 +5,12 @@ import "leaflet/dist/leaflet.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMapLocations } from "./mapLocationsSlice";
 import CompareModal from "./CompareModal";
+import ShareModal from "./ShareModal";
 import ReactDOM from "react-dom";
 import axios from "axios";
 import { useAppContext } from "../../context/useAppContext";
 import { useAuthRestore } from "../../hooks/useAuthRestore";
+import getAiFeatureConfig, { getAiEndpointUrl } from "../../config/aiConfig";
 
 const BASE_URL = "http://localhost:3000";
 const FAVORITE_PHOTOS_KEY = "favoritePhotosByUser";
@@ -100,6 +102,10 @@ const MapPage = () => {
     }
   });
   const [comparePlace, setComparePlace] = useState(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareLocation, setShareLocation] = useState(null);
+  const [shareMapPosition, setShareMapPosition] = useState(null);
+  const [userLocation, setUserLocation] = useState(null); // Lưu vị trí người dùng
 
   useEffect(() => {
     localStorage.setItem(
@@ -187,6 +193,77 @@ const MapPage = () => {
       localStorage.removeItem("returnToPlace");
     }
   }, [user, places]);
+
+  /* ---------- XỬ LÝ URL PARAMETERS KHI CHIA SẺ ĐỊA ĐIỂM ---------- */
+  useEffect(() => {
+    // Chỉ chạy khi map và places đã load
+    if (!mapInstance.current || !places || places.length === 0) return;
+
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const locationId = urlParams.get("locationId");
+      const locationName = urlParams.get("locationName");
+      const lat = parseFloat(urlParams.get("lat"));
+      const lng = parseFloat(urlParams.get("lng"));
+      const zoom = parseInt(urlParams.get("zoom")) || 15;
+
+      // Nếu không có parameters, không làm gì
+      if (!locationId && !lat && !lng) return;
+
+      console.log("📍 Shared location detected:", {
+        locationId,
+        locationName,
+        lat,
+        lng,
+        zoom,
+      });
+
+      // Tìm địa điểm trong danh sách
+      let targetPlace = null;
+      if (locationId) {
+        targetPlace = places.find((p) => String(p.id) === String(locationId));
+      }
+
+      // Nếu có tọa độ, fly đến vị trí đó
+      if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+        mapInstance.current.flyTo([lat, lng], zoom, {
+          duration: 1.5,
+          easeLinearity: 0.25,
+        });
+
+        // Nếu tìm thấy địa điểm, mở sidebar sau khi map đã fly xong
+        if (targetPlace) {
+          setTimeout(() => {
+            showPlaceDetail(targetPlace, mapInstance.current);
+          }, 1800);
+        } else if (locationName) {
+          // Nếu không tìm thấy trong danh sách nhưng có tên, hiển thị marker tạm
+          console.log("📌 Showing temporary marker for:", locationName);
+          L.marker([lat, lng])
+            .addTo(mapInstance.current)
+            .bindPopup(`<b>${locationName}</b><br>Địa điểm được chia sẻ`)
+            .openPopup();
+        }
+      } else if (targetPlace) {
+        // Không có tọa độ nhưng có địa điểm
+        const placePos = targetPlace.position;
+        if (placePos && placePos.length === 2) {
+          mapInstance.current.flyTo(placePos, zoom, {
+            duration: 1.5,
+            easeLinearity: 0.25,
+          });
+          setTimeout(() => {
+            showPlaceDetail(targetPlace, mapInstance.current);
+          }, 1800);
+        }
+      }
+
+      // Xóa parameters khỏi URL sau khi xử lý (optional - giữ URL clean)
+      // window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.error("Error handling shared location:", error);
+    }
+  }, [places, mapInstance.current]);
 
   // ✅ RE-RENDER FORM ĐÁNH GIÁ SAU KHI USER RESTORE (KHÔNG RESET RATING)
   useEffect(() => {
@@ -376,6 +453,101 @@ const MapPage = () => {
                   endpoint: `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`,
                 });
 
+                // ✅ AI MODERATE COMMENT trước khi submit
+                console.log("🔍 [DEBUG #1] Bắt đầu kiểm tra AI moderation...");
+                const aiConfig = getAiFeatureConfig();
+                console.log("🔍 [DEBUG #1] aiConfig:", aiConfig);
+                const moderateEnabled =
+                  aiConfig?.featureFlags?.moderateComment !== false;
+                console.log("🔍 [DEBUG #1] moderateEnabled:", moderateEnabled);
+                console.log("🔍 [DEBUG #1] comment:", comment);
+
+                let aiAnalysis = null;
+                if (moderateEnabled && comment) {
+                  console.log(
+                    "🚀 [DEBUG #1] Điều kiện AI PASS - Bắt đầu gọi API..."
+                  );
+                  try {
+                    const moderateEndpoint =
+                      getAiEndpointUrl("moderateComment");
+                    console.log(
+                      "🔍 [DEBUG #1] moderateEndpoint:",
+                      moderateEndpoint
+                    );
+                    if (moderateEndpoint) {
+                      console.log("🤖 [AI] Analyzing comment...");
+                      const aiRes = await axios.post(
+                        moderateEndpoint,
+                        {
+                          text: comment,
+                        },
+                        {
+                          timeout: 5000,
+                        }
+                      );
+
+                      aiAnalysis = aiRes.data;
+                      console.log("✅ [AI] Analysis result:", aiAnalysis);
+
+                      // Hiển thị kết quả phân tích cho user
+                      if (aiAnalysis) {
+                        const sentiment = aiAnalysis.sentiment || "neutral";
+                        const toxicity = aiAnalysis.toxicity || 0;
+                        const categories = aiAnalysis.categories || [];
+
+                        console.log(
+                          `🧠 [AI] Toxicity: ${toxicity}, Sentiment: ${sentiment}, Categories:`,
+                          categories
+                        );
+
+                        let warningMsg = "";
+                        let shouldBlock = false;
+
+                        // Chặn nếu toxic cao (giảm từ 0.7 xuống 0.6)
+                        if (toxicity > 0.6) {
+                          warningMsg =
+                            "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!";
+                          shouldBlock = true;
+                        } else if (toxicity > 0.4) {
+                          warningMsg =
+                            "⚠️ Bình luận có thể không phù hợp. Bạn có chắc muốn gửi?";
+                          const confirmSend = confirm(warningMsg);
+                          if (!confirmSend) return;
+                        }
+
+                        // Cảnh báo nếu có categories vi phạm
+                        if (
+                          categories.includes("hate") ||
+                          categories.includes("violence")
+                        ) {
+                          warningMsg =
+                            "⚠️ Bình luận chứa nội dung vi phạm (hate/violence). Không thể gửi!";
+                          shouldBlock = true;
+                        }
+
+                        if (shouldBlock) {
+                          alert(warningMsg);
+                          return;
+                        }
+
+                        // Hiển thị sentiment cho user (optional)
+                        if (sentiment === "negative" && toxicity > 0.3) {
+                          console.log(
+                            "💭 [AI] Comment has negative sentiment, but allowed"
+                          );
+                        }
+                      }
+                    }
+                  } catch (aiError) {
+                    console.error("❌ [AI] Moderate error:", aiError.message);
+                    alert(
+                      "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
+                        aiError.message
+                    );
+                    return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
+                  }
+                }
+
                 // ✅ Build FormData to send images + data
                 const formData = new FormData();
                 formData.append("userId", user.userId);
@@ -436,6 +608,64 @@ const MapPage = () => {
                   newReviewsList.length,
                   "total reviews"
                 );
+
+                // ✅ CẬP NHẬT RATING SUMMARY TRỰC TIẾP
+                setTimeout(() => {
+                  const avgRating =
+                    newReviewsList.length > 0
+                      ? (
+                          newReviewsList.reduce((sum, r) => sum + r.rating, 0) /
+                          newReviewsList.length
+                        ).toFixed(1)
+                      : "0.0";
+
+                  const ratingSummary = document.querySelector(
+                    ".rating-summary-container"
+                  );
+                  if (ratingSummary) {
+                    ratingSummary.innerHTML = `
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-weight:600;">${avgRating}</span>
+                        <span style="color:#777;">${
+                          newReviewsList.length
+                        } đánh giá</span>
+                      </div>
+                      <div style="margin-top:8px;">
+                        <span style="color:#ffca28;">${"★".repeat(
+                          Math.floor(parseFloat(avgRating))
+                        )}${"☆".repeat(
+                      5 - Math.floor(parseFloat(avgRating))
+                    )}</span>
+                      </div>
+                    `;
+                    console.log("✅ Rating summary updated to:", avgRating);
+                  }
+
+                  const histogram = document.querySelector(".rating-histogram");
+                  if (histogram && newReviewsList.length > 0) {
+                    const histogramHTML = [5, 4, 3, 2, 1]
+                      .map((star) => {
+                        const num = newReviewsList.filter(
+                          (r) => r.rating === star
+                        ).length;
+                        const pct = Math.round(
+                          (num / newReviewsList.length) * 100
+                        );
+                        return `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                          <div style="width:36px">${star}★</div>
+                          <div style="flex:1;background:#eee;border-radius:6px;height:10px;overflow:hidden;">
+                            <div style="width:${pct}%;height:100%;background:#ffd54f;border-radius:6px"></div>
+                          </div>
+                          <div style="width:36px;text-align:right;color:#666">${pct}%</div>
+                        </div>
+                      `;
+                      })
+                      .join("");
+                    histogram.innerHTML = histogramHTML;
+                    console.log("✅ Histogram updated");
+                  }
+                }, 150);
 
                 // Update reviews list in DOM immediately (with avatar + like button)
                 const reviewsList = document.getElementById("reviews-list");
@@ -748,15 +978,165 @@ const MapPage = () => {
 
                 // Handle image upload and submission
                 const files = imageInput ? Array.from(imageInput.files) : [];
-                const formData = new FormData();
-                formData.append("userId", user.userId);
-                formData.append("rating", currentRating);
-                formData.append("comment", comment);
-                files.forEach((file) => formData.append("images", file));
 
                 try {
                   submitBtn.disabled = true;
+                  submitBtn.textContent = "Đang phân tích...";
+
+                  // ✅ BLACKLIST WORDS - Chặn các từ vi phạm phổ biến
+                  const blacklistWords = [
+                    "cc",
+                    "dm",
+                    "vl",
+                    "cl",
+                    "dcm",
+                    "vcl",
+                    "dit",
+                    "dít",
+                    "lồn",
+                    "lon",
+                    "cu",
+                    "cac",
+                    "cặc",
+                    "buoi",
+                    "bươi",
+                    "fuck",
+                    "shit",
+                    "damn",
+                    "bitch",
+                    "ass",
+                    "dick",
+                    "ngu",
+                    "nứu",
+                    "cho",
+                    "chó",
+                    "pig",
+                    "dog",
+                    "cứt",
+                    "đéo",
+                    "deo",
+                  ];
+
+                  const commentLower = comment.toLowerCase().trim();
+                  const hasBlacklistWord = blacklistWords.some((word) => {
+                    // Match từ độc lập hoặc trong chuỗi
+                    return (
+                      commentLower === word ||
+                      commentLower.includes(` ${word} `) ||
+                      commentLower.startsWith(`${word} `) ||
+                      commentLower.endsWith(` ${word}`) ||
+                      commentLower.includes(word)
+                    );
+                  });
+
+                  if (hasBlacklistWord) {
+                    console.log(
+                      "⚠️ [BLACKLIST] Comment contains blacklisted word:",
+                      commentLower
+                    );
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Gửi đánh giá";
+                    alert(
+                      "⚠️ Bình luận chứa nội dung không phù hợp. Vui lòng điều chỉnh!"
+                    );
+                    return;
+                  }
+
+                  // ✅ AI MODERATE COMMENT trước khi submit
+                  console.log(
+                    "🔍 [DEBUG #2] Bắt đầu kiểm tra AI moderation..."
+                  );
+                  const aiConfig = getAiFeatureConfig();
+                  console.log("🔍 [DEBUG #2] aiConfig:", aiConfig);
+                  const moderateEnabled =
+                    aiConfig?.featureFlags?.moderateComment !== false;
+                  console.log(
+                    "🔍 [DEBUG #2] moderateEnabled:",
+                    moderateEnabled
+                  );
+                  console.log("🔍 [DEBUG #2] comment:", comment);
+
+                  if (moderateEnabled && comment) {
+                    console.log(
+                      "🚀 [DEBUG #2] Điều kiện AI PASS - Bắt đầu gọi API..."
+                    );
+                    try {
+                      const moderateEndpoint =
+                        getAiEndpointUrl("moderateComment");
+                      console.log(
+                        "🔍 [DEBUG #2] moderateEndpoint:",
+                        moderateEndpoint
+                      );
+                      if (moderateEndpoint) {
+                        console.log("🤖 [AI] Analyzing comment...");
+                        const aiRes = await axios.post(
+                          moderateEndpoint,
+                          {
+                            text: comment,
+                          },
+                          {
+                            timeout: 5000,
+                          }
+                        );
+
+                        const aiAnalysis = aiRes.data;
+                        console.log("✅ [AI] Analysis result:", aiAnalysis);
+
+                        if (aiAnalysis) {
+                          const toxicity = aiAnalysis.toxicity || 0;
+                          const categories = aiAnalysis.categories || [];
+
+                          console.log(
+                            `🧠 [AI] Toxicity: ${toxicity}, Categories:`,
+                            categories
+                          );
+
+                          // Block nếu toxic cao hoặc có categories vi phạm (giảm từ 0.7 xuống 0.6)
+                          if (
+                            toxicity > 0.6 ||
+                            categories.includes("hate") ||
+                            categories.includes("violence")
+                          ) {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = "Gửi đánh giá";
+                            alert(
+                              "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!"
+                            );
+                            return;
+                          }
+
+                          // Cảnh báo nếu toxic trung bình
+                          if (toxicity > 0.4) {
+                            const confirmSend = confirm(
+                              "⚠️ Bình luận có thể không phù hợp. Bạn có chắc muốn gửi?"
+                            );
+                            if (!confirmSend) {
+                              submitBtn.disabled = false;
+                              submitBtn.textContent = "Gửi đánh giá";
+                              return;
+                            }
+                          }
+                        }
+                      }
+                    } catch (aiError) {
+                      console.error("❌ [AI] Moderate error:", aiError.message);
+                      alert(
+                        "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
+                          aiError.message
+                      );
+                      submitBtn.disabled = false;
+                      submitBtn.textContent = "Gửi đánh giá";
+                      return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
+                    }
+                  }
+
                   submitBtn.textContent = "Đang gửi...";
+
+                  const formData = new FormData();
+                  formData.append("userId", user.userId);
+                  formData.append("rating", currentRating);
+                  formData.append("comment", comment);
+                  files.forEach((file) => formData.append("images", file));
 
                   console.log("🚀 [SUBMIT] Submitting to:", {
                     url: `${BASE_URL}/map-locations/${currentPlace.current.id}/feedback`,
@@ -772,7 +1152,7 @@ const MapPage = () => {
                       withCredentials: true,
                     }
                   );
-                  
+
                   commentInput.value = "";
                   if (imageInput) imageInput.value = "";
                   if (imagePreview) imagePreview.innerHTML = "";
@@ -1861,6 +2241,25 @@ const MapPage = () => {
     }
   };
 
+  /* ---------- HANDLE SHARE BUTTON ---------- */
+  const handleShareLocation = (place) => {
+    if (!place || !mapInstance.current) return;
+
+    console.log("📤 Opening share modal for:", place.title);
+
+    // Get current map position
+    const center = mapInstance.current.getCenter();
+    const zoom = mapInstance.current.getZoom();
+
+    setShareLocation(place);
+    setShareMapPosition({
+      lat: center.lat,
+      lng: center.lng,
+      zoom: zoom,
+    });
+    setShareModalOpen(true);
+  };
+
   /* ---------- SHOW PLACE DETAIL ---------- */
   const showPlaceDetail = async (place, map) => {
     const isFavOpen = favoritesSidebarRef.current.style.display === "block";
@@ -2043,13 +2442,15 @@ const MapPage = () => {
           `
               : `
             <div style="display:flex;flex-direction:column;align-items:center;width:100%;">
-              <div style="background:#f1f1f1;padding:16px;border-radius:8px;width:100%;margin-bottom:16px;text-align:center;">
+              <div class="rating-summary-container" style="background:#f1f1f1;padding:16px;border-radius:8px;width:100%;margin-bottom:16px;text-align:center;">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                   <span style="font-weight:600;">${(
                     reviewsData.reduce((sum, r) => sum + r.rating, 0) /
                       Math.max(reviewsData.length, 1) || 0
                   ).toFixed(1)}</span>
-                  <span style="color:#777;">${reviewsData.length} đánh giá</span>
+                  <span style="color:#777;">${
+                    reviewsData.length
+                  } đánh giá</span>
                 </div>
                 <div style="margin-top:8px;">
                   <span style="color:#ffca28;">${"★".repeat(
@@ -2077,7 +2478,7 @@ const MapPage = () => {
                     });
                     const total = reviewsData.length || 1;
                     return `
-                      <div style="display:flex;flex-direction:column;gap:6px;">
+                      <div class="rating-histogram" style="display:flex;flex-direction:column;gap:6px;">
                         ${[5, 4, 3, 2, 1]
                           .map((star, idx) => {
                             const num = reviewsData.filter(
@@ -2295,8 +2696,49 @@ const MapPage = () => {
         document
           .getElementById("get-directions-btn")
           ?.addEventListener("click", () => {
-            if (!userMarker.current) return alert("Vui lòng bật định vị!");
-            calculateRoute(userMarker.current.getLatLng(), place.position, map);
+            // Nếu chưa có vị trí người dùng, thử lấy lại
+            if (!userLocation && navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  const lat = pos.coords.latitude;
+                  const lng = pos.coords.longitude;
+                  setUserLocation({ lat, lng });
+
+                  // Cập nhật marker người dùng
+                  if (userMarker.current) {
+                    userMarker.current.setLatLng([lat, lng]);
+                  } else {
+                    const icon = L.divIcon({
+                      html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+                      className: "user-location-marker",
+                      iconSize: [22, 22],
+                      iconAnchor: [11, 11],
+                    });
+                    userMarker.current = L.marker([lat, lng], { icon }).addTo(
+                      map
+                    );
+                    userMarker.current.bindPopup(
+                      '<b style="color:#4285f4">Vị trí của bạn</b>'
+                    );
+                  }
+
+                  // Tính đường
+                  calculateRoute({ lat, lng }, place.position, map);
+                },
+                () => alert("⚠️ Vui lòng bật định vị để chỉ đường!")
+              );
+            } else if (userLocation) {
+              // Đã có vị trí, tính đường luôn
+              calculateRoute(userLocation, place.position, map);
+            } else {
+              alert("⚠️ Vui lòng bật định vị để chễ đường!");
+            }
+          });
+
+        document
+          .getElementById("share-location-btn")
+          ?.addEventListener("click", () => {
+            handleShareLocation(place);
           });
 
         document.getElementById("save-btn")?.addEventListener("click", () => {
@@ -2542,6 +2984,77 @@ const MapPage = () => {
               return;
             }
 
+            // ✅ AI MODERATION CHECK
+            const aiConfig = getAiFeatureConfig();
+            console.log("🔧 [DEBUG] AI Config:", aiConfig);
+            console.log(
+              "🔧 [DEBUG] moderateComment flag:",
+              aiConfig.featureFlags.moderateComment
+            );
+            console.log(
+              "🔧 [DEBUG] AI URL:",
+              `${aiConfig.baseUrls[0]}${aiConfig.endpoints.moderateComment}`
+            );
+
+            if (aiConfig.featureFlags.moderateComment) {
+              try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Đang kiểm tra AI...";
+
+                console.log("🚀 [AI] Calling moderation API...");
+                const moderationResponse = await axios.post(
+                  `${aiConfig.baseUrls[0]}${aiConfig.endpoints.moderateComment}`,
+                  { text: comment },
+                  { timeout: 8000 }
+                );
+
+                console.log(
+                  "✅ [AI] Response received:",
+                  moderationResponse.data
+                );
+                const { toxicity, categories } = moderationResponse.data;
+                console.log("🤖 [AI MODERATION] Result:", {
+                  toxicity,
+                  categories,
+                  comment,
+                });
+
+                if (toxicity > 0.6) {
+                  alert(
+                    `⚠️ Bình luận có khả năng vi phạm (${(
+                      toxicity * 100
+                    ).toFixed(1)}%). Vui lòng viết lại!`
+                  );
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = "Gửi đánh giá";
+                  return;
+                } else if (toxicity > 0.4) {
+                  const confirmSend = confirm(
+                    `⚠️ AI phát hiện có thể vi phạm (${(toxicity * 100).toFixed(
+                      1
+                    )}%). Bạn có chắc muốn gửi?`
+                  );
+                  if (!confirmSend) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Gửi đánh giá";
+                    return;
+                  }
+                }
+                console.log("✅ [AI] Comment passed moderation check");
+                submitBtn.textContent = "Gửi đánh giá";
+                submitBtn.disabled = false;
+              } catch (aiError) {
+                console.error("❌ [AI MODERATION] Error:", aiError.message);
+                console.error("❌ [AI MODERATION] Full error:", aiError);
+                alert(
+                  `❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: ${aiError.message}`
+                );
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Gửi đánh giá";
+                return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
+              }
+            }
+
             try {
               console.log("🚀 [SUBMIT] Sending to API:", {
                 userId: user.userId,
@@ -2612,6 +3125,64 @@ const MapPage = () => {
                 newReviewsList.length,
                 "total reviews"
               );
+
+              // ✅ CẬP NHẬT RATING SUMMARY TRỰC TIẾP
+              setTimeout(() => {
+                const avgRating =
+                  newReviewsList.length > 0
+                    ? (
+                        newReviewsList.reduce((sum, r) => sum + r.rating, 0) /
+                        newReviewsList.length
+                      ).toFixed(1)
+                    : "0.0";
+
+                const ratingSummary = document.querySelector(
+                  ".rating-summary-container"
+                );
+                if (ratingSummary) {
+                  ratingSummary.innerHTML = `
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <span style="font-weight:600;">${avgRating}</span>
+                      <span style="color:#777;">${
+                        newReviewsList.length
+                      } đánh giá</span>
+                    </div>
+                    <div style="margin-top:8px;">
+                      <span style="color:#ffca28;">${"★".repeat(
+                        Math.floor(parseFloat(avgRating))
+                      )}${"☆".repeat(
+                    5 - Math.floor(parseFloat(avgRating))
+                  )}</span>
+                    </div>
+                  `;
+                  console.log("✅ Rating summary updated to:", avgRating);
+                }
+
+                const histogram = document.querySelector(".rating-histogram");
+                if (histogram && newReviewsList.length > 0) {
+                  const histogramHTML = [5, 4, 3, 2, 1]
+                    .map((star) => {
+                      const num = newReviewsList.filter(
+                        (r) => r.rating === star
+                      ).length;
+                      const pct = Math.round(
+                        (num / newReviewsList.length) * 100
+                      );
+                      return `
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:36px">${star}★</div>
+                        <div style="flex:1;background:#eee;border-radius:6px;height:10px;overflow:hidden;">
+                          <div style="width:${pct}%;height:100%;background:#ffd54f;border-radius:6px"></div>
+                        </div>
+                        <div style="width:36px;text-align:right;color:#666">${pct}%</div>
+                      </div>
+                    `;
+                    })
+                    .join("");
+                  histogram.innerHTML = histogramHTML;
+                  console.log("✅ Histogram updated");
+                }
+              }, 150);
 
               // ✅ UPDATE REVIEWS LIST IN DOM IMMEDIATELY (with avatar + like)
               const reviewsList = document.getElementById("reviews-list");
@@ -2758,6 +3329,77 @@ const MapPage = () => {
             }
             if (!comment) return alert("Vui lòng nhập bình luận!");
 
+            // ✅ AI MODERATION CHECK
+            const aiConfig = getAiFeatureConfig();
+            console.log("🔧 [DEBUG] AI Config:", aiConfig);
+            console.log(
+              "🔧 [DEBUG] moderateComment flag:",
+              aiConfig.featureFlags.moderateComment
+            );
+            console.log(
+              "🔧 [DEBUG] AI URL:",
+              `${aiConfig.baseUrls[0]}${aiConfig.endpoints.moderateComment}`
+            );
+
+            if (aiConfig.featureFlags.moderateComment) {
+              try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Đang kiểm tra AI...";
+
+                console.log("🚀 [AI] Calling moderation API...");
+                const moderationResponse = await axios.post(
+                  `${aiConfig.baseUrls[0]}${aiConfig.endpoints.moderateComment}`,
+                  { text: comment },
+                  { timeout: 8000 }
+                );
+
+                console.log(
+                  "✅ [AI] Response received:",
+                  moderationResponse.data
+                );
+                const { toxicity, categories } = moderationResponse.data;
+                console.log("🤖 [AI MODERATION] Result:", {
+                  toxicity,
+                  categories,
+                  comment,
+                });
+
+                if (toxicity > 0.6) {
+                  alert(
+                    `⚠️ Bình luận có khả năng vi phạm (${(
+                      toxicity * 100
+                    ).toFixed(1)}%). Vui lòng viết lại!`
+                  );
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = "Gửi đánh giá";
+                  return;
+                } else if (toxicity > 0.4) {
+                  const confirmSend = confirm(
+                    `⚠️ AI phát hiện có thể vi phạm (${(toxicity * 100).toFixed(
+                      1
+                    )}%). Bạn có chắc muốn gửi?`
+                  );
+                  if (!confirmSend) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Gửi đánh giá";
+                    return;
+                  }
+                }
+                console.log("✅ [AI] Comment passed moderation check");
+                submitBtn.textContent = "Gửi đánh giá";
+                submitBtn.disabled = false;
+              } catch (aiError) {
+                console.error("❌ [AI MODERATION] Error:", aiError.message);
+                console.error("❌ [AI MODERATION] Full error:", aiError);
+                alert(
+                  `❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: ${aiError.message}`
+                );
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Gửi đánh giá";
+                return; // CHẶN CỨNG KHÔNG CHO GỬI NẾU AI LỖI
+              }
+            }
+
             try {
               await axios.post(
                 `${BASE_URL}/map-locations/${place.id}/feedback`,
@@ -2806,8 +3448,49 @@ const MapPage = () => {
       document
         .getElementById("get-directions-btn")
         ?.addEventListener("click", () => {
-          if (!userMarker.current) return alert("Vui lòng bật định vị!");
-          calculateRoute(userMarker.current.getLatLng(), place.position, map);
+          // Nếu chưa có vị trí người dùng, thử lấy lại
+          if (!userLocation && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                setUserLocation({ lat, lng });
+
+                // Cập nhật marker người dùng
+                if (userMarker.current) {
+                  userMarker.current.setLatLng([lat, lng]);
+                } else {
+                  const icon = L.divIcon({
+                    html: `<div style="width:16px;height:16px;background:#4285f4;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+                    className: "user-location-marker",
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11],
+                  });
+                  userMarker.current = L.marker([lat, lng], { icon }).addTo(
+                    map
+                  );
+                  userMarker.current.bindPopup(
+                    '<b style="color:#4285f4">Vị trí của bạn</b>'
+                  );
+                }
+
+                // Tính đường
+                calculateRoute({ lat, lng }, place.position, map);
+              },
+              () => alert("⚠️ Vui lòng bật định vị để chỉ đường!")
+            );
+          } else if (userLocation) {
+            // Đã có vị trí, tính đường luôn
+            calculateRoute(userLocation, place.position, map);
+          } else {
+            alert("⚠️ Vui lòng bật định vị để chễ đường!");
+          }
+        });
+
+      document
+        .getElementById("share-location-btn")
+        ?.addEventListener("click", () => {
+          handleShareLocation(place);
         });
 
       document.getElementById("save-btn")?.addEventListener("click", () => {
@@ -2921,6 +3604,21 @@ const MapPage = () => {
 
   const openPhotoUploadModal = (place) => {
     closePhotoUploadModal();
+
+    // ✅ Kiểm tra auth state TRƯỚC KHI tạo modal
+    console.log(
+      "📸 Opening photo modal - isAuthLoading:",
+      isAuthLoading,
+      "user:",
+      user?.userId
+    );
+
+    // ⚠️ Nếu chưa đăng nhập, YÊN LÀNG KHÔNG MỞ MODAL
+    if (!user || !user.userId) {
+      console.log("❌ User chưa đăng nhập");
+      alert("Vui lòng đăng nhập để thêm ảnh!");
+      return;
+    }
 
     const overlay = document.createElement("div");
     overlay.style.cssText =
@@ -3067,8 +3765,8 @@ const MapPage = () => {
     });
 
     overlay.innerHTML = `
-      <div style="position:relative;width:100%;max-width:960px;max-height:92vh;background:#020617;border-radius:20px;padding:20px 20px 16px;box-shadow:0 30px 80px rgba(0,0,0,0.55);display:flex;flex-direction:column;gap:14px;font-family:system-ui;">
-        <button id="preview-close" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border:none;border-radius:50%;background:rgba(15,23,42,0.9);color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+      <div style="position:relative;width:100%;max-width:960px;max-height:92vh;background:#020617;border-radius:20px;padding:56px 20px 16px;box-shadow:0 30px 80px rgba(0,0,0,0.55);display:flex;flex-direction:column;gap:14px;font-family:system-ui;">
+        <button id="preview-close" style="position:absolute;top:8px;right:8px;width:40px;height:40px;border:none;border-radius:50%;background:rgba(239,68,68,0.9);color:white;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.3);" onmouseover="this.style.background='rgba(220,38,38,1)'" onmouseout="this.style.background='rgba(239,68,68,0.9)'">×</button>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
           <div style="display:flex;gap:10px;">
             <button id="preview-prev" style="padding:8px 14px;border:none;border-radius:999px;background:#1e293b;color:white;font-weight:600;cursor:pointer;font-size:0.85rem;">‹ Ảnh trước</button>
@@ -3197,14 +3895,33 @@ const MapPage = () => {
 
         const routeDetails = document.getElementById("route-details");
         routeDetails.innerHTML = `
-          <h4 style="margin:16px 0 8px;font-size:1rem;color:#333;font-weight:600">Lộ trình</h4>
-          <div style="padding:16px;background:#f8f9fa;border-radius:8px">
-            <div style="font-weight:600;color:#333;margin-bottom:8px">
-              Thời gian: <span style="color:#1a73e8">${mins} phút</span> · Khoảng cách: <span style="color:#1a73e8">${km} km</span>
+          <div style="position:relative;">
+            <h4 style="margin:16px 0 8px;font-size:1rem;color:#333;font-weight:600;display:flex;align-items:center;justify-content:space-between;">
+              Lộ trình
+              <button id="close-route-btn" style="width:28px;height:28px;border:none;border-radius:50%;background:#ef4444;color:white;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">×</button>
+            </h4>
+            <div style="padding:16px;background:#f8f9fa;border-radius:8px">
+              <div style="font-weight:600;color:#333;margin-bottom:8px">
+                Thời gian: <span style="color:#1a73e8">${mins} phút</span> · Khoảng cách: <span style="color:#1a73e8">${km} km</span>
+              </div>
             </div>
           </div>
         `;
         routeDetails.style.display = "block";
+
+        // Xử lý nút đóng lộ trình
+        const closeRouteBtn = document.getElementById("close-route-btn");
+        if (closeRouteBtn) {
+          closeRouteBtn.addEventListener("click", () => {
+            // Ẩn route details
+            routeDetails.style.display = "none";
+            // Xóa polyline trên bản đồ
+            if (currentRouteLayer.current) {
+              map.removeLayer(currentRouteLayer.current);
+              currentRouteLayer.current = null;
+            }
+          });
+        }
       }
     } catch (err) {
       document.getElementById(
@@ -3225,55 +3942,11 @@ const MapPage = () => {
           <span style="font-size:1.6rem;color:#aaa;">×</span>
         </div>
       </div>
-      <div style="margin-bottom:12px;font-size:0.9rem;color:#aaa;">
-        Ảnh đã lưu: <span class="photo-fav-count" style="color:#0ff;">${userPhotoFavorites.length}</span>
-      </div>
-      <div id="favorite-photos-container" style="margin-bottom:16px;color:white;"></div>
-      <div style="margin:16px 0;border-top:1px solid #333;"></div>
       <div style="margin-bottom:16px;font-size:0.9rem;color:#aaa;">
         Địa điểm đã lưu: <span class="fav-count" style="color:#0ff;">${userPlaceFavorites.length}</span>
       </div>
       <div id="favorites-list" style="color:white;"></div>
     `;
-
-    const photoContainer = document.getElementById("favorite-photos-container");
-    if (!user || !user.userId) {
-      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Đăng nhập để lưu và xem ảnh yêu thích.</div>`;
-    } else if (!userPhotoFavorites.length) {
-      photoContainer.innerHTML = `<div style="color:#aaa;text-align:center;padding:16px;">Chưa có ảnh nào được lưu.</div>`;
-    } else {
-      photoContainer.innerHTML = userPhotoFavorites
-        .sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))
-        .map((photo) => {
-          const src = photo.ImagePath?.startsWith("http")
-            ? photo.ImagePath
-            : `${BASE_URL}${photo.ImagePath || ""}`;
-          return `
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #333;position:relative;cursor:pointer;" onclick="window.openFavoritePhoto('${
-              photo.submissionId
-            }')">
-              <img src="${src}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;" alt="Ảnh yêu thích" />
-              <div style="flex:1;">
-                <div style="font-weight:600;font-size:0.95rem;color:white;margin-bottom:4px;">${
-                  photo.locationTitle || "Ảnh cộng đồng"
-                }</div>
-                <div style="font-size:0.85rem;color:#cbd5f5;margin-bottom:2px;">👤 ${
-                  photo.submittedBy || "Ẩn danh"
-                }</div>
-                <div style="font-size:0.85rem;color:#facc15;">📅 ${
-                  photo.Year || "Chưa rõ năm"
-                }</div>
-              </div>
-              <div onclick="event.stopPropagation(); window.removeFavoritePhoto('${
-                photo.submissionId
-              }')" style="position:absolute;top:8px;right:0;width:28px;height:28px;background:#444;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-    }
 
     const list = document.getElementById("favorites-list");
     if (userPlaceFavorites.length === 0) {
@@ -3403,6 +4076,9 @@ const MapPage = () => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
 
+        // Lưu vị trí vào state
+        setUserLocation({ lat, lng });
+
         if (userMarker.current) {
           mapInstance.current.removeLayer(userMarker.current);
         }
@@ -3484,6 +4160,18 @@ const MapPage = () => {
           <CompareModal
             place={comparePlace}
             onClose={() => setComparePlace(null)}
+          />,
+          document.body
+        )}
+
+      {/* CHIA SẺ ĐỊA ĐIỂM MODAL */}
+      {shareModalOpen &&
+        ReactDOM.createPortal(
+          <ShareModal
+            isOpen={shareModalOpen}
+            onClose={() => setShareModalOpen(false)}
+            location={shareLocation}
+            mapPosition={shareMapPosition}
           />,
           document.body
         )}

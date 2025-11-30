@@ -1,0 +1,366 @@
+/* Share Modal Overlay */
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content */
+.share-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Close Button */
+.share-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f1f3f5;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 20px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.share-modal-close:hover {
+  background: #e9ecef;
+  transform: rotate(90deg);
+}
+
+/* Title */
+.share-modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #212529;
+  margin: 0 0 6px 0;
+  text-align: center;
+}
+
+.share-modal-subtitle {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Social Icons Grid */
+.share-icons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 500px) {
+  .share-icons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Share Icon Button */
+.share-icon {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.share-icon:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.share-icon:active {
+  transform: translateY(-2px);
+}
+
+.share-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Platform-specific colors */
+.share-icon.messenger {
+  color: #0084ff;
+  border-color: #0084ff;
+}
+
+.share-icon.messenger:hover {
+  background: #0084ff;
+  color: white;
+}
+
+.share-icon.zalo {
+  color: #0068ff;
+  border-color: #0068ff;
+}
+
+.share-icon.zalo:hover {
+  background: #0068ff;
+  color: white;
+}
+
+.share-icon.instagram {
+  color: #e1306c;
+  border-color: #e1306c;
+}
+
+.share-icon.instagram:hover {
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
+  color: white;
+}
+
+.share-icon.facebook {
+  color: #1877f2;
+  border-color: #1877f2;
+}
+
+.share-icon.facebook:hover {
+  background: #1877f2;
+  color: white;
+}
+
+/* Link Section */
+.share-link-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.share-link-section label {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 12px;
+}
+
+.share-link-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.share-link-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: "Courier New", monospace;
+  background: white;
+  color: #495057;
+  transition: border-color 0.2s;
+}
+
+.share-link-input:focus {
+  outline: none;
+  border-color: #0d6efd;
+}
+
+.share-copy-btn {
+  padding: 12px 20px;
+  background: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.share-copy-btn:hover {
+  background: #0b5ed7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.share-copy-btn.copied {
+  background: #198754;
+}
+
+.share-copy-btn:active {
+  transform: translateY(0);
+}
+
+.share-link-note {
+  font-size: 13px;
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Instructions */
+.share-instructions {
+  background: #e7f5ff;
+  border-left: 4px solid #0d6efd;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.share-instructions h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d6efd;
+  margin: 0 0 12px 0;
+}
+
+.share-instructions ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.share-instructions li {
+  font-size: 14px;
+  color: #495057;
+  line-height: 1.8;
+  margin-bottom: 6px;
+}
+
+.share-instructions li:last-child {
+  margin-bottom: 0;
+}
+
+.share-instructions strong {
+  font-weight: 600;
+  color: #212529;
+}
+
+/* Scrollbar styling */
+.share-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.share-modal-content::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-radius: 4px;
+}
+
+.share-modal-content::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+  border-radius: 4px;
+}
+
+.share-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #868e96;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .share-modal-content {
+    padding: 24px 20px;
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .share-modal-title {
+    font-size: 22px;
+  }
+
+  .share-modal-subtitle {
+    font-size: 14px;
+  }
+
+  .share-icons-grid {
+    gap: 12px;
+  }
+
+  .share-icon {
+    padding: 16px 12px;
+    font-size: 13px;
+  }
+
+  .share-icon svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .share-link-container {
+    flex-direction: column;
+  }
+
+  .share-copy-btn {
+    width: 100%;
+  }
+
+  .share-instructions {
+    padding: 16px;
+  }
+
+  .share-instructions li {
+    font-size: 13px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 601px) and (max-width: 768px) {
+  .share-modal-content {
+    max-width: 520px;
+  }
+}
