@@ -399,6 +399,12 @@
   font-size: 14px;
   margin: 0;
 }
+/* Ensure very long words or repeated characters wrap/break so layout doesn't overflow */
+.comment-text {
+  white-space: pre-wrap; /* preserve user newlines but allow wrapping */
+  overflow-wrap: anywhere; /* modern browsers: break long words if needed */
+  word-break: break-word; /* fallback */
+}
 
 .comment-time {
   color: var(--muted);

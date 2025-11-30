@@ -22,6 +22,9 @@ export class Comments {
   @CreateDateColumn({ type: 'datetime' })
   CreatedAt: Date;
 
+  @Column({ type: 'simple-json', nullable: true })
+  Moderation: any;
+
   // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.comments)
   @JoinColumn({ name: 'ArticleID' })

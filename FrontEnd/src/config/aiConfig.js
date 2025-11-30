@@ -4,7 +4,7 @@ const defaultAiConfig = {
   baseUrls: ['http://26.68.60.194:8000'],// bật lên khi làm ở nhờ hoặc khi thằng làm ai không có ở đó để test chung
   featureFlags: {
     analyze: true,
-    moderateComment: false,
+    moderateComment: true,
     moderateArticle: false,
     gemini: true,
   },
