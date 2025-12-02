@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../context/useAppContext';
 import StatsCard from '../../Component/admin/StatsCard';
 import { apiClient } from '../../services/api';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAppContext();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalArticles: 0,
@@ -16,6 +18,13 @@ const AdminDashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
 
   useEffect(() => {
+    // ⛔ Moderator không được xem Dashboard - redirect to Contributions
+    const isModerator = user?.role === 'Moderator' || user?.Role === 'Moderator';
+    if (isModerator) {
+      navigate('/admin/contributions', { replace: true });
+      return;
+    }
+
     // Fetch stats từ API
     // TODO: Thay bằng API thật
     setStats({
@@ -31,7 +40,7 @@ const AdminDashboard = () => {
       { id: 3, user: 'Lê Văn C', action: 'đã thích bài viết', time: '15 phút trước', type: 'like' },
       { id: 4, user: 'Admin', action: 'đã duyệt 3 bài viết', time: '1 giờ trước', type: 'approve' },
     ]);
-  }, []);
+  }, [user, navigate]);
 
   return (
     <div>

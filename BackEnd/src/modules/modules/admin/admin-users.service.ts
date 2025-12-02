@@ -258,14 +258,14 @@ export class AdminUsersService {
     const inactive = total - active;
 
     const adminCount = await this.userRepo.count({ where: { RoleID: 1 } });
-    const editorCount = await this.userRepo.count({ where: { RoleID: 4 } });
+    const moderatorCount = await this.userRepo.count({ where: { RoleID: 3 } });
 
     return {
       total,
       active,
       inactive,
       admins: adminCount,
-      editors: editorCount,
+      moderators: moderatorCount,
     };
   }
 }

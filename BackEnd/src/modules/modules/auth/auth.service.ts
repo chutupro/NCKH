@@ -325,7 +325,7 @@ export class AuthService {
         email: user.Email,
         fullName: user.FullName ?? '',
         roleId: user.RoleID,
-        role: user?.role?.RoleName || 'User',
+        Role: user?.role?.RoleName || 'User', // ✅ Đổi thành Role (capital R) để match frontend
         profile: {
           avatar: userWithProfile?.profile?.Avatar || '/img/default-avatar.png',
         },

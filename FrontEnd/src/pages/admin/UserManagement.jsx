@@ -1,9 +1,13 @@
 ﻿import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../context/useAppContext';
 import adminUsersService from '../../services/adminUsersService';
 import { toast } from 'react-toastify';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const UserManagement = () => {
+  const navigate = useNavigate();
+  const { user } = useAppContext();
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, editors: 0 });
   const [loading, setLoading] = useState(true);
@@ -13,9 +17,16 @@ const UserManagement = () => {
   const [newUser, setNewUser] = useState({ email: '', password: '', fullName: '', roleId: 2 });
 
   useEffect(() => {
+    // ⛔ Moderator không được xem trang này
+    const isModerator = user?.role === 'Moderator' || user?.Role === 'Moderator';
+    if (isModerator) {
+      navigate('/admin/contributions', { replace: true });
+      return;
+    }
+
     fetchUsers();
     fetchStats();
-  }, [pagination.page, searchQuery]);
+  }, [pagination.page, searchQuery, user, navigate]);
 
   const fetchUsers = async () => {
     try {
@@ -161,7 +172,7 @@ const UserManagement = () => {
               <div className="admin-form-group"><label>Email *</label><input type="email" required className="admin-input" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} /></div>
               <div className="admin-form-group"><label>Password *</label><input type="password" required className="admin-input" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} minLength={6} /></div>
               <div className="admin-form-group"><label>Tên *</label><input type="text" required className="admin-input" value={newUser.fullName} onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })} /></div>
-              <div className="admin-form-group"><label>Role</label><select className="admin-select" value={newUser.roleId} onChange={(e) => setNewUser({ ...newUser, roleId: parseInt(e.target.value) })}><option value="2">User</option><option value="4">Editor</option><option value="1">Admin</option></select></div>
+              <div className="admin-form-group"><label>Role</label><select className="admin-select" value={newUser.roleId} onChange={(e) => setNewUser({ ...newUser, roleId: parseInt(e.target.value) })}><option value="2">User</option><option value="3">Moderator</option><option value="1">Admin</option></select></div>
               <div className="admin-modal-footer"><button type="button" className="admin-btn" onClick={() => setShowAddModal(false)}>Hủy</button><button type="submit" className="admin-btn admin-btn-primary">Tạo</button></div>
             </form>
           </div>

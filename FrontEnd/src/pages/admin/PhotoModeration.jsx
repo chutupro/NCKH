@@ -1,12 +1,25 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '../../context/useAppContext';
 
 const BASE_URL = 'http://localhost:3000';
 
 const PhotoModeration = () => {
+  const navigate = useNavigate();
+  const { user } = useAppContext();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actioning, setActioning] = useState(null);
+
+  useEffect(() => {
+    // ⛔ Moderator không được xem trang này (chỉ được xem AdminContributions)
+    const isModerator = user?.role === 'Moderator' || user?.Role === 'Moderator';
+    if (isModerator) {
+      navigate('/admin/contributions', { replace: true });
+      return;
+    }
+  }, [user, navigate]);
 
   const loadPending = useCallback(async () => {
     setLoading(true);
