@@ -18,12 +18,10 @@ interface CrawledEvent {
 @Injectable()
 export class CrawlerService {
   private readonly defaultCategories = [
-    'Lịch sử',
-    'Kiến trúc',
-    'Chiến tranh',
+    'Di Sản',
     'Văn hóa',
-    'Du lịch',
     'Thiên nhiên',
+    'Sự kiện',
   ];
 
   private readonly CATEGORY_KEYWORDS: { [category: string]: { keyword: string; weight: number }[] } = {
