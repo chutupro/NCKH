@@ -27,7 +27,42 @@ const Community = () => {
     const params = new URLSearchParams(location.search)
     const q = params.get('query') || ''
     if (q) setSearchQuery(q)
+    const f = params.get('filter') || params.get('category') || ''
+    if (f) setActiveFilter(f)
+    // if URL has no params, restore from localStorage
+    if (!params.toString()) {
+      try {
+        const raw = localStorage.getItem('community.filters')
+        if (raw) {
+          const obj = JSON.parse(raw)
+          if (obj.query && !q) setSearchQuery(obj.query)
+          if (obj.filter && !f) setActiveFilter(obj.filter)
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
   }, [location.search])
+
+  // Persist activeFilter + searchQuery to URL so refresh keeps them
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('query', searchQuery);
+    if (activeFilter && activeFilter !== 'all') params.set('filter', activeFilter);
+    const newSearch = params.toString();
+    const current = location.search.startsWith('?') ? location.search.slice(1) : location.search;
+    if (newSearch !== current) {
+      // replace instead of push
+      window.history.replaceState({}, '', `${location.pathname}${newSearch ? `?${newSearch}` : ''}`);
+    }
+    // persist to localStorage as fallback
+    try {
+      localStorage.setItem('community.filters', JSON.stringify({ query: searchQuery, filter: activeFilter }));
+    } catch (e) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, activeFilter]);
 
   useEffect(() => {
     // Scroll đến bài viết cụ thể nếu có hash trong URL
@@ -174,6 +209,7 @@ const Community = () => {
             activeFilter={activeFilter} 
             onFilterChange={setActiveFilter}
             onSearchChange={setSearchQuery}
+            searchValue={searchQuery}
           />
         </div>
       </div>

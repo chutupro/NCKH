@@ -1,5 +1,5 @@
 import "../../Styles/ImageLibrary/ImageLibrary.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getCollections, getCategories } from "../../API/collections";
 import { CODE_TO_VN } from '../../util/categoryMap'
@@ -133,11 +133,35 @@ const ImageLibrary = () => {
 
   // Nếu URL có ?query=..., khởi tạo giá trị search từ query param để tự động tìm
   const location = useLocation();
+  // read persisted filters from localStorage if URL doesn't provide them
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const q = params.get('query') || '';
+    const hasAny = params.has('query') || params.has('category') || params.has('sort') || params.has('page');
+    if (!hasAny) {
+      try {
+        const raw = localStorage.getItem('imageLibrary.filters');
+        if (raw) {
+          const obj = JSON.parse(raw);
+          if (obj.query) setSearch(obj.query);
+          if (obj.category) setCategory(obj.category);
+          if (obj.sort) setSort(obj.sort);
+          if (obj.page) setPage(Number(obj.page) || 1);
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    // URLSearchParams.get decodes percent-encoding but leaves '+' characters as-is
+    // Convert '+' to spaces and trim to normalize user-entered queries that were encoded differently
+    const rawQ = params.get('query');
+    const q = rawQ != null ? String(rawQ).replace(/\+/g, ' ').trim() : '';
     const c = params.get('category') || '';
-    if (q && q !== search) {
+    // If the URL explicitly contains the query param (even empty), use it as the source of truth
+    if (params.has('query') && q !== search) {
       setSearch(q);
       setPage(1);
     }
@@ -175,6 +199,64 @@ const ImageLibrary = () => {
   const handleSearch = e => { setSearch(e.target.value); setPage(1); };
   const handleCategory = e => { setCategory(e.target.value); setPage(1); };
   const handlePage = p => setPage(p);
+
+  // Persist current filters/search/sort/page to URL so they survive refreshes
+  // Persist current filters/search/sort/page to URL so they survive refreshes
+  // Debounce navigate to avoid focus/caret loss while user types
+  const savePersistRef = useRef(null);
+  const navDebounceRef = useRef(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (search) params.set('query', search);
+    if (category && category !== 'all') params.set('category', category);
+    if (sort && sort !== 'moi_nhat') params.set('sort', sort);
+    if (page && page > 1) params.set('page', String(page));
+    const newSearch = params.toString();
+    const current = location.search.startsWith('?') ? location.search.slice(1) : location.search;
+
+    // debounce navigate to avoid re-render focus jumps while typing
+    if (navDebounceRef.current) clearTimeout(navDebounceRef.current);
+    navDebounceRef.current = setTimeout(() => {
+      if (newSearch !== current) {
+        navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+      }
+    }, 450);
+
+    // persist to localStorage as fallback (debounced to reduce writes)
+    try {
+      if (savePersistRef.current) clearTimeout(savePersistRef.current);
+      savePersistRef.current = setTimeout(() => {
+        try {
+          localStorage.setItem('imageLibrary.filters', JSON.stringify({ query: search, category, sort, page }));
+        } catch (e) {
+          // ignore storage errors
+        }
+      }, 400);
+    } catch (e) {
+      // ignore
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category, sort, page]);
+
+  // clear pending timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (savePersistRef.current) clearTimeout(savePersistRef.current);
+      if (navDebounceRef.current) clearTimeout(navDebounceRef.current);
+    };
+  }, []);
+
+  // When the component unmounts (user navigates away), clear persisted filters
+  // and remove querystring so returning to the page starts fresh.
+  useEffect(() => {
+    return () => {
+      try { localStorage.removeItem('imageLibrary.filters'); } catch (e) { /* ignore */ }
+      try { window.history.replaceState({}, '', location.pathname); } catch (e) { /* ignore */ }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="image-library-container">
