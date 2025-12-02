@@ -325,14 +325,31 @@ const MapAdmin = () => {
   };
 
   return (
-    <div style={{ padding: "40px", maxWidth: "1400px", margin: "0 auto", background: "#f5f5f5", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
+    <div style={{ 
+      padding: "40px", 
+      maxWidth: "1400px", 
+      margin: "0 auto", 
+      background: "#f5f5f5", 
+      borderRadius: "12px", 
+      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+      position: "relative",
+      zIndex: 1
+    }}>
       <h2 style={{ fontSize: "2rem", fontWeight: "600", color: "#333", marginBottom: "30px", textAlign: "center" }}>
         Quản lý Địa điểm Lịch sử Đà Nẵng
       </h2>
 
-      <div style={{ display: "flex", gap: "30px" }}>
+      <div style={{ display: "flex", gap: "30px", position: "relative", zIndex: 1 }}>
         {/* FORM */}
-        <div style={{ flex: 1, background: "white", padding: "20px", borderRadius: "12px", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
+        <div style={{ 
+          flex: 1, 
+          background: "white", 
+          padding: "20px", 
+          borderRadius: "12px", 
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          position: "relative",
+          zIndex: 2
+        }}>
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Tên địa điểm</label>
@@ -473,11 +490,69 @@ const MapAdmin = () => {
         </div>
 
         {/* BẢN ĐỒ */}
-        <div style={{ flex: 2, borderRadius: "12px", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}>
-          <div ref={mapRef} style={{ height: "700px", width: "100%" }} />
-          <p style={{ marginTop: "10px", fontSize: "0.95rem", color: "#555", textAlign: "center" }}>
-            <strong>Tọa độ:</strong> [{form.position[0].toFixed(6)}, {form.position[1].toFixed(6)}]
-          </p>
+        <div style={{ 
+          flex: 2, 
+          borderRadius: "12px", 
+          overflow: "hidden", 
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          position: "relative",
+          zIndex: 1
+        }}>
+          <div ref={mapRef} style={{ height: "700px", width: "100%", position: "relative", zIndex: 1 }} />
+          
+          {/* Hiển thị tọa độ đẹp */}
+          <div style={{
+            marginTop: "12px",
+            padding: "12px 16px",
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            borderRadius: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "12px",
+            boxShadow: "0 2px 8px rgba(102, 126, 234, 0.3)",
+          }}>
+            <span style={{ fontSize: "1.2rem" }}>📍</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>
+                Tọa độ hiện tại
+              </span>
+              <code style={{ 
+                fontSize: "0.95rem", 
+                color: "#fff", 
+                fontWeight: 600,
+                letterSpacing: "0.5px",
+                fontFamily: "Consolas, Monaco, monospace"
+              }}>
+                {form.position[0].toFixed(6)}, {form.position[1].toFixed(6)}
+              </code>
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${form.position[0].toFixed(6)}, ${form.position[1].toFixed(6)}`);
+                alert('Đã copy tọa độ!');
+              }}
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                border: "none",
+                borderRadius: "6px",
+                padding: "6px 12px",
+                color: "white",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                fontWeight: 500,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.2)";
+              }}
+            >
+              📋 Copy
+            </button>
+          </div>
         </div>
       </div>
 

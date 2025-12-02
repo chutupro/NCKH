@@ -25,7 +25,6 @@ import Community from "../pages/community/Community";
 import CompareGallery from "../pages/Compare/CompareGallery";
 import CompareDetail from "../pages/Compare/CompareDetail";
 import MapPage from "../pages/map/MapPage";
-import MapAdmin from "../pages/map/MapAdmin";
 import { fetchMapLocations } from "../pages/map/mapLocationsSlice";
 
 
@@ -34,10 +33,10 @@ import AdminLayout from "../Component/admin/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import UserManagement from "../pages/admin/UserManagement";
 import CollectionManagement from "../pages/admin/CollectionManagement";
+import LocationManagement from "../pages/admin/LocationManagement";
 import AIModels from "../pages/admin/AIModels";
 import SystemMonitor from "../pages/admin/SystemMonitor";
 import RolePermissions from "../pages/admin/RolePermissions";
-import PhotoModeration from "../pages/admin/PhotoModeration";
 import AdminContributions from "../Component/admin/AdminContributions";
 import ProtectedRoute from "../Component/common/ProtectedRoute";
 
@@ -93,16 +92,6 @@ const Routee = () => {
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
 
-      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/EDITOR */}
-      <Route
-        path="/map/admin"
-        element={
-          <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
-            <MapAdmin />
-          </ProtectedRoute>
-        }
-      />
-
       {/* ADMIN DASHBOARD: CHỈ ADMIN */}
       <Route
         path="/admin"
@@ -115,7 +104,7 @@ const Routee = () => {
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="content" element={<CollectionManagement />} />
-        <Route path="photos" element={<PhotoModeration />} />
+        <Route path="locations" element={<LocationManagement />} />
         <Route path="contributions" element={<AdminContributions />} />
         <Route path="ai-models" element={<AIModels />} />
         <Route path="system-monitor" element={<SystemMonitor />} />
