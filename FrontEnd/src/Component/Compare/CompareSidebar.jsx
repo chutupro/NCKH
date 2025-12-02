@@ -17,12 +17,8 @@ const CompareSidebar = ({ item }) => {
           <span className="cd-info-value">{item.location || t('compareDetail.defaultLocation')}</span>
         </div>
         <div className="cd-info-item">
-          <span className="cd-info-label">{t('compareDetail.oldYear')}:</span>
+          <span className="cd-info-label">Năm:</span>
           <span className="cd-info-value">{item.yearOld || t('compareDetail.unknown')}</span>
-        </div>
-        <div className="cd-info-item">
-          <span className="cd-info-label">{t('compareDetail.newYear')}:</span>
-          <span className="cd-info-value">{item.yearNew || '2024'}</span>
         </div>
       </div>
     </aside>

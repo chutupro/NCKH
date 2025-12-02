@@ -28,7 +28,6 @@ import MapPage from "../pages/map/MapPage";
 import MapAdmin from "../pages/map/MapAdmin";
 import { fetchMapLocations } from "../pages/map/mapLocationsSlice";
 
-
 // Admin Dashboard
 import AdminLayout from "../Component/admin/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -39,6 +38,9 @@ import SystemMonitor from "../pages/admin/SystemMonitor";
 import RolePermissions from "../pages/admin/RolePermissions";
 import PhotoModeration from "../pages/admin/PhotoModeration";
 import AdminContributions from "../Component/admin/AdminContributions";
+import MapManagement from "../pages/admin/MapManagement";
+import CrawlerManagement from "../pages/admin/CrawlerManagement";
+import Logs from "../pages/admin/Logs";
 import ProtectedRoute from "../Component/common/ProtectedRoute";
 
 const Routee = () => {
@@ -54,12 +56,12 @@ const Routee = () => {
       <Route element={<Lauput />}>
         <Route index element={<Home />} />
         <Route path="/Personal" element={<Personal />} />
-        <Route path="/user/:userId" element={<UserProfile />} /> {/* ✅ XEM PROFILE NGƯỜI KHÁC */}
-
+        <Route path="/user/:userId" element={<UserProfile />} />{" "}
+        {/* ✅ XEM PROFILE NGƯỜI KHÁC */}
         {/* Timeline */}
         <Route path="/timeline" element={<Timeline />} />
-        <Route path="/timeline/:id" element={<TimelineDetail />} /> {/* khác → giữ thêm */}
-
+        <Route path="/timeline/:id" element={<TimelineDetail />} />{" "}
+        {/* khác → giữ thêm */}
         {/* Contribute */}
         <Route path="/contribute" element={<Contribute />} />
         <Route
@@ -67,63 +69,67 @@ const Routee = () => {
           element={<ContributeInformation />}
         />
         <Route path="/language" element={<LanguageSettings />} />
-
         {/* Gallery */}
         <Route path="/ImageLibrary" element={<ImageLibrary />} />
         <Route path="/ImageLibrary/:id" element={<ImageLibraryInformation />} />
-
         {/* Compare */}
         <Route path="/compare" element={<CompareGallery />} />
         <Route path="/compare/:id" element={<CompareDetail />} />
-
         {/* Community */}
         <Route path="/community" element={<Community />} />
-
         {/* About */}
         <Route path="/about" element={<About />} /> {/* khác → giữ thêm */}
       </Route>
-
       {/* TRANG KHÔNG LAYOUT */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} /> {/* ✅ FORGOT PASSWORD */}
-      <Route path="/oauth/google/success" element={<GoogleAuthSuccess />} /> {/* ✅ GOOGLE CALLBACK */}
-      <Route path="/oauth/facebook/success" element={<FacebookAuthSuccess />} /> {/* ✅ FACEBOOK CALLBACK */}
-
+      <Route path="/forgot-password" element={<ForgotPassword />} />{" "}
+      {/* ✅ FORGOT PASSWORD */}
+      <Route
+        path="/oauth/google/success"
+        element={<GoogleAuthSuccess />}
+      />{" "}
+      {/* ✅ GOOGLE CALLBACK */}
+      <Route
+        path="/oauth/facebook/success"
+        element={<FacebookAuthSuccess />}
+      />{" "}
+      {/* ✅ FACEBOOK CALLBACK */}
       {/* BẢN ĐỒ: FULL MÀN HÌNH */}
       <Route path="/map" element={<MapPage />} />
-
-      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/EDITOR */}
+      {/* QUẢN TRỊ BẢN ĐỒ: CHỈ ADMIN/MODERATOR */}
       <Route
         path="/map/admin"
         element={
-          <ProtectedRoute allowedRoles={['Admin', 'Editor']}>
+          <ProtectedRoute allowedRoles={["Admin", "Moderator"]}>
             <MapAdmin />
           </ProtectedRoute>
         }
       />
-
-      {/* ADMIN DASHBOARD: CHỈ ADMIN */}
+      {/* ADMIN DASHBOARD: CHỈ ADMIN VÀ MODERATOR */}
       <Route
         path="/admin"
         element={
-          <ProtectedRoute allowedRoles={['Admin']}>
+          <ProtectedRoute allowedRoles={["Admin", "Moderator"]}>
             <AdminLayout />
           </ProtectedRoute>
         }
       >
+        {/* All routes - individual permissions handled in components */}
         <Route index element={<AdminDashboard />} />
         <Route path="users" element={<UserManagement />} />
         <Route path="content" element={<CollectionManagement />} />
         <Route path="photos" element={<PhotoModeration />} />
         <Route path="contributions" element={<AdminContributions />} />
+        <Route path="map-management" element={<MapManagement />} />
+        <Route path="crawler" element={<CrawlerManagement />} />
         <Route path="ai-models" element={<AIModels />} />
         <Route path="system-monitor" element={<SystemMonitor />} />
         <Route path="permissions" element={<RolePermissions />} />
+        <Route path="logs" element={<Logs />} />
       </Route>
     </Routes>
   );
 };
-
 
 export default Routee;
