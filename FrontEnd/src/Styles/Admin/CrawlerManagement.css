@@ -73,23 +73,24 @@
 
 .filter-buttons button {
   padding: 12px 20px;
-  border: 2px solid #e5e7eb;
-  background: white;
+
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05));
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  color: #e8d7b7;
 }
 
 .filter-buttons button:hover {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: white;
+  color: white;
 }
 
 .filter-buttons button.active {
-  background: #3b82f6;
-  color: white;
+  background: #dad2c5;
+  color: black;
   border-color: #3b82f6;
 }
 
@@ -204,14 +205,6 @@
   background: #dc2626;
 }
 
-/* Loading */
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-}
 
 .spinner {
   width: 50px;
