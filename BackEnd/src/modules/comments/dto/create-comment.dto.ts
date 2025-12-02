@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsObject } from 'class-validator';
 
 export class CreateCommentDto {
   @ApiProperty({
@@ -72,4 +72,13 @@ export class CreateCommentDto {
   @IsOptional()
   @IsString()
   avatarPath?: string;
+
+  @ApiProperty({
+    example: { label: 'hate', action: 'allow' },
+    required: false,
+    description: 'Optional moderation metadata from AI (stored as JSON)'
+  })
+  @IsOptional()
+  @IsObject()
+  moderation?: any;
 }

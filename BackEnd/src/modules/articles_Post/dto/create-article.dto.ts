@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsInt, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsInt, IsOptional, IsString, IsObject } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateArticleDto {
@@ -36,4 +36,9 @@ export class CreateArticleDto {
   @IsOptional()
   @IsString()
   imageDescription?: string;
+
+  @ApiProperty({ example: { label: 'hate', action: 'allow' }, required: false })
+  @IsOptional()
+  @IsObject()
+  moderation?: any;
 }

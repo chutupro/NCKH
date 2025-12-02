@@ -225,6 +225,12 @@
   font-size: 15px;
   line-height: 1.45;
 }
+/* Ensure very long words or repeated characters in post text wrap instead of overflowing */
+.post-text {
+  white-space: pre-wrap; /* preserve newlines but allow wrapping */
+  overflow-wrap: anywhere; /* break long words when needed */
+  word-break: break-word; /* fallback for older browsers */
+}
 .meta .name {
   font-size: 15px;
 }
@@ -398,6 +404,12 @@
   color: #efeaea;
   font-size: 14px;
   margin: 0;
+}
+/* Ensure very long words or repeated characters wrap/break so layout doesn't overflow */
+.comment-text {
+  white-space: pre-wrap; /* preserve user newlines but allow wrapping */
+  overflow-wrap: anywhere; /* modern browsers: break long words if needed */
+  word-break: break-word; /* fallback */
 }
 
 .comment-time {

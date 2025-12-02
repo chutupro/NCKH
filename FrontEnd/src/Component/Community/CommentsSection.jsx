@@ -41,12 +41,26 @@ const CommentsSection = ({ postId, user, isAuthenticated, onCommentCountChange }
     if (!commentText.trim()) return
 
     try {
-      await createComment(postId, commentText.trim())
-      await loadComments()
+      const created = await createComment(postId, commentText.trim())
+      // If API returned the created comment, insert it into state so any client-side
+      // moderation metadata (e.g., label === 'hate') is preserved for the session.
+      if (created && created.id) {
+        setComments(prev => [created, ...(prev || [])])
+      } else {
+        // Fallback: reload from server if response is unexpected
+        await loadComments()
+      }
       onCommentCountChange(1)
       setCommentText('')
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Không thể thêm bình luận')
+      // If blocked by moderation, show specific message
+      if (err && err.isModeration) {
+        // Clear the input immediately as requested
+        setCommentText('')
+        toast.error(err.message || 'Bình luận bị chặn bởi hệ thống kiểm duyệt')
+      } else {
+        toast.error(err?.response?.data?.message || 'Không thể thêm bình luận')
+      }
     }
   }
 
@@ -99,13 +113,32 @@ const CommentsSection = ({ postId, user, isAuthenticated, onCommentCountChange }
     if (!replyText.trim() || !replyingTo) return
 
     try {
-      await createReply(postId, replyingTo.id, replyText.trim(), replyingTo.name)
-      await loadComments()
+      const createdReply = await createReply(postId, replyingTo.id, replyText.trim(), replyingTo.name)
+      if (createdReply && createdReply.id) {
+        setComments(prev => {
+          return (prev || []).map(c => {
+            if (c.id === createdReply.parentCommentId) {
+              const replies = c.replies ? [...c.replies, createdReply] : [createdReply]
+              return { ...c, replies }
+            }
+            return c
+          })
+        })
+      } else {
+        await loadComments()
+      }
       onCommentCountChange(1)
       setReplyText('')
       setReplyingTo(null)
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Không thể thêm trả lời')
+      if (err && err.isModeration) {
+        // Clear the reply input immediately
+        setReplyText('')
+        setReplyingTo(null)
+        toast.error(err.message || 'Trả lời bị chặn bởi hệ thống kiểm duyệt')
+      } else {
+        toast.error(err?.response?.data?.message || 'Không thể thêm trả lời')
+      }
     }
   }
 

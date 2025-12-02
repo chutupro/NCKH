@@ -48,6 +48,7 @@ export class CommentService {
       UserID: dto.userId,
       ArticleID: dto.articleId,
       ParentCommentID: dto.parentCommentId || undefined, // ✅ Cho phép reply
+      Moderation: dto.moderation ?? undefined,
       user,
       article,
     };
@@ -60,6 +61,7 @@ export class CommentService {
       content: saved.Content,
       createdAt: saved.CreatedAt,
       parentCommentId: saved.ParentCommentID,
+      moderation: saved.Moderation ?? null,
       replyToName: dto.replyToName,
       author: {
         id: user.UserID,
@@ -95,6 +97,8 @@ export class CommentService {
           avatar: c.user.profile?.Avatar || '/img/default-avatar.png',
         },
         replies: [],
+        // include moderation if present
+        ...(c.Moderation ? { moderation: c.Moderation } : {}),
       };
       commentMap.set(c.CommentID, commentData);
     });
@@ -150,9 +154,15 @@ export class CommentService {
       where: { CommentID: commentId },
     });
     if (!comment) throw new BadRequestException('Comment not found');
-    
-    // Kiểm tra quyền sở hữu
-    if (comment.UserID !== userId) {
+
+    // Fetch requesting user to check admin role
+    const requestingUser = await this.userRepo.findOne({ where: { UserID: userId }, relations: ['role'] });
+    if (!requestingUser) throw new BadRequestException('Requesting user not found');
+
+    // If not owner and not admin -> deny
+    const isOwner = comment.UserID === userId
+    const isAdmin = Boolean(requestingUser.RoleID === 1 || (requestingUser.role && requestingUser.role.RoleName && requestingUser.role.RoleName.toLowerCase() === 'admin'))
+    if (!isOwner && !isAdmin) {
       throw new BadRequestException('You can only delete your own comments');
     }
 

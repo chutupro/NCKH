@@ -91,11 +91,20 @@
 }
 
 .search-input:focus {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(232, 215, 183, 0.3);
+  /* Match the active filter button appearance */
+  background: linear-gradient(135deg, rgba(232, 215, 183, 0.2), rgba(232, 215, 183, 0.1));
+  border-color: rgba(232, 215, 183, 0.4);
+  color: black;
+  font-weight: 600;
 }
 
-.search-input:focus + .search-icon {
+.search-input:focus::placeholder {
+  color: black;
+  
+}
+
+/* Ensure the icon changes color when input is focused regardless of DOM order */
+.search-input-wrapper:focus-within .search-icon {
   color: #e8d7b7;
 }
 

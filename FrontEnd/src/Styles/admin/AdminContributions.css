@@ -224,6 +224,13 @@
   line-height: 1.4;
 }
 
+.moderation-flag {
+  display: inline-block;
+  margin-left: 6px;
+  color: #ef4444;
+  font-weight: 800;
+}
+
 .contribution-badge {
   background: #f59e0b;
   color: #1a1a1a;

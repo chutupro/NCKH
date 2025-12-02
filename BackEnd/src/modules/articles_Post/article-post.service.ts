@@ -52,6 +52,9 @@ export class ArticleService {
       .orderBy('article.CreatedAt', 'DESC')
       .getMany();
 
+    // debug: how many verified articles will be returned
+    try { console.debug(`[ArticleService] getAllArticles found ${articles.length} verified articles`) } catch (e) {}
+
     return articles.map((a) => ({
       id: a.ArticleID,
       title: a.Title,
@@ -78,9 +81,16 @@ export class ArticleService {
     if (!user) throw new Error('User not found');
     if (!category) throw new Error('Category not found');
 
+    // Only persist moderation if it's explicitly labeled 'hate'
+    const moderationToPersist = (dto as any).moderation && (dto as any).moderation.label === 'hate' ? (dto as any).moderation : null
+
     const article = this.articleRepo.create({
       Title: dto.title,
       Content: dto.content,
+      Moderation: moderationToPersist,
+      // If not flagged as 'hate', auto-verify so it appears on community
+      Verified: moderationToPersist ? false : true,
+      Rejected: false,
       UserID: dto.userId,
       CategoryID: dto.categoryId,
       user,
@@ -102,6 +112,7 @@ export class ArticleService {
       id: article.ArticleID,
       title: article.Title,
       content: article.Content,
+      moderation: article.Moderation || null,
       category: category.Name,
       author: {
         id: user.UserID,
@@ -126,11 +137,15 @@ export class ArticleService {
       .orderBy('article.CreatedAt', 'DESC')
       .getMany();
 
-    return articles.map((a) => ({
+    // Filter to only include articles that were flagged with moderation.label === 'hate'
+    const flagged = articles.filter(a => a.Moderation && a.Moderation.label === 'hate')
+
+    return flagged.map((a) => ({
       id: a.ArticleID,
       title: a.Title,
       content: a.Content,
       createdAt: a.CreatedAt,
+      moderation: a.Moderation || null,
       category: a.category?.Name,
       author: {
         id: a.user?.UserID,
@@ -159,6 +174,7 @@ export class ArticleService {
       title: a.Title,
       content: a.Content,
       createdAt: a.CreatedAt,
+      moderation: a.Moderation || null,
       category: a.category?.Name,
       author: {
         id: a.user?.UserID,
@@ -178,6 +194,8 @@ export class ArticleService {
     article.Verified = true;
     article.Rejected = false;
     await this.articleRepo.save(article);
+
+    try { console.debug(`[ArticleService] approveArticle saved ArticleID=${article.ArticleID} Verified=${article.Verified} Rejected=${article.Rejected}`) } catch (e) {}
 
     return { message: 'Article approved successfully', article };
   }
