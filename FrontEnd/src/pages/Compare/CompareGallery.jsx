@@ -1,5 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getCategories } from '../../API/collections';
 import CompareCard from '../../Component/Compare/CompareCard';
 import { getImageComparisons } from '../../API/imageComparisons';
 import '../../Styles/CompareCard/CompareCard.css';
@@ -11,6 +13,10 @@ const CompareGallery = () => {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [page, setPage] = useState(1);
+  
+  const navDebounce = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
   const PER_PAGE = 9;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,23 +44,74 @@ const CompareGallery = () => {
     return () => { mounted = false; ac.abort(); };
   }, []);
 
-  // derive categories from data (keeps in sync with DB)
+  // Initialize from URL params (?query=, ?category=)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const rawQ = params.get('query');
+    const q = rawQ != null ? String(rawQ).replace(/\+/g, ' ').trim() : '';
+    const c = params.get('category') || 'all';
+    if (q !== query) setQuery(q);
+    if (c !== category) setCategory(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
+
+  // Sync query/category back to URL (debounced)
+  useEffect(() => {
+    if (navDebounce.current) clearTimeout(navDebounce.current);
+    navDebounce.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (query) params.set('query', query);
+      if (category && category !== 'all') params.set('category', category);
+      const newSearch = params.toString();
+      const current = location.search.startsWith('?') ? location.search.slice(1) : location.search;
+      if (newSearch !== current) {
+        navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+      }
+    }, 350);
+    return () => { if (navDebounce.current) clearTimeout(navDebounce.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, category]);
+
+
+  // load categories from API (use Vietnamese names as option values)
+  const [apiCategories, setApiCategories] = useState([]);
+  useEffect(() => {
+    let mounted = true;
+    const ac = new AbortController();
+    getCategories(ac.signal)
+      .then((data) => {
+        if (!mounted) return;
+        if (Array.isArray(data)) setApiCategories(data.map(c => c.Name || c.name || String(c)));
+        else setApiCategories([]);
+      })
+      .catch((err) => {
+        console.warn('Failed to load categories', err);
+      });
+    return () => { mounted = false; ac.abort(); };
+  }, []);
+
+  // Build category options: 'all' + API category names + optional 'other'
   const CATEGORIES = useMemo(() => {
-    // derive known category codes from data; include 'other' if unknowns exist
-    const codes = new Set(['all']);
-    (items || []).forEach(c => {
-      const code = getCodeFromName(c.category || '');
-      if (KNOWN_CODES.includes(code)) codes.add(code); else if (code === 'other') codes.add('other');
-    });
-    return Array.from(codes);
-  }, [items]);
+    const list = ['all'];
+    if (apiCategories && apiCategories.length) {
+      apiCategories.forEach(n => { if (n && !list.includes(n)) list.push(n); });
+    } else {
+      (items || []).forEach(i => { const name = i.category || ''; if (name && !list.includes(name)) list.push(name); });
+    }
+    const hasOther = (items || []).some(i => getCodeFromName(i.category) === 'other');
+    if (hasOther && !list.includes('other')) list.push('other');
+    return list;
+  }, [apiCategories, items]);
 
   const filtered = useMemo(() => {
     let list = items || [];
     if (category && category !== 'all') {
-      const vn = CODE_TO_VN[category] || null;
-      if (vn) list = list.filter((i) => (i.category || '') === vn);
-      else list = list.filter((i) => !KNOWN_CODES.includes(getCodeFromName(i.category)));
+      if (category === 'other') {
+        list = list.filter((i) => getCodeFromName(i.category) === 'other');
+      } else {
+        // category is expected to be VN name from API
+        list = list.filter((i) => (i.category || '') === category);
+      }
     }
     if (query && query.trim()) {
       const q = query.toLowerCase();
@@ -99,9 +156,9 @@ const CompareGallery = () => {
             onChange={(e) => { setCategory(e.target.value); setPage(1); }}
             className="cc-filter-select"
           >
-            {CATEGORIES.map((code) => (
-              <option key={code} value={code}>
-                {labelFor(code, t)}
+            {CATEGORIES.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt === 'all' ? 'Tất cả' : opt === 'other' ? 'Khác' : opt}
               </option>
             ))}
           </select>

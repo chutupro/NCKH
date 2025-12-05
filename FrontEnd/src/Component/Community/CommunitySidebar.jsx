@@ -17,9 +17,17 @@ import { getArticlesPosts } from '../../API/articlesPost'
 import { getCategories } from '../../API/collections'
 import { getCodeFromName, CODE_TO_VN, KNOWN_CODES } from '../../util/categoryMap'
 
-const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange }) => {
+const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange, searchValue }) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('')
+
+  // keep internal input synced when parent provides `searchValue` (persisted from URL/localStorage)
+  useEffect(() => {
+    if (typeof searchValue === 'string' && searchValue !== searchQuery) {
+      setSearchQuery(searchValue)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue])
 
   const [posts, setPosts] = useState([])
   const [categories, setCategories] = useState([])
