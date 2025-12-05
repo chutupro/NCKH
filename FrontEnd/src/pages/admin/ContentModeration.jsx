@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { toast } from 'react-toastify';
 import '../../Styles/Admin/AdminDashboard.css';
 import CollectionManagement from './CollectionManagement';
 
 const ContentModeration = () => {
 
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('articles');
+  const [selectedMonth, setSelectedMonth] = useState('all');
+
   const fetchArticles = async () => {
     setLoading(true);
     try {
       // TODO: Replace with real API
-      // const response = await apiClient.get(`/admin/articles?status=${filter}`);
+      // const response = await apiClient.get(`/admin/articles`);
       // setArticles(response.data);
 
       // Mock data
@@ -65,11 +72,8 @@ const ContentModeration = () => {
         },
       ];
 
-      const filtered = filter === 'all' 
-        ? mockArticles 
-        : mockArticles.filter(a => a.status === filter);
-
-      setArticles(filtered);
+      // Store full list locally; filtering (status/month) is client-side for now
+      setArticles(mockArticles);
     } catch (error) {
       toast.error('❌ Không thể tải danh sách bài viết');
       console.error(error);
@@ -77,6 +81,38 @@ const ContentModeration = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  // build list of months available from articles (YYYY-MM)
+  const months = useMemo(() => {
+    const s = new Set();
+    articles.forEach(a => {
+      if (!a.createdAt) return;
+      const d = new Date(a.createdAt);
+      if (isNaN(d)) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      s.add(key);
+    });
+    return ['all', ...Array.from(s).sort().reverse()];
+  }, [articles]);
+
+  // compute displayed articles by status filter and selected month
+  const displayedArticles = useMemo(() => {
+    let out = articles.slice();
+    if (filter !== 'all') out = out.filter(a => a.status === filter);
+    if (selectedMonth !== 'all') {
+      out = out.filter(a => {
+        const d = new Date(a.createdAt);
+        if (isNaN(d)) return false;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return key === selectedMonth;
+      });
+    }
+    return out;
+  }, [articles, filter, selectedMonth]);
 
   const handleApprove = async (articleId) => {
     try {
@@ -209,7 +245,7 @@ const ContentModeration = () => {
         <div className="table-header">
           <h2 className="table-title">Quản lý nội dung</h2>
           <div className="table-actions">
-            {/* Filter */}
+            {/* Status Filter */}
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
@@ -224,6 +260,23 @@ const ContentModeration = () => {
               <option value="pending">Chờ duyệt</option>
               <option value="approved">Đã duyệt</option>
               <option value="rejected">Từ chối</option>
+            </select>
+
+            {/* Month selector (YYYY-MM) */}
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '1px solid var(--admin-border)',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                marginLeft: '0.5rem'
+              }}
+            >
+              {months.map(m => (
+                <option key={m} value={m}>{m === 'all' ? 'Tất cả tháng' : m}</option>
+              ))}
             </select>
 
             <button className="btn btn-primary">
@@ -252,7 +305,7 @@ const ContentModeration = () => {
               </tr>
             </thead>
             <tbody>
-              {articles.map((article) => (
+              {displayedArticles.map((article) => (
                 <tr key={article.id}>
                   <td>{article.id}</td>
                   <td>

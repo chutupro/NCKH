@@ -3,10 +3,10 @@ const defaultAiConfig = {
   // baseUrls: ['http://192.168.1.87:8000'],//làm việc khi trên công ty hoặc kết nối chung wifi
   baseUrls: ["http://26.68.60.194:8000"], // bật lên khi làm ở nhờ hoặc khi thằng làm ai không có ở đó để test chung
   featureFlags: {
-    analyze: true,
-    moderateComment: true,
-    moderateArticle: true,
-    gemini: true,
+    analyze: false,
+    moderateComment: false,
+    moderateArticle: false,
+    gemini: false,
   },
   endpoints: {
     analyze: "/fast-analyze",

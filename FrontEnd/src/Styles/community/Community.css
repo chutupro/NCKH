@@ -436,9 +436,10 @@
 
 .comment-input-wrapper {
   display: flex;
-  gap: 10px;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 28px; /* increased to make room for absolute counter */
+  position: relative; /* allow absolute positioning of counter */
+  gap: 10px;
 }
 
 .comment-input-wrapper .comment-avatar {
@@ -469,6 +470,18 @@
 }
 .comment-input::placeholder {
   color: var(--muted);
+}
+
+/* If the markup places the counter as the last child (current JSX),
+   absolutely position it under the submit button on the right. */
+.comment-input-wrapper > div:last-child {
+  position: absolute;
+  right: 12px; /* align to the right edge where the button sits */
+  top: 100%; /* position below the wrapper */
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1;
 }
 
 .comment-submit {
@@ -550,10 +563,10 @@
 
 /* Reply Input */
 .reply-input-wrapper {
-  background: rgba(232, 215, 183, 0.05);
+
   border: 1px solid rgba(232, 215, 183, 0.2);
   border-radius: 8px;
-  padding: 12px;
+  padding: 20px 5px 20px 5px;
   margin-bottom: 16px;
 }
 
@@ -593,6 +606,15 @@
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+/* Ensure the nested CommentInput expands to fill the reply area */
+.reply-input-content {
+  width: 100%;
+}
+.reply-input-content .comment-input-wrapper {
+  flex: 1; /* let the comment input wrapper take available width */
+  margin: 0; /* remove extra margins inside reply area */
 }
 
 /* Comment Thread */
@@ -684,3 +706,77 @@
 .delete-btn-personal:hover svg {
   transform: scale(1.1);
 }
+
+/* Overlay / modal for post detail */
+.post-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 9999;
+  padding: 28px;
+}
+.post-overlay-card {
+  background: linear-gradient(180deg, rgba(48, 49, 45, 0.98), rgba(15, 10, 10, 0.98));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: auto;
+  padding: 20px 20px 24px 20px;
+  position: relative;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+}
+.overlay-close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.overlay-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.post-overlay .post-text {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .post-overlay-card { padding: 12px; }
+  .overlay-close { right: 8px; top: 8px; }
+}
+
+/* Avatar inside overlay */
+.overlay-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Center image and constrain height so it fits on screen */
+.overlay-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.overlay-img {
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: 8px;
+  display: block;
+}
+
+.overlay-contribution h4 { margin: 0 0 6px 0; }
+.overlay-stats { font-size: 13px; }

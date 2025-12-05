@@ -8,7 +8,7 @@ import PostActions from './PostActions'
 import CommentsSection from './CommentsSection'
 import '../../Styles/community/Community.css'
 
-const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
+const PostCard = ({ post, onDelete, showDeleteButton = false, onOpen }) => {
   const navigate = useNavigate()
   const { isAuthenticated, isAuthLoading, accessToken, user } = useAppContext()
 
@@ -111,7 +111,15 @@ const PostCard = ({ post, onDelete, showDeleteButton = false }) => {
 
       <div className="post-body">
         <p className="post-text">{post.text}</p>
-        {post.image && <img className="post-image" src={post.image} alt="post" />}
+        {post.image && (
+          <img
+            className="post-image"
+            src={post.image}
+            alt="post"
+            onClick={(e) => { e.stopPropagation(); onOpen && onOpen(post) }}
+            style={{ cursor: onOpen ? 'pointer' : 'default' }}
+          />
+        )}
       </div>
 
       <footer className="post-footer">

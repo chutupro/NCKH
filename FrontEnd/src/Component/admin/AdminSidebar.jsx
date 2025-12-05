@@ -47,7 +47,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
         { path: '/admin/locations', icon: '🗺️', label: 'Quản lý Địa điểm', badge: null },
         { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: pendingCount > 0 ? String(pendingCount) : null },
         { path: '/admin/comparison-upload', icon: '📸', label: 'Upload Ảnh So Sánh', badge: null },
-        { path: '/admin/comments', icon: '💬', label: 'Bình luận', badge: '3' },
+        
       ],
     },
     {

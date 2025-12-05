@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAppContext } from '../../context/useAppContext';
 import PostCard from '../Community/PostCard';
+import PostDetailOverlay from '../Community/PostDetailOverlay';
 import { getArticlesPosts } from '../../API/articlesPost';
 
 const BACKEND_BASE = 'http://localhost:3000';
@@ -11,6 +12,7 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
     const fetchUserPosts = async () => {
@@ -141,8 +143,12 @@ const UserPosts = ({ onStatsUpdate, userId }) => {
           post={post} 
           onDelete={isOwnProfile ? handleDelete : undefined}
           showDeleteButton={isOwnProfile}
+          onOpen={(p) => setSelectedPost(p)}
         />
       ))}
+      {selectedPost && (
+        <PostDetailOverlay post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
     </div>
   );
 };

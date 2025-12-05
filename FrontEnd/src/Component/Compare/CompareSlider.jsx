@@ -1,97 +1,114 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock } from '@fortawesome/free-solid-svg-icons';
+import '../../Styles/CompareCard/CompareSliderTimeline.css';
+
+// Build images array (prefer item.images, fallback to old/new)
+function buildImages(item) {
+  if (!item) return [];
+  if (Array.isArray(item.images) && item.images.length) {
+    return item.images
+      .map((it) => ({
+        src: it.src || it.image || it.url || it.path || '',
+        year: it.year ?? it.Year ?? null,
+        caption: it.caption || it.title || it.note || '',
+      }))
+      .filter((x) => x.src);
+  }
+  const out = [];
+  if (item.oldSrc) out.push({ src: item.oldSrc, year: item.yearOld ?? item.YearOld ?? null, caption: item.oldCaption || '' });
+  if (item.newSrc) out.push({ src: item.newSrc, year: item.yearNew ?? item.YearNew ?? null, caption: item.newCaption || '' });
+  return out;
+}
 
 const CompareSlider = ({ item }) => {
-  const containerRef = useRef(null);
-  const [pos, setPos] = useState(50);
-  const [dragging, setDragging] = useState(false);
   const { t } = useTranslation();
+  const images = useMemo(() => buildImages(item).sort((a, b) => (a.year || 0) - (b.year || 0)), [item]);
+  const [index, setIndex] = useState(0);
+  const cardsRef = useRef([]);
+  const containerRef = useRef(null);
 
-  const startDrag = (e) => {
-    e.preventDefault();
-    setDragging(true);
+  useEffect(() => {
+    if (!images || images.length === 0) return;
+    setIndex((i) => Math.min(i, images.length - 1));
+  }, [images]);
 
-    const tempMove = (ev) => {
-      const rect = containerRef.current && containerRef.current.getBoundingClientRect();
-      if (!rect) return;
-      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-      let p = ((clientX - rect.left) / rect.width) * 100;
-      if (p < 0) p = 0;
-      if (p > 100) p = 100;
-      setPos(p);
-    };
-
-    const tempUp = () => {
-      setDragging(false);
-      window.removeEventListener('mousemove', tempMove);
-      window.removeEventListener('mouseup', tempUp);
-      window.removeEventListener('touchmove', tempMove);
-      window.removeEventListener('touchend', tempUp);
-    };
-
-    window.addEventListener('mousemove', tempMove);
-    window.addEventListener('mouseup', tempUp);
-    window.addEventListener('touchmove', tempMove);
-    window.addEventListener('touchend', tempUp);
+  const go = (i) => {
+    const idx = Math.max(0, Math.min(images.length - 1, i));
+    setIndex(idx);
+    const el = cardsRef.current && cardsRef.current[idx];
+    if (el && el.scrollIntoView) {
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
   };
+
+  const prev = () => go(index - 1);
+  const next = () => go(index + 1);
 
   const onKey = (e) => {
-    if (e.key === 'ArrowLeft') setPos((p) => Math.max(0, p - 5));
-    if (e.key === 'ArrowRight') setPos((p) => Math.min(100, p + 5));
-    if (e.key === 'Home') setPos(0);
-    if (e.key === 'End') setPos(100);
+    if (e.key === 'ArrowLeft') prev();
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(images.length - 1);
   };
 
+  const selected = images[index] || {};
+
   return (
-    <div className="cd-compare-section">
+    <div className="cd-timeline-wrapper" tabIndex={0} ref={containerRef} onKeyDown={onKey}>
       <div className="cd-compare-header">
-        <h2>{t('compareDetail.compareTitle')}</h2>
+        <h2>{t('compareDetail.compareTitle') || 'So sánh xưa - nay'}</h2>
         <div className="cd-year-labels">
-          <span className="cd-year-old">
-            📅 Năm: {item.yearOld || t('compareCommon.oldShort')}
-          </span>
+          {/* Selected year shown in info panel; hide debug/label here to avoid duplication */}
         </div>
       </div>
 
-      <div className="cd-compare-container" ref={containerRef}>
-        <img src={item.oldSrc} alt={`${item.title} ${t('compareCommon.altOld')}`} className="cd-img cd-img-old" />
-        <div className="cd-img-wrap-new" style={{ width: `${pos}%` }}>
-          <img src={item.newSrc} alt={`${item.title} ${t('compareCommon.altNew')}`} className="cd-img cd-img-new" />
+      <div className="cd-main-row">
+        <div className="cd-viewer">
+          {selected.src ? (
+            <img src={selected.src} alt={selected.caption || item.title || ''} className="cd-main-img" loading="lazy" />
+          ) : (
+            <div className="cd-no-image">{t('compareDetail.noImages') || 'No image'}</div>
+          )}
         </div>
 
-        <div
-          className={`cd-divider ${dragging ? 'cd-dragging' : ''}`}
-          style={{ left: `${pos}%` }}
-          role="slider"
-          tabIndex={0}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(pos)}
-          onMouseDown={startDrag}
-          onTouchStart={startDrag}
-          onKeyDown={onKey}
-        >
-          <div className="cd-handle">
-            <div className="cd-handle-line"></div>
-            <div className="cd-handle-circle">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M9 19l7-7-7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div className="cd-handle-line"></div>
+        <div className="cd-info-panel">
+          <div className="cd-info-card">
+            <h3>{item.title}</h3>
+            <div className="muted">{t('compareDetail.info') || 'Thông tin'}</div>
+            <div className="cd-desc">{selected.caption || item.description || ''}</div>
           </div>
         </div>
-
-        <div className="cd-labels">
-          <span className="cd-label cd-label-old">{t('compareCommon.oldLabel')}</span>
-          <span className="cd-label cd-label-new">{t('compareCommon.newLabel')}</span>
-        </div>
       </div>
 
-      <p className="cd-drag-tip">← {t('compareCommon.dragTip')} →</p>
+      <div className="cd-timeline">
+        <div className="cd-line" aria-hidden="true" />
+        <div className="cd-cards" role="list">
+          {images.map((img, i) => (
+            <button
+              key={i}
+              ref={(el) => (cardsRef.current[i] = el)}
+              className={`cd-card ${i === index ? 'active' : ''}`}
+              onClick={() => go(i)}
+              role="listitem"
+              aria-selected={i === index}
+            >
+              <div className="cd-card-img-wrap">
+                <img className="cd-card-img" src={img.src} alt={img.caption || ''} loading="lazy" />
+              </div>
+              <div className="cd-card-body cd-card-year-only">
+                <button
+                  type="button"
+                  className="cd-card-year-link"
+                  onClick={(e) => { e.stopPropagation(); go(i); }}
+                  aria-label={`Chọn năm ${img.year || ''}`}
+                >
+                  {img.year || ''}
+                </button>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

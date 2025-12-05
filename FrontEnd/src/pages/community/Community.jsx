@@ -6,6 +6,7 @@ import { getArticlesPosts } from '../../API/articlesPost'
 import postsMock from '../../util/posts'
 const BACKEND_BASE = 'http://localhost:3000'
 import PostCard from '../../Component/Community/PostCard'
+import PostDetailOverlay from '../../Component/Community/PostDetailOverlay'
 import CommunitySidebar from '../../Component/Community/CommunitySidebar'
 import Headers from '../../Component/home/Headers'
 import { Link, useLocation } from 'react-router-dom';
@@ -21,6 +22,7 @@ const Community = () => {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedPost, setSelectedPost] = useState(null)
 
   // Nếu URL có query param ?query=..., dùng nó làm searchQuery ban đầu
   useEffect(() => {
@@ -196,7 +198,7 @@ const Community = () => {
               <div className="error">{t('common.error') || 'Lỗi: '}{error}</div>
             ) : filteredPosts.length > 0 ? (
                       filteredPosts.map((p) => (
-                      <PostCard post={p} key={p.id} />
+                      <PostCard post={p} key={p.id} onOpen={(post) => setSelectedPost(post)} />
                     ))
             ) : (
               <div className="no-posts">
@@ -213,6 +215,9 @@ const Community = () => {
           />
         </div>
       </div>
+      {selectedPost && (
+        <PostDetailOverlay post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
     </main>
   )
 }

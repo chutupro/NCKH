@@ -1,28 +1,27 @@
 import React from 'react'
 
-const MAX_WORDS = 20
+const MAX_CHARS = 200
 
 const CommentInput = ({ user, value, onChange, onSubmit, placeholder = "Viết bình luận..." }) => {
-  const countWords = (text) => (text || '').split(/\s+/).filter(Boolean).length
+  const countChars = (text) => (text || '').length
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && value.trim()) {
-      // prevent submitting if no words or exceeds limit
-      const wc = countWords(value)
-      if (wc > 0 && wc <= MAX_WORDS) onSubmit()
+      // prevent submitting if no chars or exceeds limit
+      const cc = countChars(value)
+      if (cc > 0 && cc <= MAX_CHARS) onSubmit()
     }
   }
 
   const handleChange = (e) => {
     let v = e.target.value
-    const words = (v || '').split(/\s+/).filter(Boolean)
-    if (words.length > MAX_WORDS) {
-      v = words.slice(0, MAX_WORDS).join(' ')
+    if ((v || '').length > MAX_CHARS) {
+      v = v.slice(0, MAX_CHARS)
     }
     onChange(v)
   }
 
-  const wordCount = countWords(value)
+  const charCount = countChars(value)
 
   return (
     <div className="comment-input-wrapper">
@@ -48,17 +47,17 @@ const CommentInput = ({ user, value, onChange, onSubmit, placeholder = "Viết b
         <button 
           className="comment-submit"
           onClick={() => {
-            const wc = wordCount
-            if (wc > 0 && wc <= MAX_WORDS) onSubmit()
+            const cc = charCount
+            if (cc > 0 && cc <= MAX_CHARS) onSubmit()
           }}
-          disabled={!(wordCount > 0 && wordCount <= MAX_WORDS)}
+          disabled={!(charCount > 0 && charCount <= MAX_CHARS)}
         >
           Gửi
         </button>
-        <div style={{ fontSize: 12, color: wordCount > MAX_WORDS ? '#ef4444' : 'var(--muted)', marginTop: 6 }}>
-          {wordCount}/{MAX_WORDS} từ
-        </div>
       </div>
+        <div style={{ fontSize: 12, color: charCount > MAX_CHARS ? '#ef4444' : 'var(--muted)', marginTop: 6 }}>
+          {charCount}/{MAX_CHARS} chữ
+        </div>
     </div>
   )
 }

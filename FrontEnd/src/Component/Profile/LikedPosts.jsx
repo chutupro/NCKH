@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/useAppContext';
 import PostCard from '../Community/PostCard';
+import PostDetailOverlay from '../Community/PostDetailOverlay';
 import { getArticlesPosts } from '../../API/articlesPost';
 import { listLikes } from '../../API/likes';
 
@@ -8,6 +9,7 @@ const LikedPosts = () => {
   const { user } = useAppContext();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
     const fetchLikedPosts = async () => {
@@ -92,8 +94,12 @@ const LikedPosts = () => {
           key={post.id} 
           post={post}
           showActions={false}
+          onOpen={(p) => setSelectedPost(p)}
         />
       ))}
+      {selectedPost && (
+        <PostDetailOverlay post={selectedPost} onClose={() => setSelectedPost(null)} />
+      )}
     </div>
   );
 };

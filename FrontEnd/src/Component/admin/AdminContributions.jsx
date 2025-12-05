@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../../context/useAppContext';
 import axios from 'axios';
+import { getArticles } from '../../API/articles';
 import '../../Styles/Admin/AdminContributions.css';
 
 const AdminContributions = () => {
@@ -16,6 +17,9 @@ const AdminContributions = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState([]);
+  const [communityArticles, setCommunityArticles] = useState([]);
+  const [loadingCommunity, setLoadingCommunity] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState('all');
 
   const API_URL = 'http://localhost:3000';
 
@@ -24,7 +28,26 @@ const AdminContributions = () => {
     fetchPendingArticles();
     fetchApprovedArticles();
     fetchRejectedArticles();
+    // preload community articles so tab is snappy
+    fetchCommunityArticles();
   }, []);
+
+  const fetchCommunityArticles = async () => {
+    try {
+      setLoadingCommunity(true);
+      const data = await getArticles();
+      const normalized = (data || []).map((a) => ({
+        id: a.ArticleID ?? a.id ?? a.ArticleId,
+        ...a,
+      }));
+      setCommunityArticles(normalized);
+    } catch (err) {
+      console.error('Error fetching community articles:', err);
+      setCommunityArticles([]);
+    } finally {
+      setLoadingCommunity(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -121,6 +144,21 @@ const AdminContributions = () => {
     });
   };
 
+  // Tổng lượt thích (cố gắng hỗ trợ nhiều dạng dữ liệu từ backend)
+  const getTotalLikes = (article) => {
+    if (!article) return 0;
+    // arrays of timestamps
+    const ts = article.likes_timestamps || article.like_timestamps || article.likesTimestamps || null;
+    if (Array.isArray(ts)) return ts.length;
+
+    // details arrays
+    const details = article.likesDetails || article.likes_details || article.likeEvents || article.likes_events || null;
+    if (Array.isArray(details)) return details.length;
+
+    // numeric fields
+    return article.likes ?? article.likeCount ?? article.total_likes ?? article.totalLikes ?? article.like ?? 0;
+  };
+
   const handleViewDetail = (article) => {
     setSelectedArticle(article);
     setShowDetailModal(true);
@@ -141,8 +179,19 @@ const AdminContributions = () => {
       
       const matchesCategory = !selectedCategory || 
         article.category?.toLowerCase() === selectedCategory.toLowerCase();
-      
-      return matchesSearch && matchesCategory;
+      // month filter: check createdAt or created fields
+      const created = article.createdAt || article.created_at || article.created;
+      let matchesMonth = true;
+      if (selectedMonth && selectedMonth !== 'all') {
+        const d = new Date(created);
+        if (isNaN(d)) matchesMonth = false;
+        else {
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          matchesMonth = key === selectedMonth;
+        }
+      }
+
+      return matchesSearch && matchesCategory && matchesMonth;
     });
   };
 
@@ -150,6 +199,41 @@ const AdminContributions = () => {
   const filteredPendingArticles = filterArticles(pendingArticles);
   const filteredApprovedArticles = filterArticles(approvedArticles);
   const filteredRejectedArticles = filterArticles(rejectedArticles);
+  const filteredCommunityArticles = filterArticles(communityArticles);
+
+  // Helper: sort array by total likes descending
+  const sortByLikesDesc = (arr) => {
+    return (arr || []).slice().sort((a, b) => {
+      const la = getTotalLikes(a) || 0;
+      const lb = getTotalLikes(b) || 0;
+      return lb - la;
+    });
+  };
+
+  const sortedPendingArticles = useMemo(() => sortByLikesDesc(filteredPendingArticles), [filteredPendingArticles]);
+  const sortedApprovedArticles = useMemo(() => sortByLikesDesc(filteredApprovedArticles), [filteredApprovedArticles]);
+  const sortedRejectedArticles = useMemo(() => sortByLikesDesc(filteredRejectedArticles), [filteredRejectedArticles]);
+  const sortedCommunityArticles = useMemo(() => sortByLikesDesc(filteredCommunityArticles), [filteredCommunityArticles]);
+
+  // Build available months (YYYY-MM) from all article sources
+  const months = useMemo(() => {
+    const set = new Set();
+    const pushFrom = (arr) => arr.forEach(a => {
+      const created = a.createdAt || a.created_at || a.created;
+      if (!created) return;
+      const d = new Date(created);
+      if (isNaN(d)) return;
+      set.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    });
+    pushFrom(pendingArticles);
+    pushFrom(approvedArticles);
+    pushFrom(rejectedArticles);
+    pushFrom(communityArticles);
+    return ['all', ...Array.from(set).sort().reverse()];
+  }, [pendingArticles, approvedArticles, rejectedArticles, communityArticles]);
+
+  // Tổng số bài đóng góp (pending + approved + rejected)
+  const totalSubmissions = pendingArticles.length + approvedArticles.length + rejectedArticles.length;
 
   const renderArticleCard = (article, status = 'pending') => (
     <div key={article.id} className="contribution-item">
@@ -229,6 +313,10 @@ const AdminContributions = () => {
       <div className="contributions-header">
         <h1>Quản lý Đóng góp</h1>
         <div className="contributions-stats">
+          <div className="stat-card total">
+            <span className="stat-number">{totalSubmissions}</span>
+            <span className="stat-label">Tổng đóng góp</span>
+          </div>
           <div className="stat-card pending">
             <span className="stat-number">{pendingArticles.length}</span>
             <span className="stat-label">Chờ duyệt</span>
@@ -277,9 +365,27 @@ const AdminContributions = () => {
             </option>
           ))}
         </select>
+        
+        {/* Month selector */}
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="month-filter"
+          style={{ marginLeft: '0.5rem' }}
+        >
+          {months.map(m => (
+            <option key={m} value={m}>{m === 'all' ? 'Tất cả tháng' : `${m.slice(5)}/${m.slice(0,4)}`}</option>
+          ))}
+        </select>
       </div>
 
       <div className="contributions-tabs">
+        <button
+          className={`tab ${activeTab === 'community' ? 'active' : ''}`}
+          onClick={() => setActiveTab('community')}
+        >
+          Bài viết cộng đồng ({communityArticles.length})
+        </button>
         <button
           className={`tab ${activeTab === 'pending' ? 'active' : ''}`}
           onClick={() => setActiveTab('pending')}
@@ -298,6 +404,7 @@ const AdminContributions = () => {
         >
           Đã từ chối ({filteredRejectedArticles.length}/{rejectedArticles.length})
         </button>
+        
       </div>
 
       <div className="contributions-content">
@@ -306,8 +413,8 @@ const AdminContributions = () => {
         ) : (
           <div className="contributions-list">
             {activeTab === 'pending' &&
-              (filteredPendingArticles.length > 0 ? (
-                filteredPendingArticles.map((article) => renderArticleCard(article, 'pending'))
+              (sortedPendingArticles.length > 0 ? (
+                sortedPendingArticles.map((article) => renderArticleCard(article, 'pending'))
               ) : (
                 <div className="empty-state">
                   <div className="empty-icon">📭</div>
@@ -321,8 +428,8 @@ const AdminContributions = () => {
               ))}
 
             {activeTab === 'approved' &&
-              (filteredApprovedArticles.length > 0 ? (
-                filteredApprovedArticles.map((article) => renderArticleCard(article, 'approved'))
+              (sortedApprovedArticles.length > 0 ? (
+                sortedApprovedArticles.map((article) => renderArticleCard(article, 'approved'))
               ) : (
                 <div className="empty-state">
                   <div className="empty-icon">✅</div>
@@ -336,8 +443,8 @@ const AdminContributions = () => {
               ))}
 
             {activeTab === 'rejected' &&
-              (filteredRejectedArticles.length > 0 ? (
-                filteredRejectedArticles.map((article) => renderArticleCard(article, 'rejected'))
+              (sortedRejectedArticles.length > 0 ? (
+                sortedRejectedArticles.map((article) => renderArticleCard(article, 'rejected'))
               ) : (
                 <div className="empty-state">
                   <div className="empty-icon">❌</div>
@@ -349,6 +456,39 @@ const AdminContributions = () => {
                   </p>
                 </div>
               ))}
+
+            {activeTab === 'community' && (
+              loadingCommunity ? (
+                <div className="loading-spinner">Đang tải bài viết cộng đồng...</div>
+              ) : sortedCommunityArticles.length > 0 ? (
+                sortedCommunityArticles.map((art) => (
+                  <div key={art.id || art.title} className="contribution-item">
+                    <div className="contribution-main">
+                      <div className="contribution-header-info">
+                        <div className="contribution-title-section">
+                          <h3 className="contribution-item-title">{art.title}</h3>
+                          <span className="contribution-badge">{art.category}</span>
+                        </div>
+                        <div className="contribution-meta">
+                          <span className="contribution-author-text">👤 {art.author?.fullName || art.authorName || '—'}</span>
+                          <span className="contribution-date-text">📅 {formatDate(art.createdAt || art.created_at || art.created)}</span>
+                        </div>
+                      </div>
+                      <div className="contribution-content-preview">{(art.content || '').slice(0,200)}{(art.content || '').length>200?'...':''}</div>
+                    </div>
+                    <div className="contribution-actions-row">
+                      <button className="btn-view-detail" onClick={() => handleViewDetail(art)} title="Xem chi tiết">👁️</button>
+                      <div className="like-count" title={`Tổng lượt thích`}>❤️ {getTotalLikes(art) ?? 0}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-icon">📰</div>
+                  <p>Không có bài viết cộng đồng để hiển thị</p>
+                </div>
+              )
+            )}
           </div>
         )}
       </div>
@@ -449,7 +589,7 @@ const AdminContributions = () => {
                 >
                   🗑️ Xóa
                 </button>
-              ) : (
+              ) : activeTab === 'rejected' ? (
                 <>
                   <button
                     className="btn-modal-approve"
@@ -470,7 +610,7 @@ const AdminContributions = () => {
                     🗑️ Xóa
                   </button>
                 </>
-              )}
+              ) : activeTab === 'community' ? null : null}
             </div>
           </div>
         </div>

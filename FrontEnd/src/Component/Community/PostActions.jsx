@@ -46,7 +46,7 @@ const PostActions = ({
       <div className="actions">
         <button
           className={`like-btn${liked ? ' liked' : ''}`}
-          onClick={onToggleLike}
+          onClick={(e) => { e.stopPropagation(); onToggleLike && onToggleLike(e); }}
           disabled={loading}
           aria-pressed={liked}
         >
@@ -54,20 +54,20 @@ const PostActions = ({
         </button>
         <button 
           className={`comment-btn${showComments ? ' active' : ''}`}
-          onClick={onToggleComments}
+          onClick={(e) => { e.stopPropagation(); onToggleComments && onToggleComments(e); }}
         >
           <FontAwesomeIcon icon={faComment} /> Bình luận
         </button>
         <div style={{ position: 'relative' }}>
           <button 
             className="share-btn"
-            onClick={() => setShowShareMenu(!showShareMenu)}
+            onClick={(e) => { e.stopPropagation(); setShowShareMenu(!showShareMenu); }}
           >
             <FontAwesomeIcon icon={faShareNodes} /> Chia sẻ
           </button>
           {showShareMenu && (
-            <div className="share-menu">
-              <button className="share-option" onClick={handleShare}>
+            <div className="share-menu" onClick={(e) => e.stopPropagation()}>
+              <button className="share-option" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
                 📋 Sao chép link
               </button>
             </div>

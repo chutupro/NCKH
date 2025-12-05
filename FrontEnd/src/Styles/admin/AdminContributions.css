@@ -45,6 +45,10 @@
   border-left-color: #ef4444;
 }
 
+.stat-card.total {
+  border-left-color: #3b82f6;
+}
+
 .stat-number {
   display: block;
   font-size: 2rem;
@@ -139,6 +143,30 @@
 }
 
 .category-filter option {
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Make month selector visually match category selector */
+.month-filter {
+  padding: 0.875rem 1.25rem;
+  border: 2px solid #2d2d2d;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #1a1a1a;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.month-filter:focus {
+  outline: none;
+  border-color: #60a5fa;
+  background: #242424;
+}
+
+.month-filter option {
   background: #1a1a1a;
   color: #ffffff;
 }
@@ -266,6 +294,17 @@
   gap: 0.75rem;
   align-items: center;
   flex-shrink: 0;
+}
+
+.like-count {
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  padding: 0.35rem 0.6rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .btn-view-detail {
