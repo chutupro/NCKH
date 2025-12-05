@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getCollections } from '../../API/collections';
 import '../../Styles/Admin/ComparisonImageUpload.css';
 
 const ComparisonImageUpload = () => {
   const [formData, setFormData] = useState({
+    collectionName: '',
     title: '',
     location: '',
-    description: '',
+    oldImageDescription: '',
+    newImageDescription: '',
     oldYear: '',
     newYear: '',
     category: 'kien-truc',
@@ -13,6 +16,7 @@ const ComparisonImageUpload = () => {
     newImageFile: null,
   });
 
+  const [collections, setCollections] = useState([]);
   const [oldImagePreview, setOldImagePreview] = useState(null);
   const [newImagePreview, setNewImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -23,6 +27,19 @@ const ComparisonImageUpload = () => {
     { value: 'du-lich', label: '✈️ Du lịch' },
     { value: 'thien-nhien', label: '🌳 Thiên nhiên' },
   ];
+
+  useEffect(() => {
+    fetchCollections();
+  }, []);
+
+  const fetchCollections = async () => {
+    try {
+      const data = await getCollections();
+      setCollections(data);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -71,8 +88,8 @@ const ComparisonImageUpload = () => {
     e.preventDefault();
 
     // Validation
-    if (!formData.title || !formData.location) {
-      alert('Vui lòng điền đầy đủ tiêu đề và địa điểm!');
+    if (!formData.collectionName || !formData.title || !formData.location) {
+      alert('Vui lòng điền đầy đủ các trường bắt buộc!');
       return;
     }
 
@@ -81,14 +98,21 @@ const ComparisonImageUpload = () => {
       return;
     }
 
+    if (!formData.oldImageDescription || !formData.newImageDescription) {
+      alert('Vui lòng điền mô tả cho cả hai ảnh!');
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       // Create FormData for upload
       const uploadData = new FormData();
+      uploadData.append('collectionName', formData.collectionName);
       uploadData.append('title', formData.title);
       uploadData.append('location', formData.location);
-      uploadData.append('description', formData.description);
+      uploadData.append('oldImageDescription', formData.oldImageDescription);
+      uploadData.append('newImageDescription', formData.newImageDescription);
       uploadData.append('oldYear', formData.oldYear);
       uploadData.append('newYear', formData.newYear);
       uploadData.append('category', formData.category);
@@ -101,13 +125,15 @@ const ComparisonImageUpload = () => {
       // Simulate upload
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      alert('Upload thành công!');
+      alert('✅ Upload thành công!');
       
       // Reset form
       setFormData({
+        collectionName: '',
         title: '',
         location: '',
-        description: '',
+        oldImageDescription: '',
+        newImageDescription: '',
         oldYear: '',
         newYear: '',
         category: 'kien-truc',
@@ -119,7 +145,7 @@ const ComparisonImageUpload = () => {
 
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Upload thất bại! Vui lòng thử lại.');
+      alert('❌ Upload thất bại! Vui lòng thử lại.');
     } finally {
       setIsUploading(false);
     }
@@ -138,8 +164,30 @@ const ComparisonImageUpload = () => {
           <h2>📝 Thông tin cơ bản</h2>
           
           <div className="form-group">
+            <label htmlFor="collectionName">
+              Tên bộ sưu tập <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="collectionName"
+              name="collectionName"
+              value={formData.collectionName}
+              onChange={handleInputChange}
+              placeholder="VD: Cầu Rồng qua các thời kỳ"
+              required
+              list="collections-list"
+            />
+            <datalist id="collections-list">
+              {collections.map(col => (
+                <option key={col.collection_id} value={col.name} />
+              ))}
+            </datalist>
+            <small className="form-hint">Nhập tên mới hoặc chọn từ danh sách có sẵn</small>
+          </div>
+
+          <div className="form-group">
             <label htmlFor="title">
-              Tiêu đề <span className="required">*</span>
+              Tiêu đề so sánh <span className="required">*</span>
             </label>
             <input
               type="text"
@@ -147,7 +195,7 @@ const ComparisonImageUpload = () => {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="VD: Cầu Rồng Đà Nẵng"
+              placeholder="VD: Cầu Rồng - Sự thay đổi sau 10 năm"
               required
             />
           </div>
@@ -164,18 +212,6 @@ const ComparisonImageUpload = () => {
               onChange={handleInputChange}
               placeholder="VD: Đà Nẵng, Việt Nam"
               required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="description">Mô tả</label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Mô tả về sự thay đổi..."
-              rows="4"
             />
           </div>
 
@@ -197,7 +233,7 @@ const ComparisonImageUpload = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="oldYear">Năm (Ảnh xưa)</label>
+              <label htmlFor="oldYear">Năm chụp (Ảnh xưa)</label>
               <input
                 type="text"
                 id="oldYear"
@@ -209,7 +245,7 @@ const ComparisonImageUpload = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="newYear">Năm (Ảnh nay)</label>
+              <label htmlFor="newYear">Năm chụp (Ảnh nay)</label>
               <input
                 type="text"
                 id="newYear"
@@ -224,12 +260,16 @@ const ComparisonImageUpload = () => {
 
         {/* Image Upload Section */}
         <div className="form-section">
-          <h2>🖼️ Upload Ảnh</h2>
+          <h2>🖼️ Upload và Mô tả Ảnh</h2>
           
           <div className="images-grid">
             {/* Old Image */}
             <div className="image-upload-box">
-              <h3>📷 Ảnh Xưa</h3>
+              <div className="image-header">
+                <h3>📷 Ảnh Xưa</h3>
+                {formData.oldYear && <span className="year-badge">{formData.oldYear}</span>}
+              </div>
+              
               {!oldImagePreview ? (
                 <label className="upload-area" htmlFor="oldImage">
                   <div className="upload-placeholder">
@@ -252,6 +292,7 @@ const ComparisonImageUpload = () => {
                     type="button"
                     className="remove-image-btn"
                     onClick={() => handleRemoveImage('old')}
+                    title="Xóa ảnh"
                   >
                     ✕
                   </button>
@@ -260,11 +301,30 @@ const ComparisonImageUpload = () => {
                   </div>
                 </div>
               )}
+
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label htmlFor="oldImageDescription">
+                  Mô tả ảnh xưa <span className="required">*</span>
+                </label>
+                <textarea
+                  id="oldImageDescription"
+                  name="oldImageDescription"
+                  value={formData.oldImageDescription}
+                  onChange={handleInputChange}
+                  placeholder="Mô tả chi tiết về ảnh xưa, bối cảnh lịch sử..."
+                  rows="4"
+                  required
+                />
+              </div>
             </div>
 
             {/* New Image */}
             <div className="image-upload-box">
-              <h3>📷 Ảnh Nay</h3>
+              <div className="image-header">
+                <h3>📷 Ảnh Nay</h3>
+                {formData.newYear && <span className="year-badge year-badge-new">{formData.newYear}</span>}
+              </div>
+              
               {!newImagePreview ? (
                 <label className="upload-area" htmlFor="newImage">
                   <div className="upload-placeholder">
@@ -287,6 +347,7 @@ const ComparisonImageUpload = () => {
                     type="button"
                     className="remove-image-btn"
                     onClick={() => handleRemoveImage('new')}
+                    title="Xóa ảnh"
                   >
                     ✕
                   </button>
@@ -295,6 +356,21 @@ const ComparisonImageUpload = () => {
                   </div>
                 </div>
               )}
+
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label htmlFor="newImageDescription">
+                  Mô tả ảnh nay <span className="required">*</span>
+                </label>
+                <textarea
+                  id="newImageDescription"
+                  name="newImageDescription"
+                  value={formData.newImageDescription}
+                  onChange={handleInputChange}
+                  placeholder="Mô tả chi tiết về ảnh hiện tại, sự thay đổi..."
+                  rows="4"
+                  required
+                />
+              </div>
             </div>
           </div>
         </div>

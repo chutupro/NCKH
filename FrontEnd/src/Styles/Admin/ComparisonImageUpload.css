@@ -79,6 +79,14 @@
   color: #e74c3c;
 }
 
+.form-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
 .form-group input[type="text"],
 .form-group textarea,
 .form-group select {
@@ -102,6 +110,7 @@
 .form-group textarea {
   resize: vertical;
   min-height: 100px;
+  line-height: 1.5;
 }
 
 /* Form Row */
@@ -124,6 +133,36 @@
   color: #34495e;
   margin-bottom: 1rem;
   font-weight: 600;
+}
+
+/* Image Header */
+.image-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.image-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #34495e;
+  font-weight: 600;
+}
+
+.year-badge {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+}
+
+.year-badge-new {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
 }
 
 /* Upload Area */
