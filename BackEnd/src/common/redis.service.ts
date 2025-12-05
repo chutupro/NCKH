@@ -66,11 +66,11 @@ export class RedisService implements OnModuleDestroy {
   /**
    * Lưu JTI của access token hiện tại cho user
    * Key: access_jti:{userId} → Value: jti
-   * TTL: 15 phút (900 giây) - khớp với access token expiry
+   * TTL: Động theo cấu hình (mặc định 3600 giây = 1 giờ) - khớp với access token expiry
    */
-  async setAccessJti(userId: number, jti: string): Promise<void> {
+  async setAccessJti(userId: number, jti: string, ttlSeconds: number = 3600): Promise<void> {
     const key = `access_jti:${userId}`;
-    await this.client.set(key, jti, 'EX', 900); // 15 minutes = 900 seconds
+    await this.client.set(key, jti, 'EX', ttlSeconds);
   }
 
   /**

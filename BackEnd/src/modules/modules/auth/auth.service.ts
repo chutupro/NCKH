@@ -256,9 +256,12 @@ export class AuthService {
       jti, // ✅ THÊM JTI VÀO ACCESS TOKEN
     };
 
+    // 🔐 SỬ DỤNG GIÁ TRỊ TỪ .ENV (mặc định 3600 = 1 giờ)
+    const accessTokenExpiry = this.config.get<number>('JWT_ACCESS_EXPIRES') || 3600;
+
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.config.get<string>('ACCESS_TOKEN_SECRET') ?? 'access_secret',
-      expiresIn: '15m',
+      expiresIn: `${accessTokenExpiry}s`, // ✅ Thêm 's' để chỉ rõ là SECONDS
     });
 
     // 🔐 GHI NHỚ ĐĂNG NHẬP: Refresh token EXPIRES IN theo rememberMe
@@ -276,13 +279,13 @@ export class AuthService {
       expiresIn: refreshTokenExpiry, // ← ĐỔI THEO rememberMe
     });
 
-    // 🔥 LƯU JTI VÀO REDIS - TTL 15 phút (900 giây)
+    // 🔥 LƯU JTI VÀO REDIS - TTL khớp với access token expiry
     // Key: access_jti:{userId} → Value: jti
-    await this.redis.setAccessJti(user.UserID, jti);
+    await this.redis.setAccessJti(user.UserID, jti, accessTokenExpiry);
 
     console.log(`✅ [AuthService] Created tokens for user ${user.UserID}:`, {
       jti,
-      accessExpiry: '15m',
+      accessExpiry: `${accessTokenExpiry}s`,
       refreshExpiry: refreshTokenExpiry,
       rememberMe,
     });
