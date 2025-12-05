@@ -18,7 +18,7 @@ import { VersionHistory } from 'src/modules/entities/version-history.entity';
 import { Notifications } from 'src/modules/entities/notification.entity';
 import { MapLocations } from 'src/modules/entities/map-location.entity';
 import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
-import { ImageComparison } from '../modules/entities/image-comparison.entity'; // <-- thêm nếu cần
+import { ImageComparison } from '../modules/entities/image-comparison.entity';
 import { Collections } from 'src/modules/entities/collection.entity';
 import { CollectionArticles } from 'src/modules/entities/collection-article.entity';
 import { LocationImage } from 'src/modules/entities/location-image.entity';
