@@ -47,7 +47,7 @@ const Timeline = () => {
           params.append("categories", selectedCategory);
 
         const res = await fetch(
-          `http://localhost:3000/timeline/items?${params}`
+          `http://localhost:3000/timeline?${params}`
         );
         if (!res.ok) throw new Error("Không tải dữ liệu");
         const data = await res.json();

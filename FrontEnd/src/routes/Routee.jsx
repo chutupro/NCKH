@@ -38,7 +38,6 @@ import SystemMonitor from "../pages/admin/SystemMonitor";
 import RolePermissions from "../pages/admin/RolePermissions";
 import AdminContributions from "../Component/admin/AdminContributions";
 import MapManagement from "../pages/admin/MapManagement";
-import CrawlerManagement from "../pages/admin/CrawlerManagement";
 import Logs from "../pages/admin/Logs";
 import ComparisonImageUpload from "../pages/admin/ComparisonImageUpload";
 import ProtectedRoute from "../Component/common/ProtectedRoute";
@@ -115,7 +114,6 @@ const Routee = () => {
         <Route path="contributions" element={<AdminContributions />} />
         <Route path="comparison-upload" element={<ComparisonImageUpload />} />
         <Route path="map-management" element={<MapManagement />} />
-        <Route path="crawler" element={<CrawlerManagement />} />
         <Route path="ai-models" element={<AIModels />} />
         <Route path="system-monitor" element={<SystemMonitor />} />
         <Route path="permissions" element={<RolePermissions />} />

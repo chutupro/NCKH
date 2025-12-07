@@ -54,7 +54,6 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
       section: 'AI & Automation',
       items: [
         { path: '/admin/ai-models', icon: '🤖', label: 'AI Models', badge: null },
-        { path: '/admin/crawler', icon: '🕷️', label: 'Crawler', badge: null },
       ],
     },
     {

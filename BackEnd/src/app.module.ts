@@ -12,7 +12,6 @@ import { ArticleModule } from './modules/articles_Post/article-post.module';
 import { CommentModule } from './modules/comments/comment.module';
 import { GalleryModule } from './gallerys/gallery.module';
 import { UploadModule } from './modules/upload/upload.module';
-import { CrawlerModule } from './modules/crawler/crawler.module';
 import { AdminModule } from './modules/modules/admin/admin.module';
 import { CollectionsModule } from './modules/collections/collections.module';
 import { ImageComparisonsModule } from './modules/image-comparisons/image-comparisons.module';
@@ -34,7 +33,6 @@ import { LocationImagesModule } from './modules/location-images/location-images.
     CommentModule,
     GalleryModule,
     UploadModule,
-    CrawlerModule,
     CollectionsModule,
     ImageComparisonsModule,
     LocationImagesModule,

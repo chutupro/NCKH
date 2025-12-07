@@ -33,7 +33,6 @@ export default defineConfig({
       '/map-locations': 'http://localhost:3000',
       '/uploads': 'http://localhost:3000',
       '/upload': 'http://localhost:3000',
-      '/timeline': 'http://localhost:3000',
       '/gallery': 'http://localhost:3000',
       '/categories': 'http://localhost:3000',
       '/comments': 'http://localhost:3000',
