@@ -46,11 +46,7 @@ const moderateText = async (text) => {
   const moderateEndpoint = getAiEndpointUrl("moderateComment");
   if (!moderateEndpoint) return null;
 
-  const res = await axios.post(
-    moderateEndpoint,
-    { text },
-    { timeout: 5000 }
-  );
+  const res = await axios.post(moderateEndpoint, { text }, { timeout: 5000 });
 
   const data = res.data || {};
 
@@ -64,7 +60,8 @@ const moderateText = async (text) => {
   if (toxicity > 0.6) return { action: "block", label: "toxic", detail: data };
   if (categories.includes("hate") || categories.includes("violence"))
     return { action: "allow", label: "hate", detail: data };
-  if (toxicity > 0.4) return { action: "allow", label: "non_toxic", warn: true, detail: data };
+  if (toxicity > 0.4)
+    return { action: "allow", label: "non_toxic", warn: true, detail: data };
   return { action: "allow", label: "non_toxic", detail: data };
 };
 
@@ -93,6 +90,8 @@ const MapPage = () => {
   const allMarkersRef = useRef(new Map());
   const tileLayerRef = useRef(null); // ✅ Ref cho tile layer
   const communityPhotosRef = useRef(new Map());
+  const currentOpenPopupMarker = useRef(null); // ✅ Theo dõi marker có popup đang mở
+  const placesRef = useRef([]); // ✅ Ref để lưu places mới nhất cho search
 
   /* ---------- STATE ---------- */
   const [searchQuery, setSearchQuery] = useState("");
@@ -496,7 +495,8 @@ const MapPage = () => {
                       alert(
                         "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!"
                       );
-                      const commentInput = document.getElementById("comment-input");
+                      const commentInput =
+                        document.getElementById("comment-input");
                       if (commentInput) commentInput.value = "";
                       setNewComment("");
                       return;
@@ -514,7 +514,10 @@ const MapPage = () => {
                     }
                   }
                 } catch (aiError) {
-                  console.error("❌ [AI] Moderate error:", aiError?.message || aiError);
+                  console.error(
+                    "❌ [AI] Moderate error:",
+                    aiError?.message || aiError
+                  );
                   alert(
                     "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
                       (aiError?.message || aiError)
@@ -528,7 +531,10 @@ const MapPage = () => {
                 formData.append("rating", currentRating);
                 formData.append("comment", comment);
                 if (moderationForSend) {
-                  formData.append("moderation", JSON.stringify(moderationForSend));
+                  formData.append(
+                    "moderation",
+                    JSON.stringify(moderationForSend)
+                  );
                 }
 
                 // Add images if selected
@@ -1020,7 +1026,9 @@ const MapPage = () => {
                   }
 
                   // ✅ AI MODERATE COMMENT trước khi submit
-                  console.log("🔍 [DEBUG #2] Starting AI moderation (map review)...");
+                  console.log(
+                    "🔍 [DEBUG #2] Starting AI moderation (map review)..."
+                  );
                   let moderationForSend = null;
                   try {
                     const mod = await moderateText(comment);
@@ -1034,7 +1042,8 @@ const MapPage = () => {
                         alert(
                           "⚠️ Bình luận có nội dung không phù hợp. Vui lòng điều chỉnh!"
                         );
-                        const commentInput = document.getElementById("comment-input");
+                        const commentInput =
+                          document.getElementById("comment-input");
                         if (commentInput) commentInput.value = "";
                         setNewComment("");
                         return;
@@ -1056,7 +1065,10 @@ const MapPage = () => {
                       }
                     }
                   } catch (aiError) {
-                    console.error("❌ [AI] Moderate error:", aiError?.message || aiError);
+                    console.error(
+                      "❌ [AI] Moderate error:",
+                      aiError?.message || aiError
+                    );
                     alert(
                       "❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: " +
                         (aiError?.message || aiError)
@@ -1073,7 +1085,10 @@ const MapPage = () => {
                   formData.append("rating", currentRating);
                   formData.append("comment", comment);
                   if (moderationForSend) {
-                    formData.append("moderation", JSON.stringify(moderationForSend));
+                    formData.append(
+                      "moderation",
+                      JSON.stringify(moderationForSend)
+                    );
                   }
                   files.forEach((file) => formData.append("images", file));
 
@@ -1174,6 +1189,54 @@ const MapPage = () => {
     };
   }, [dispatch]);
 
+  /* ---------- CẬP NHẬT PLACES REF KHI PLACES THAY ĐỔI ---------- */
+  useEffect(() => {
+    placesRef.current = places;
+  }, [places]);
+
+  /* ---------- KIỂM TRA VÀ MỞ LẠI PLACE SAU KHI LOGIN ---------- */
+  useEffect(() => {
+    if (!mapInstance.current || places.length === 0 || !user?.userId) return;
+
+    const returnToPlaceData = sessionStorage.getItem("returnToPlaceAfterLogin");
+    if (!returnToPlaceData) return;
+
+    try {
+      const placeData = JSON.parse(returnToPlaceData);
+      const place = places.find((p) => p.id === placeData.id);
+
+      if (place) {
+        console.log("✅ Quay lại place sau khi login:", place.title);
+
+        // Xóa ngay để tránh loop
+        sessionStorage.removeItem("returnToPlaceAfterLogin");
+
+        // Zoom tới vị trí
+        setTimeout(() => {
+          if (mapInstance.current) {
+            mapInstance.current.setView(
+              [place.position[0], place.position[1]],
+              17,
+              { animate: true }
+            );
+
+            // Mở sidebar chi tiết
+            showPlaceDetail(place, mapInstance.current);
+
+            // Highlight marker
+            highlightMarker(place.id);
+          }
+        }, 800);
+      } else {
+        // Không tìm thấy place, vẫn xóa để tránh loop
+        sessionStorage.removeItem("returnToPlaceAfterLogin");
+      }
+    } catch (err) {
+      console.error("Lỗi khi parse returnToPlaceAfterLogin:", err);
+      sessionStorage.removeItem("returnToPlaceAfterLogin");
+    }
+  }, [places.length, user?.userId]);
+
   /* ---------- TOGGLE DARK/LIGHT MODE ---------- */
   useEffect(() => {
     if (!mapInstance.current || !tileLayerRef.current) return;
@@ -1246,12 +1309,96 @@ const MapPage = () => {
       marker.placeId = place.id;
       marker.isUserMarker = false;
 
-      marker.on("mouseover", () => showHoverPopup(place, place.position));
-      marker.on("mouseout", () => {
-        hoverTimeoutRef.current = setTimeout(() => hideHoverPopup(), 300);
+      // ✅ TẠO POPUP HTML VỚI THÔNG TIN ĐỊA ĐIỂM
+      const popupContent = `
+        <div style="cursor:pointer;min-width:200px;" class="marker-popup-content" data-place-id="${
+          place.id
+        }">
+          <img src="${
+            place.image
+              ? `${BASE_URL}${place.image}`
+              : "https://via.placeholder.com/200x100?text=Chưa+có+hình"
+          }" style="width:100%;height:100px;object-fit:cover;border-radius:4px;margin-bottom:8px;" />
+          <h4 style="margin:0 0 4px;font-size:0.95rem;font-weight:600;color:#333;">${
+            place.title
+          }</h4>
+          <div style="display:flex;align-items:center;gap:4px;font-size:0.85rem;margin-bottom:4px;">
+            <span style="color:#ffca28;font-weight:bold;">${
+              place.rating || 0
+            }</span>
+            ${"★".repeat(Math.floor(place.rating || 0))}${"☆".repeat(
+        5 - Math.floor(place.rating || 0)
+      )}
+            <span style="color:#888;">(${place.reviews || 0})</span>
+          </div>
+          <p style="margin:0;font-size:0.8rem;color:#666;line-height:1.3;max-height:40px;overflow:hidden;">${
+            place.desc || "Mô tả chưa có"
+          }</p>
+          <div style="margin-top:8px;font-size:0.75rem;color:#1a73e8;font-weight:500;">
+            👆 Click để xem chi tiết
+          </div>
+        </div>
+      `;
+
+      // ✅ SỬ DỤNG TOOLTIP THAY VÌ POPUP ĐỂ HIỂN THỊ NHIỀU CÁI CÙNG LÚC
+      marker
+        .bindTooltip(popupContent, {
+          permanent: true, // Luôn hiển thị
+          direction: "top", // Hiển thị phía trên marker
+          className: "custom-marker-popup custom-marker-tooltip",
+          offset: [0, -10], // Dịch lên trên một chút
+          opacity: 1,
+        })
+        .openTooltip();
+
+      // ✅ LƯU MARKER ĐẦU TIÊN LÀ MARKER ĐANG MỞ
+      if (!currentOpenPopupMarker.current) {
+        currentOpenPopupMarker.current = marker;
+      }
+
+      // ✅ HÀM ATTACH CLICK LISTENER CHO TOOLTIP - SỬ DỤNG addEventListener
+      const attachTooltipClickListener = () => {
+        // Tìm tất cả tooltip elements với place.id này
+        const tooltipElements = document.querySelectorAll(
+          `.marker-popup-content[data-place-id="${place.id}"]`
+        );
+
+        tooltipElements.forEach((tooltipElement) => {
+          if (tooltipElement && !tooltipElement.dataset.listenerAttached) {
+            tooltipElement.dataset.listenerAttached = "true";
+
+            tooltipElement.addEventListener(
+              "click",
+              (e) => {
+                console.log("🖱️ Tooltip clicked for place:", place.title);
+                e.preventDefault();
+                e.stopPropagation();
+
+                currentPlace.current = place;
+                clearCurrentRoute();
+                showPlaceDetail(place, mapInstance.current);
+              },
+              { capture: true }
+            );
+
+            console.log("✅ Click listener attached for:", place.title);
+          }
+        });
+      };
+
+      // ✅ ATTACH LISTENER NHIỀU LẦN ĐỂ ĐẢM BẢO
+      setTimeout(attachTooltipClickListener, 100);
+      setTimeout(attachTooltipClickListener, 300);
+      setTimeout(attachTooltipClickListener, 500);
+
+      // ✅ ATTACH LISTENER KHI TOOLTIP MỞ
+      marker.on("tooltipopen", () => {
+        setTimeout(attachTooltipClickListener, 50);
+        setTimeout(attachTooltipClickListener, 200);
       });
+
+      // ✅ CLICK VÀO MARKER MỞ CHI TIẾT
       marker.on("click", () => {
-        hideHoverPopup();
         currentPlace.current = place;
         clearCurrentRoute();
         showPlaceDetail(place, mapInstance.current);
@@ -1265,6 +1412,10 @@ const MapPage = () => {
   useEffect(() => {
     if (!mapInstance.current || !places.length) return;
 
+    // ✅ Tạo danh sách marker cần hiển thị
+    const visibleMarkers = [];
+    const hiddenMarkers = [];
+
     allMarkersRef.current.forEach((marker, placeId) => {
       const place = places.find((p) => p.id === placeId);
       if (!place) return;
@@ -1273,18 +1424,63 @@ const MapPage = () => {
         selectedCategory === null || place.categoryId === selectedCategory;
 
       if (isVisible) {
-        // Hiển thị marker
-        if (!mapInstance.current.hasLayer(marker)) {
-          marker.addTo(mapInstance.current);
-        }
-        marker.setOpacity(1);
-        if (marker.getElement()) {
-          marker.getElement().style.filter = "";
-        }
+        visibleMarkers.push(marker);
       } else {
-        // Ẩn hoàn toàn marker (xóa khỏi map)
-        if (mapInstance.current.hasLayer(marker)) {
-          mapInstance.current.removeLayer(marker);
+        hiddenMarkers.push(marker);
+      }
+    });
+
+    // ✅ Ẩn các marker không thuộc category
+    hiddenMarkers.forEach((marker) => {
+      if (marker.getTooltip() && marker.isTooltipOpen()) {
+        marker.closeTooltip();
+      }
+      if (mapInstance.current.hasLayer(marker)) {
+        mapInstance.current.removeLayer(marker);
+      }
+    });
+
+    // ✅ Hiển thị và mở tooltip cho tất cả marker visible
+    visibleMarkers.forEach((marker, index) => {
+      const wasHidden = !mapInstance.current.hasLayer(marker);
+
+      if (wasHidden) {
+        marker.addTo(mapInstance.current);
+      }
+
+      marker.setOpacity(1);
+      if (marker.getElement()) {
+        marker.getElement().style.filter = "";
+      }
+
+      // ✅ Mở tooltip (tooltip có thể mở nhiều cái cùng lúc)
+      if (marker.getTooltip() && !marker.isTooltipOpen()) {
+        marker.openTooltip();
+
+        // ✅ ATTACH LISTENER SAU KHI MỞ TOOLTIP
+        const place = places.find((p) => {
+          let found = false;
+          allMarkersRef.current.forEach((m, placeId) => {
+            if (m === marker) found = placeId;
+          });
+          return p.id === found;
+        });
+
+        if (place) {
+          setTimeout(() => {
+            const tooltipElement = document.querySelector(
+              `.marker-popup-content[data-place-id="${place.id}"]`
+            );
+            if (tooltipElement && !tooltipElement.onclick) {
+              tooltipElement.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                currentPlace.current = place;
+                clearCurrentRoute();
+                showPlaceDetail(place, mapInstance.current);
+              };
+            }
+          }, 200);
         }
       }
     });
@@ -1699,21 +1895,56 @@ const MapPage = () => {
     const searchBtn = document.querySelector(".search-btn");
     if (!input || !searchBtn) return;
 
+    // ✅ NẾU PLACES CHƯA LOAD, CHỜ LOAD XONG
+    if (!placesRef.current || placesRef.current.length === 0) {
+      console.log("⏳ Đợi places load...");
+      return;
+    }
+
+    console.log("✅ Places đã load, gắn event listeners");
+
     let timeout;
-    input.oninput = (e) => {
+    const handleInput = (e) => {
       const q = e.target.value;
       setSearchQuery(q);
       clearTimeout(timeout);
       timeout = setTimeout(() => searchLocal(q), 300);
     };
 
-    searchBtn.onclick = () => {
+    const handleSearch = () => {
       const q = input.value.trim();
-      if (!q || localSuggestions.length === 0) return;
+      if (!q) return;
 
-      const first = localSuggestions[0];
-      const place = places.find((p) => p.id === first.id);
-      if (place) {
+      // ✅ SỬ DỤNG placesRef ĐỂ CÓ GIÁ TRỊ MỚI NHẤT
+      const currentPlaces = placesRef.current;
+
+      // ✅ KIỂM TRA XEM PLACES ĐÃ LOAD CHƯA
+      if (!currentPlaces || currentPlaces.length === 0) {
+        alert("Đang tải dữ liệu, vui lòng thử lại sau giây lát!");
+        return;
+      }
+
+      // ✅ TÌM KIẾM TRỰC TIẾP (KHÔNG PHỤ THUỘC VÀO SUGGESTIONS)
+      const query = q.toLowerCase();
+      const matches = currentPlaces.filter((p) => {
+        const title = (p.title || "").toLowerCase();
+        const address = (p.address || "").toLowerCase();
+        const desc = (p.desc || "").toLowerCase();
+        return (
+          title.includes(query) ||
+          address.includes(query) ||
+          desc.includes(query)
+        );
+      });
+
+      if (matches.length === 0) {
+        alert("Không tìm thấy địa điểm phù hợp!");
+        return;
+      }
+
+      // ✅ CHỌN KẾT QUẢ ĐẦU TIÊN
+      const place = matches[0];
+      if (place && mapInstance.current) {
         mapInstance.current.setView(
           [place.position[0], place.position[1]],
           17,
@@ -1722,19 +1953,23 @@ const MapPage = () => {
         highlightMarker(place.id);
         input.value = place.title;
         setSearchQuery(place.title);
-        document.querySelector(".suggestion-list").style.display = "none";
+        const list = document.querySelector(".suggestion-list");
+        if (list) list.style.display = "none";
         showPlaceDetail(place, mapInstance.current);
-
-        // ÉP VẼ LẠI SAU KHI ZOOM
         setTimeout(() => mapInstance.current.invalidateSize(), 600);
       }
     };
 
-    input.onkeydown = (e) => {
+    const handleKeyDown = (e) => {
       if (e.key === "Enter") {
-        searchBtn.click();
+        handleSearch();
       }
     };
+
+    // Gắn event listeners
+    input.oninput = handleInput;
+    searchBtn.onclick = handleSearch;
+    input.onkeydown = handleKeyDown;
 
     const updateBtn = () => {
       searchBtn.innerHTML = isSearching
@@ -1745,8 +1980,11 @@ const MapPage = () => {
     const observer = new MutationObserver(updateBtn);
     observer.observe(searchBtn, { childList: true });
 
-    return () => observer.disconnect();
-  }, [searchLocal, localSuggestions, places, isSearching]);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeout);
+    };
+  }, [places.length, isSearching, searchLocal]); // ✅ Thêm places.length để re-run khi data load
 
   /* ---------- CSS TOÀN CỤC CHO SEARCH INPUT ---------- */
   useEffect(() => {
@@ -1834,7 +2072,14 @@ const MapPage = () => {
     saveBtn.onclick = (e) => {
       e.stopPropagation();
       if (!user || !user.userId) {
-        alert("Vui lòng đăng nhập để lưu địa điểm.");
+        (async () => {
+          const shouldLogin = await showLoginConfirmModal(
+            "Bạn cần đăng nhập để lưu địa điểm vào yêu thích."
+          );
+          if (shouldLogin) {
+            window.location.href = "/login";
+          }
+        })();
         return;
       }
       const fullPlace = places.find((p) => p.id === place.id) || place;
@@ -1897,9 +2142,142 @@ const MapPage = () => {
     return favoritePhotosByUser[user.userId] || [];
   };
 
-  const addPlaceToFavorites = (place) => {
+  /* ---------- MODAL XÁC NHẬN ĐĂNG NHẬP ---------- */
+  const showLoginConfirmModal = (
+    message = "Bạn cần đăng nhập để sử dụng tính năng này."
+  ) => {
+    return new Promise((resolve) => {
+      // Tạo overlay
+      const overlay = document.createElement("div");
+      overlay.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+      `;
+
+      // Tạo modal
+      const modal = document.createElement("div");
+      modal.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        font-family: system-ui, -apple-system, sans-serif;
+      `;
+
+      modal.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 16px;">🔐</div>
+        <h3 style="margin: 0 0 12px; font-size: 1.5rem; color: #1a202c;">
+          Yêu cầu đăng nhập
+        </h3>
+        <p style="margin: 0 0 24px; color: #4a5568; font-size: 1rem; line-height: 1.6;">
+          ${message}
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button id="cancel-btn" style="
+            padding: 12px 24px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #4a5568;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+          ">
+            Từ chối
+          </button>
+          <button id="login-btn" style="
+            padding: 12px 24px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+          ">
+            Đăng nhập
+          </button>
+        </div>
+      `;
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      // Xử lý buttons
+      const cancelBtn = modal.querySelector("#cancel-btn");
+      const loginBtn = modal.querySelector("#login-btn");
+
+      cancelBtn.onmouseover = () => {
+        cancelBtn.style.background = "#f7fafc";
+      };
+      cancelBtn.onmouseout = () => {
+        cancelBtn.style.background = "white";
+      };
+
+      loginBtn.onmouseover = () => {
+        loginBtn.style.transform = "translateY(-2px)";
+        loginBtn.style.boxShadow = "0 4px 12px rgba(102, 126, 234, 0.4)";
+      };
+      loginBtn.onmouseout = () => {
+        loginBtn.style.transform = "translateY(0)";
+        loginBtn.style.boxShadow = "none";
+      };
+
+      const cleanup = () => {
+        overlay.remove();
+      };
+
+      cancelBtn.onclick = () => {
+        cleanup();
+        resolve(false);
+      };
+
+      loginBtn.onclick = () => {
+        cleanup();
+        // Lưu URL và thông tin place hiện tại để redirect về sau khi login
+        sessionStorage.setItem("redirectAfterLogin", "/map");
+        if (currentPlace.current) {
+          sessionStorage.setItem(
+            "returnToPlaceAfterLogin",
+            JSON.stringify({
+              id: currentPlace.current.id,
+              title: currentPlace.current.title,
+              position: currentPlace.current.position,
+            })
+          );
+        }
+        resolve(true);
+      };
+
+      // Click outside để đóng
+      overlay.onclick = (e) => {
+        if (e.target === overlay) {
+          cleanup();
+          resolve(false);
+        }
+      };
+    });
+  };
+
+  const addPlaceToFavorites = async (place) => {
     if (!user || !user.userId) {
-      alert("Vui lòng đăng nhập để lưu địa điểm.");
+      const shouldLogin = await showLoginConfirmModal(
+        "Bạn cần đăng nhập để lưu địa điểm vào yêu thích."
+      );
+      if (shouldLogin) {
+        window.location.href = "/login";
+      }
       return false;
     }
     setFavoritePlacesByUser((prev) => {
@@ -1928,10 +2306,15 @@ const MapPage = () => {
     });
   };
 
-  const handleToggleFavoritePlace = (place) => {
+  const handleToggleFavoritePlace = async (place) => {
     if (!place) return;
     if (!user || !user.userId) {
-      alert("Vui lòng đăng nhập để lưu địa điểm.");
+      const shouldLogin = await showLoginConfirmModal(
+        "Bạn cần đăng nhập để lưu địa điểm vào yêu thích."
+      );
+      if (shouldLogin) {
+        window.location.href = "/login";
+      }
       return;
     }
     setFavoritePlacesByUser((prev) => {
@@ -1958,10 +2341,15 @@ const MapPage = () => {
     });
   };
 
-  const handleToggleFavoritePhoto = (photo, placeInfo) => {
+  const handleToggleFavoritePhoto = async (photo, placeInfo) => {
     if (!photo) return;
     if (!user || !user.userId) {
-      alert("Vui lòng đăng nhập để lưu ảnh vào mục yêu thích.");
+      const shouldLogin = await showLoginConfirmModal(
+        "Bạn cần đăng nhập để lưu ảnh vào yêu thích."
+      );
+      if (shouldLogin) {
+        window.location.href = "/login";
+      }
       return;
     }
 
@@ -2374,7 +2762,7 @@ const MapPage = () => {
               </div>
               ${
                 communityPhotos.length
-                  ? `<div id="community-photo-carousel" data-location-id="${place.id}" style="width:100%;height:220px;"><!-- sẽ được cập nhật sau --></div>`
+                  ? `<div id="community-photo-carousel" data-location-id="${place.id}" style="width:100%;"><!-- sẽ được cập nhật sau --></div>`
                   : `<div id="community-photo-carousel" data-location-id="${place.id}" style="display:none;"></div>`
               }
             </div>
@@ -2620,7 +3008,7 @@ const MapPage = () => {
             </div>
             <div id="community-photo-carousel" data-location-id="${
               place.id
-            }" style="width:100%;height:220px;">
+            }" style="width:100%;">
               ${
                 latestPhotos.length
                   ? "<!-- sẽ được cập nhật sau -->"
@@ -2682,7 +3070,14 @@ const MapPage = () => {
 
         document.getElementById("save-btn")?.addEventListener("click", () => {
           if (!user || !user.userId) {
-            alert("Vui lòng đăng nhập để lưu địa điểm.");
+            (async () => {
+              const shouldLogin = await showLoginConfirmModal(
+                "Bạn cần đăng nhập để lưu địa điểm vào yêu thích."
+              );
+              if (shouldLogin) {
+                window.location.href = "/login";
+              }
+            })();
             return;
           }
           const fullPlace = places.find((p) => p.id === place.id) || place;
@@ -2959,7 +3354,10 @@ const MapPage = () => {
                 }
               }
             } catch (aiError) {
-              console.error("❌ [AI MODERATION] Error:", aiError?.message || aiError);
+              console.error(
+                "❌ [AI MODERATION] Error:",
+                aiError?.message || aiError
+              );
               alert(
                 `❌ AI kiểm duyệt không khả dụng. Vui lòng thử lại sau!\n\nLỗi: ${
                   aiError?.message || aiError
@@ -3413,7 +3811,14 @@ const MapPage = () => {
 
       document.getElementById("save-btn")?.addEventListener("click", () => {
         if (!user || !user.userId) {
-          alert("Vui lòng đăng nhập để lưu địa điểm.");
+          (async () => {
+            const shouldLogin = await showLoginConfirmModal(
+              "Bạn cần đăng nhập để lưu địa điểm vào yêu thích."
+            );
+            if (shouldLogin) {
+              window.location.href = "/login";
+            }
+          })();
           return;
         }
         const fullPlace = places.find((p) => p.id === place.id) || place;
@@ -3531,10 +3936,17 @@ const MapPage = () => {
       user?.userId
     );
 
-    // ⚠️ Nếu chưa đăng nhập, YÊN LÀNG KHÔNG MỞ MODAL
+    // ⚠️ Nếu chưa đăng nhập, HIỂN THỊ MODAL XÁC NHẬN
     if (!user || !user.userId) {
       console.log("❌ User chưa đăng nhập");
-      alert("Vui lòng đăng nhập để thêm ảnh!");
+      (async () => {
+        const shouldLogin = await showLoginConfirmModal(
+          "Bạn cần đăng nhập để thêm ảnh cộng đồng."
+        );
+        if (shouldLogin) {
+          window.location.href = "/login";
+        }
+      })();
       return;
     }
 
@@ -4028,6 +4440,46 @@ const MapPage = () => {
 
   return (
     <>
+      <style>{`
+        /* Custom popup styling */
+        .custom-marker-popup .leaflet-popup-content-wrapper,
+        .custom-marker-tooltip {
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+          padding: 0;
+          overflow: hidden;
+          pointer-events: auto !important;
+        }
+        
+        .custom-marker-popup .leaflet-popup-content,
+        .custom-marker-tooltip .leaflet-tooltip-content {
+          margin: 0;
+          width: auto !important;
+          pointer-events: auto !important;
+        }
+        
+        .custom-marker-popup .leaflet-popup-tip {
+          background: white;
+        }
+        
+        .leaflet-tooltip {
+          pointer-events: auto !important;
+        }
+        
+        .marker-popup-content:hover {
+          background-color: #f8f9fa;
+        }
+        
+        .marker-popup-content {
+          transition: background-color 0.2s ease;
+          border-radius: 6px;
+          padding: 8px;
+          cursor: pointer;
+          pointer-events: auto !important;
+        }
+      `}</style>
+
       <div
         ref={mapRef}
         style={{
