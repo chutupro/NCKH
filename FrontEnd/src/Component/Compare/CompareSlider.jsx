@@ -2,34 +2,41 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../../Styles/CompareCard/CompareSliderTimeline.css';
 
-// Build images array (prefer item.images, fallback to old/new)
-function buildImages(item) {
-  if (!item) return [];
-  if (Array.isArray(item.images) && item.images.length) {
-    return item.images
-      .map((it) => ({
-        src: it.src || it.image || it.url || it.path || '',
-        year: it.year ?? it.Year ?? null,
-        caption: it.caption || it.title || it.note || '',
-      }))
-      .filter((x) => x.src);
-  }
-  const out = [];
-  if (item.oldSrc) out.push({ src: item.oldSrc, year: item.yearOld ?? item.YearOld ?? null, caption: item.oldCaption || '' });
-  if (item.newSrc) out.push({ src: item.newSrc, year: item.yearNew ?? item.YearNew ?? null, caption: item.newCaption || '' });
-  return out;
+// Build timeline images array from item.images
+function buildTimelineImages(item) {
+  if (!item || !Array.isArray(item.images) || item.images.length === 0) return [];
+  return item.images
+    .map((img) => ({
+      src: img.src || img.ImagePath || '',
+      year: img.year ?? img.Year ?? null,
+      caption: img.caption || img.Caption || '',
+    }))
+    .filter((x) => x.src)
+    .sort((a, b) => (a.year || 0) - (b.year || 0));
 }
 
 const CompareSlider = ({ item }) => {
   const { t } = useTranslation();
-  const images = useMemo(() => buildImages(item).sort((a, b) => (a.year || 0) - (b.year || 0)), [item]);
-  const [index, setIndex] = useState(0);
+  const images = useMemo(() => buildTimelineImages(item), [item]);
+  const [index, setIndex] = useState(0); // Mặc định chọn ảnh đầu tiên (index = 0)
+  const [dragging, setDragging] = useState(false);
   const cardsRef = useRef([]);
   const containerRef = useRef(null);
+  const timelineRef = useRef(null);
+  const startXRef = useRef(0);
 
   useEffect(() => {
     if (!images || images.length === 0) return;
-    setIndex((i) => Math.min(i, images.length - 1));
+    // Chọn ảnh đầu tiên
+    setIndex(0);
+    
+    // Scroll đến ảnh được chọn
+    setTimeout(() => {
+      const el = cardsRef.current && cardsRef.current[0];
+      if (el && el.scrollIntoView) {
+        el.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+      }
+    }, 100);
   }, [images]);
 
   const go = (i) => {
@@ -51,44 +58,83 @@ const CompareSlider = ({ item }) => {
     if (e.key === 'End') go(images.length - 1);
   };
 
+  // Drag handlers cho chuột
+  const handleMouseDown = (e) => {
+    setDragging(true);
+    startXRef.current = timelineRef.current.scrollLeft + e.clientX;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!dragging) return;
+    e.preventDefault();
+    const x = e.clientX;
+    const walk = startXRef.current - x;
+    timelineRef.current.scrollLeft = walk;
+  };
+
+  const handleMouseUp = () => {
+    setDragging(false);
+  };
+
+  // Drag handlers cho touch
+  const handleTouchStart = (e) => {
+    setDragging(true);
+    startXRef.current = timelineRef.current.scrollLeft + e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!dragging) return;
+    const x = e.touches[0].clientX;
+    const walk = startXRef.current - x;
+    timelineRef.current.scrollLeft = walk;
+  };
+
+  const handleTouchEnd = () => {
+    setDragging(false);
+  };
+
   const selected = images[index] || {};
 
   return (
     <div className="cd-timeline-wrapper" tabIndex={0} ref={containerRef} onKeyDown={onKey}>
-      <div className="cd-compare-header">
-        <h2>{t('compareDetail.compareTitle') || 'So sánh xưa - nay'}</h2>
-        <div className="cd-year-labels">
-          {/* Selected year shown in info panel; hide debug/label here to avoid duplication */}
-        </div>
-      </div>
-
       <div className="cd-main-row">
         <div className="cd-viewer">
           {selected.src ? (
             <img src={selected.src} alt={selected.caption || item.title || ''} className="cd-main-img" loading="lazy" />
           ) : (
-            <div className="cd-no-image">{t('compareDetail.noImages') || 'No image'}</div>
+            <div className="cd-no-image">No image available</div>
           )}
         </div>
 
         <div className="cd-info-panel">
           <div className="cd-info-card">
-            <h3>{item.title}</h3>
-            <div className="muted">{t('compareDetail.info') || 'Thông tin'}</div>
-            <div className="cd-desc">{selected.caption || item.description || ''}</div>
+            <div className="cd-info-year">{selected.year || 'N/A'}</div>
+            <div className="cd-desc">{selected.caption || item.description || 'No description'}</div>
           </div>
         </div>
       </div>
 
       <div className="cd-timeline">
         <div className="cd-line" aria-hidden="true" />
-        <div className="cd-cards" role="list">
+        <div 
+          ref={timelineRef}
+          className="cd-cards" 
+          role="list"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ cursor: dragging ? 'grabbing' : 'grab' }}
+        >
           {images.map((img, i) => (
             <button
               key={i}
               ref={(el) => (cardsRef.current[i] = el)}
               className={`cd-card ${i === index ? 'active' : ''}`}
-              onClick={() => go(i)}
+              onClick={() => !dragging && go(i)}
               role="listitem"
               aria-selected={i === index}
             >
@@ -99,7 +145,7 @@ const CompareSlider = ({ item }) => {
                 <button
                   type="button"
                   className="cd-card-year-link"
-                  onClick={(e) => { e.stopPropagation(); go(i); }}
+                  onClick={(e) => { e.stopPropagation(); !dragging && go(i); }}
                   aria-label={`Chọn năm ${img.year || ''}`}
                 >
                   {img.year || ''}

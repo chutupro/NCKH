@@ -19,6 +19,7 @@ import { Notifications } from 'src/modules/entities/notification.entity';
 import { MapLocations } from 'src/modules/entities/map-location.entity';
 import { ModerationLogs } from 'src/modules/entities/moderation-log.entity';
 import { ImageComparison } from '../modules/entities/image-comparison.entity';
+import { ComparisonImage } from '../modules/entities/comparison-image.entity';
 import { Collections } from 'src/modules/entities/collection.entity';
 import { CollectionArticles } from 'src/modules/entities/collection-article.entity';
 import { LocationImage } from 'src/modules/entities/location-image.entity';
@@ -59,6 +60,7 @@ import { LocationImage } from 'src/modules/entities/location-image.entity';
           Notifications,
           ModerationLogs,
           ImageComparison,
+          ComparisonImage,
           LocationImage,
         ],
         synchronize: false, // ❌ TẮT AUTO SYNC - Dùng migration thay vì

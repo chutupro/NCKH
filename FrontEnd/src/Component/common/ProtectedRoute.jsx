@@ -39,8 +39,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   );
   
   // DEBUG: Log user data
-  console.log('🔍 [ProtectedRoute] Full user object:', user);
-  console.log('🔍 [ProtectedRoute] Extracted role:', { roleId, userRole, allowedRoles });
+  
 
   // Nếu đã đăng nhập nhưng không có quyền → redirect về trang chủ với thông báo
   if (allowedRoles.length > 0) {
