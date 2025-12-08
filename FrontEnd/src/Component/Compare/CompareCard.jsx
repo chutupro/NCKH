@@ -14,7 +14,7 @@ const CompareCard = ({ item }) => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    const id = item?.id;
+    const id = item?.ComparisonID;
     if (!id) return;
 
     const handlers = {
@@ -34,12 +34,12 @@ const CompareCard = ({ item }) => {
 
     registerCompare(id, handlers);
     return () => unregisterCompare(id);
-  }, [item?.id, registerCompare, unregisterCompare, stopCompareDrag]);
+  }, [item?.ComparisonID, registerCompare, unregisterCompare, stopCompareDrag]);
 
   const startDrag = (e) => {
     e.preventDefault();
     e.stopPropagation(); // Prevent card click
-    if (item?.id) startCompareDrag(item.id);
+    if (item?.ComparisonID) startCompareDrag(item.ComparisonID);
     setDragging(true);
 
     const tempMove = (ev) => {
@@ -79,15 +79,21 @@ const CompareCard = ({ item }) => {
     if (dragging || e.target.closest('.cc-divider')) {
       return;
     }
-    navigate(`/compare/${item.id}`);
+    navigate(`/compare/${item.ComparisonID}`);
   };
+
+  // Get first (oldest) and last (newest) images for preview
+  const oldImage = item.firstImage?.src || item.oldSrc || '';
+  const newImage = item.lastImage?.src || item.newSrc || '';
+  const oldYear = item.firstImage?.year || item.YearOld || '';
+  const newYear = item.lastImage?.year || item.YearNew || '';
 
   return (
     <div className="cc-card" onClick={handleCardClick}>
       <div className="cc-media" ref={containerRef}>
-        <img src={item.oldSrc} alt={`${item.title} ${t('compareCommon.altOld')}`} className="cc-img cc-img-old" />
+        <img src={oldImage} alt={`${item.title} ${t('compareCommon.altOld')}`} className="cc-img cc-img-old" />
         <div className="cc-img-wrap-new" style={{ width: `${pos}%` }}>
-          <img src={item.newSrc} alt={`${item.title} ${t('compareCommon.altNew')}`} className="cc-img cc-img-new" />
+          <img src={newImage} alt={`${item.title} ${t('compareCommon.altNew')}`} className="cc-img cc-img-new" />
         </div>
 
         <div
@@ -108,14 +114,14 @@ const CompareCard = ({ item }) => {
 
       <div className="cc-body">
         <div className="cc-tags">
-          <span className="cc-tag cc-old">{t('compareCommon.oldShort')}</span>
-          <span className="cc-tag cc-new">{t('compareCommon.newShort')}</span>
+          <span className="cc-tag cc-old">{oldYear}</span>
+          <span className="cc-tag cc-new">{newYear}</span>
         </div>
-        {item?.category ? (
-          <div className="cc-category">{displayCategoryName(item.category)}</div>
+        {item?.Category?.Name ? (
+          <div className="cc-category">{displayCategoryName(item.Category.Name)}</div>
         ) : null}
-        <h3 className="cc-title">{item.title}</h3>
-        <p className="cc-post">📍 {item.location || t('compareDetail.defaultLocation')}</p>
+        <h3 className="cc-title">{item.Title}</h3>
+        <p className="cc-post">📍 {item.Location || t('compareDetail.defaultLocation')}</p>
         <div className="cc-meta">
           <span className="cc-drag-tip">← {t('compareCommon.dragShort')} →</span>
         </div>

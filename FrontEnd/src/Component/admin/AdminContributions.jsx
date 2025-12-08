@@ -334,17 +334,17 @@ const AdminContributions = () => {
 
       {/* Thanh tìm kiếm và lọc */}
       <div className="contributions-filters">
-        <div className="search-box">
+        <div className="contrib-search-box">
           <input
             type="text"
             placeholder="Tìm kiếm theo tiêu đề, nội dung, tác giả..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
+            className="contrib-search-input"
           />
           {searchQuery && (
             <button 
-              className="clear-search"
+              className="contrib-clear-search"
               onClick={() => setSearchQuery('')}
               title="Xóa tìm kiếm"
             >
@@ -356,7 +356,7 @@ const AdminContributions = () => {
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          className="category-filter"
+          className="contrib-category-filter"
         >
           <option value="">Tất cả danh mục</option>
           {categories.map((category) => (

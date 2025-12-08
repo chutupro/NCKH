@@ -94,7 +94,7 @@
   /* Match the active filter button appearance */
   background: linear-gradient(135deg, rgba(232, 215, 183, 0.2), rgba(232, 215, 183, 0.1));
   border-color: rgba(232, 215, 183, 0.4);
-  color: black;
+  color: white;
   font-weight: 600;
 }
 

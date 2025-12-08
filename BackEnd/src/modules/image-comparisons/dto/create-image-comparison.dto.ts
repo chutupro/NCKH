@@ -1,10 +1,18 @@
+import { IsString, IsOptional, IsInt } from 'class-validator';
+
 export class CreateImageComparisonDto {
+  @IsString()
   Title: string;
+
+  @IsOptional()
+  @IsString()
   Description?: string;
-  YearOld?: number;
-  YearNew?: number;
+
+  @IsOptional()
+  @IsInt()
   CategoryID?: number;
-  OldImagePath?: string;
-  NewImagePath?: string;
+
+  @IsOptional()
+  @IsString()
   Address?: string;
 }
