@@ -127,6 +127,7 @@ const AdminContributions = () => {
       fetchPendingArticles();
       fetchApprovedArticles();
       fetchRejectedArticles();
+      fetchCommunityArticles(); // ✅ Reload bài viết cộng đồng
     } catch (error) {
       console.error('Error deleting article:', error);
       alert('Có lỗi xảy ra khi xóa bài viết!');
@@ -393,12 +394,6 @@ const AdminContributions = () => {
           Chờ duyệt ({filteredPendingArticles.length}/{pendingArticles.length})
         </button>
         <button
-          className={`tab ${activeTab === 'approved' ? 'active' : ''}`}
-          onClick={() => setActiveTab('approved')}
-        >
-          Đã duyệt ({filteredApprovedArticles.length}/{approvedArticles.length})
-        </button>
-        <button
           className={`tab ${activeTab === 'rejected' ? 'active' : ''}`}
           onClick={() => setActiveTab('rejected')}
         >
@@ -479,6 +474,13 @@ const AdminContributions = () => {
                     <div className="contribution-actions-row">
                       <button className="btn-view-detail" onClick={() => handleViewDetail(art)} title="Xem chi tiết">👁️</button>
                       <div className="like-count" title={`Tổng lượt thích`}>❤️ {getTotalLikes(art) ?? 0}</div>
+                      <button
+                        className="btn-delete-action"
+                        onClick={() => handleDelete(art.id)}
+                        title="Xóa bài viết"
+                      >
+                        🗑️ Xóa
+                      </button>
                     </div>
                   </div>
                 ))

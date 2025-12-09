@@ -115,44 +115,7 @@ const ImageLibraryInformation = () => {
         </div>
       </div>
 
-      {relatedCompares.length > 0 && (
-        <div className="related-section">
-          <h2 className="section-title">{'Ảnh Xưa và Nay'}</h2>
-          <p className="section-subtitle">{'Khám phá sự thay đổi qua thời gian'}</p>
-          <div className="compare-grid">
-            {relatedCompares.map(compare => (
-              <div
-                key={compare.ComparisonID ?? compare.id}
-                className="compare-item"
-                onClick={() => navigate(`/compare/${compare.id ?? compare.ComparisonID}`)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/compare/${compare.id ?? compare.ComparisonID}`); }}
-              >
-                <div className="compare-images">
-                  <div className="compare-old">
-                    <img src={compare.oldSrc} alt={`${compare.title} - ${'xưa'}`} />
-                    <div className="compare-label old-label">{'XƯA'} ({compare.yearOld})</div>
-                  </div>
-                  <div className="compare-divider">→</div>
-                  <div className="compare-new">
-                    <img src={compare.newSrc} alt={`${compare.title} - ${'nay'}`} />
-                    <div className="compare-label new-label">{'NAY'} ({compare.yearNew})</div>
-                  </div>
-                </div>
-                <div className="compare-info">
-                  <h3 className="compare-title">{compare.title}</h3>
-                  <p className="compare-description">{compare.description}</p>
-                  <div className="compare-stats">
-                    <span>📍 {compare.location}</span>
-                    {/* Likes removed per request */}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      
 
       <div className="cta-section">
   <h3>{'Khám phá thêm'}</h3>
