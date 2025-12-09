@@ -1,20 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getImageComparisonById } from '../../API/imageComparisons';
 import '../../Styles/CompareCard/CompareDetail.css';
-import CompareDetailHeader from '../../Component/Compare/CompareDetailHeader';
-import CompareDetailHero from '../../Component/Compare/CompareDetailHero';
 import CompareSlider from '../../Component/Compare/CompareSlider';
-import CompareContent from '../../Component/Compare/CompareContent';
-import CompareSidebar from '../../Component/Compare/CompareSidebar';
-import { useTranslation } from 'react-i18next';
 
 const CompareDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
-  // fetch item from API
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,31 +34,58 @@ const CompareDetail = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="cd-loading">Loading...</div>;
+    return <div className="lib-info-container"><div className="loading">Đang tải...</div></div>;
   }
 
   if (!item) {
     return (
-      <div className="cd-not-found">
-        <h2>{t('common.error')}</h2>
-        <button onClick={() => navigate('/compare')} className="cd-back-btn">
-          {t('compareDetail.back')}
-        </button>
+      <div className="lib-info-container">
+        <div className="not-found">
+          <h2>Không tìm thấy</h2>
+          <Link to="/CompareGallery" className="back-btn">← Quay lại</Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="cd-wrapper">
-      <CompareDetailHeader title={item.title} />
+    <div className="lib-info-container">
+      <div className="lib-info-header">
+        <button onClick={() => navigate(-1)} className="back-btn">
+          <span>←</span> Quay lại
+        </button>
+        <div className="breadcrumb">
+          <Link to="/">Trang chủ</Link>
+          <span>/</span>
+          <Link to="/compare">Xưa & Nay</Link>
+          <span>/</span>
+          <span>{item.title}</span>
+        </div>
+      </div>
 
-      <div className="cd-container">
-        <CompareDetailHero item={item} />
+      
+
+      <div className="compare-slider-section">
+        <h2 className="section-title">So sánh Xưa - Nay</h2>
         <CompareSlider item={item} />
+      </div>
 
-        <div className="cd-content">
-          <CompareContent item={item} />
-          <CompareSidebar item={item} />
+      <div className="compare-detail-content">
+        <div className="content-section">
+          <h3>📍 Vị trí</h3>
+          <p>{item.location}</p>
+        </div>
+        <div className="content-section">
+          <h3>📖 Mô tả chi tiết</h3>
+          <p>{item.description}</p>
+        </div>
+      </div>
+
+      <div className="cta-section">
+        <h3>Khám phá thêm</h3>
+        <div className="cta-buttons">
+          <Link to="/compare" className="cta-btn primary">Xem thêm so sánh</Link>
+          <Link to="/ImageLibrary" className="cta-btn secondary">Thư viện ảnh</Link>
         </div>
       </div>
     </div>

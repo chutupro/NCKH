@@ -4,7 +4,8 @@
     "map": "Map",
     "timeline": "Timeline",
     "community": "Community",
-    "collection": "Collection",
+    "thenNow": "Then & Now",
+    "collection": "Library images ",
     "join": "Join",
     "login": "Login"
   },
@@ -31,9 +32,9 @@
     "sharedPhotos": "Photos shared"
   },
   "collection": {
-    "title": "Heritage Collection",
+    "title": "Heritage Image Library",
     "subtitle": "Discover cultural beauty through each image",
-    "viewAll": "View more collections"
+    "viewAll": "View more image library"
   },
   "impact": {
     "title": "The Meaning When You Contribute Photos",
@@ -270,7 +271,7 @@
     "title": "About DynaVault",
     "subtitle": "Preserving Da Nang's cultural heritage through community and technology",
     "contributeNow": "Contribute Photos",
-    "browse": "Browse Collection",
+    "browse": "Browse Image Library",
     "missionTitle": "Our Mission",
     "mission": "We connect community and technology to preserve, digitize and share the cultural heritage of Da Nang. Each photo and story you contribute enriches our collective archive.",
     "teamTitle": "Meet the Team",

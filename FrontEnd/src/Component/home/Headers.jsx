@@ -52,11 +52,11 @@ const Headers = () => {
     <header className="header">
       <nav className="navbar">
         <div className="nav-links">
-          <span className="font-handwriting notranslate" translate="no">DynaVault</span>
-          <Link to="/" className="nav-link">{t('nav.home')}</Link>
+          <Link to="/" className="logo-link font-handwriting notranslate" translate="no">DynaVault</Link>
           <Link to="/map" className="nav-link">{t('nav.map')}</Link>
           <Link to="/timeline" className="nav-link">{t('nav.timeline')}</Link>
           <Link to="/community" className="nav-link">{t('nav.community')}</Link>
+          <Link to="/compare" className="nav-link">{t('nav.thenNow')}</Link>
           <Link to="/ImageLibrary" className="nav-link">{t('nav.collection')}</Link>
         </div>
         <div className="nav-buttons">

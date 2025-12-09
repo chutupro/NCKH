@@ -4,7 +4,8 @@
     "map": "Bản đồ",
     "timeline": "Trục thời gian",
     "community": "Cộng đồng",
-    "collection": "Bộ sưu tập",
+    "thenNow": "Xưa & Nay",
+    "collection": "Thư viện ảnh",
     "join": "Tham gia",
     "login": "Đăng Nhập"
   },
@@ -31,9 +32,9 @@
     "sharedPhotos": "Ảnh được chia sẻ"
   },
   "collection": {
-    "title": "Bộ sưu tập Di sản",
+    "title": "Thư viện ảnh Di sản",
     "subtitle": "Khám phá vẻ đẹp văn hóa qua từng hình ảnh",
-    "viewAll": "Xem thêm bộ sưu tập"
+    "viewAll": "Xem thêm thư viện ảnh"
   },
   "impact": {
     "title": "Ý Nghĩa Khi Bạn Góp Ảnh",
@@ -271,7 +272,7 @@
     "title": "Về DynaVault",
     "subtitle": "Bảo tồn di sản văn hóa Đà Nẵng thông qua cộng đồng và công nghệ",
     "contributeNow": "Đóng góp ảnh",
-    "browse": "Duyệt bộ sưu tập",
+    "browse": "Duyệt thư viện ảnh",
     "missionTitle": "Sứ mệnh của chúng tôi",
     "mission": "Chúng tôi kết nối cộng đồng và công nghệ để bảo tồn, số hóa và chia sẻ di sản văn hóa Đà Nẵng. Mỗi bức ảnh và câu chuyện bạn đóng góp giúp làm giàu kho tư liệu chung.",
     "teamTitle": "Đội ngũ phát triển",
