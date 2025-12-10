@@ -82,9 +82,6 @@ export class Articles {
   @OneToMany(() => MapLocations, (mapLocation) => mapLocation.article)
   mapLocations: MapLocations[];
 
-  @OneToMany(() => Timelines, (timeline) => timeline.article)
-  timelines: Timelines[];
-
   @OneToMany(() => VersionHistory, (versionHistory) => versionHistory.article)
   versionHistory: VersionHistory[];
 

@@ -168,7 +168,7 @@ const CollectionManagement = () => {
         const imageFormData = new FormData();
         imageFormData.append('file', selectedImage);
         imageFormData.append('type', 'post');
-        imageFormData.append('category', 'van-hoa');
+        imageFormData.append('categoryId', formData.CategoryID); // Truyền CategoryID thay vì string
 
         // Get token from cookie
         const getCookie = (name) => {

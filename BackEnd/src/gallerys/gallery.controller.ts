@@ -64,22 +64,35 @@ export class GalleryController {
     @Req() req: any,
   ) {
     const token = req.headers.authorization?.replace('Bearer ', '') || '';
-    const category = body.categoryId || 'gallery';
+    
+    // Map CategoryID to folder name
+    const categoryMap = {
+      1: 'di-san',      // Di sản
+      2: 'van-hoa',     // Văn hóa
+      3: 'thien-nhien', // Thiên nhiên
+      4: 'su-kien',     // Sự kiện
+    };
+    
+    const categoryId = body.categoryId ? parseInt(body.categoryId.toString()) : null;
+    const categoryFolder = categoryId ? categoryMap[categoryId] || 'other' : 'other';
+    
+    console.log(`[Gallery Upload] CategoryID: ${categoryId} → Folder: ${categoryFolder}`);
 
     // Upload to media-service
     const uploadResult = await this.mediaClient.uploadToMediaService(
       file,
       token,
       'post',
-      category,
+      categoryFolder,
     );
 
-    // Save to DB Images
+    // Save to DB Images với CategoryID
     await this.imagesService.create(
       uploadResult.url,
       undefined,
       body.title || 'Gallery image',
       'gallery',
+      categoryId,  // Truyền CategoryID vào DB
     );
 
     return this.galleryService.create(file, body, uploadResult.url);

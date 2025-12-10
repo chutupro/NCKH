@@ -112,9 +112,9 @@ const Routee = () => {
         <Route path="users" element={<UserManagement />} />
         <Route path="content" element={<CollectionManagement />} />
         <Route path="locations" element={<LocationManagement />} />
+        <Route path="timeline-management" element={<TimelineManagement />} />
         <Route path="contributions" element={<AdminContributions />} />
         <Route path="comparisons" element={<ComparisonManager />} />
-        <Route path="timeline-management" element={<TimelineManagement />} />
         <Route path="map-management" element={<MapManagement />} />
         <Route path="ai-models" element={<AIModels />} />
         <Route path="system-monitor" element={<SystemMonitor />} />

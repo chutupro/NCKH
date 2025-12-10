@@ -31,7 +31,19 @@ export class UploadController {
   ) {
     const token = req.headers.authorization?.replace('Bearer ', '') || '';
     const type = body.type || 'post';
-    const category = body.category || 'van-hoa';
+    
+    // Map CategoryID to folder name
+    const categoryMap = {
+      1: 'di-san',
+      2: 'van-hoa',
+      3: 'thien-nhien',
+      4: 'su-kien',
+    };
+    
+    const categoryId = body.categoryId ? parseInt(body.categoryId) : null;
+    const category = categoryId ? categoryMap[categoryId] : (body.category || 'van-hoa');
+    
+    console.log(`[Upload] CategoryID: ${categoryId} → Folder: ${category}`);
 
     // 1. Upload to media-service
     const uploadResult = await this.mediaClient.uploadToMediaService(
@@ -41,12 +53,13 @@ export class UploadController {
       category,
     );
 
-    // 2. Save to DB Images
+    // 2. Save to DB Images với CategoryID
     const imageRecord = await this.imagesService.create(
       uploadResult.url,
       undefined,
       body.altText || file.originalname,
       type,
+      categoryId,  // Truyền CategoryID
     );
 
     return {

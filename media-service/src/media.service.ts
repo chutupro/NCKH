@@ -6,7 +6,7 @@ import * as path from 'path';
 @Injectable()
 export class MediaService {
   private readonly VALID_TYPES = ['avatar', 'post'];
-  private readonly VALID_CATEGORIES = ['van-hoa', 'du-lich', 'thien-nhien', 'kien-truc'];
+  private readonly VALID_CATEGORIES = ['di-san', 'van-hoa', 'thien-nhien', 'su-kien'];
   private readonly MEDIA_SERVICE_URL = process.env.MEDIA_SERVICE_URL || 'http://localhost:3001';
 
   constructor(private readonly storage: StorageService) {}

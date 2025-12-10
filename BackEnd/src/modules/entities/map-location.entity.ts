@@ -8,39 +8,32 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Articles } from './article.entity';
-import { Timelines } from './timeline.entity';
 import { Feedback } from './feedback.entity';
-import { Categories } from './category.entity';
 import { LocationImage } from './location-image.entity';
+import { Images } from './image.entity';
 
 @Entity('MapLocations')
 export class MapLocations {
   @PrimaryGeneratedColumn()
   LocationID: number;
 
-  @Column({ type: 'nvarchar', length: 150, nullable: false })
+  @Column({ name: 'Name', type: 'nvarchar', length: 150, nullable: false })
   Name: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  @Column({ name: 'Latitude', type: 'decimal', precision: 10, scale: 8, nullable: true })
   Latitude: number;
 
-  @Column({ type: 'decimal', precision: 11, scale: 8, nullable: true })
+  @Column({ name: 'Longitude', type: 'decimal', precision: 11, scale: 8, nullable: true })
   Longitude: number;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ name: 'Address', type: 'nvarchar', length: 500, nullable: true })
   Address: string;
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
-  Image: string;
+  @Column({ name: 'MainImageID', type: 'int', nullable: true })
+  MainImageID: number | null;
 
-  @Column({ type: 'int', nullable: true })
-  ImageYear: number;
-
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
-  OldImage: string;
-
-  @Column({ type: 'int', nullable: true })
-  OldImageYear: number;
+  @Column({ name: 'OldImageID', type: 'int', nullable: true })
+  OldImageID: number | null;
 
   @Column({ name: 'Desc', type: 'nvarchar', length: 500 })
   description: string;
@@ -48,19 +41,13 @@ export class MapLocations {
   @Column({ name: 'FullDesc', type: 'nvarchar', length: 2000 })
   fullDescription: string;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ name: 'ArticleID', type: 'int', nullable: true })
   ArticleID: number;
 
-  @Column({ type: 'int', nullable: true })
-  TimelineID: number;
-
-  @Column({ type: 'int', nullable: true })
-  CategoryID: number;
-
-  @Column({ type: 'decimal', precision: 2, scale: 1, nullable: true })
+  @Column({ name: 'Rating', type: 'decimal', precision: 2, scale: 1, nullable: true })
   Rating: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ name: 'Reviews', type: 'int', nullable: true })
   Reviews: number;
 
   @ManyToOne(() => Articles, (article) => article.mapLocations, {
@@ -69,17 +56,13 @@ export class MapLocations {
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
 
-  @ManyToOne(() => Timelines, (timeline) => timeline.mapLocations, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'TimelineID' })
-  timeline: Timelines;
+  @ManyToOne(() => Images, { nullable: true })
+  @JoinColumn({ name: 'MainImageID' })
+  mainImage: Images;
 
-  @ManyToOne(() => Categories, (category) => category.mapLocations, {
-    onDelete: 'SET NULL',
-  })
-  @JoinColumn({ name: 'CategoryID' })
-  category: Categories;
+  @ManyToOne(() => Images, { nullable: true })
+  @JoinColumn({ name: 'OldImageID' })
+  oldImage: Images;
 
   @OneToMany(() => Feedback, (feedback) => feedback.location)
   feedbacks: Feedback[];

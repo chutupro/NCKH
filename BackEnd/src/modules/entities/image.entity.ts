@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Articles } from './article.entity'; 
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Articles } from './article.entity';
+import { Categories } from './category.entity';
 
 @Entity('Images')
 export class Images {
@@ -18,8 +19,15 @@ export class Images {
   @Column({ type: 'varchar', length: 20, nullable: true })
   Type: string | null;
 
+  @Column({ type: 'int', nullable: true })
+  CategoryID: number | null;
+
   // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.images, { nullable: true })
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
+
+  @ManyToOne(() => Categories, (category) => category.images, { nullable: true })
+  @JoinColumn({ name: 'CategoryID' })
+  category: Categories;
 }

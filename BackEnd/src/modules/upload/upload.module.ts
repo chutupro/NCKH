@@ -4,9 +4,10 @@ import { UploadController } from './upload.controller';
 import { MediaClientService } from 'src/common/media-client.service';
 import { ImagesService } from 'src/common/images.service';
 import { Images } from '../entities/image.entity';
+import { Timelines } from '../entities/timeline.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Images])],
+  imports: [TypeOrmModule.forFeature([Images, Timelines])],
   controllers: [UploadController],
   providers: [MediaClientService, ImagesService],
 })

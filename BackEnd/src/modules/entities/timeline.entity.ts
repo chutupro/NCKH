@@ -1,8 +1,7 @@
 // src/entities/timeline.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
-import { Articles } from './article.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { MapLocations } from './map-location.entity';
-import { Categories } from './category.entity';
+import { Images } from './image.entity';
 
 @Entity('Timelines')
 export class Timelines {
@@ -16,31 +15,25 @@ export class Timelines {
   eventDate: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
-
-  @Column({ type: 'nvarchar', length: 100, nullable: false })
-  category: string;
+  description: string | null;
 
   @Column({ type: 'int', nullable: true })
-  CategoryID: number;
+  ImageID: number | null;
 
   @Column({ type: 'int', nullable: true })
-  ArticleID: number;
+  LocationID: number | null;
 
-  @Column({ nullable: true })
-  image: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  sourceUrl: string | null;
 
-  @Column({ nullable: true })
-  sourceUrl: string;
+  @Column({ type: 'varchar', length: 20, nullable: false, default: 'pending' })
+  status: string; // 'pending' | 'approved' | 'rejected'
 
-  @ManyToOne(() => Categories, (cat) => cat.timelines, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'CategoryID' })
-  categoryEntity: Categories;
+  @ManyToOne(() => Images, { nullable: true })
+  @JoinColumn({ name: 'ImageID' })
+  image: Images;
 
-  @ManyToOne(() => Articles, (article) => article.timelines, { onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'ArticleID' })
-  article: Articles;
-
-  @OneToMany(() => MapLocations, (map) => map.timeline, { cascade: true })
-  mapLocations: MapLocations[];
+  @ManyToOne(() => MapLocations, { nullable: true })
+  @JoinColumn({ name: 'LocationID' })
+  location: MapLocations;
 }

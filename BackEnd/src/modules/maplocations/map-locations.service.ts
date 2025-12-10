@@ -17,47 +17,48 @@ export class MapLocationsService {
   ) {}
 
  async findAll() {
-  const locations = await this.mapLocationsRepository
-    .createQueryBuilder('loc')
-    .leftJoin('loc.category', 'category')
-    .select([
-      'loc.LocationID',
-      'loc.Name',
-      'loc.Latitude',
-      'loc.Longitude',
-      'loc.Address',
-      'loc.Image',
-      'loc.OldImage',
-      'loc.ImageYear',
-      'loc.OldImageYear',
-      'loc.ArticleID',
-      'loc.TimelineID',
-      'loc.CategoryID',
-      'loc.Rating',
-      'loc.Reviews',
-      'category.Name',
-    ])
-    .addSelect('loc.Desc', 'description')           // ← DB column Desc
-    .addSelect('loc.FullDesc', 'fullDescription')   // ← DB column FullDesc
-    .getRawMany();
+  try {
+    const locations = await this.mapLocationsRepository
+      .createQueryBuilder('loc')
+      .leftJoin('loc.mainImage', 'mainImg')
+      .leftJoin('loc.oldImage', 'oldImg')
+      .select([
+        'loc.LocationID',
+        'loc.Name',
+        'loc.Latitude',
+        'loc.Longitude',
+        'loc.Address',
+        'loc.MainImageID',
+        'loc.OldImageID',
+        'loc.ArticleID',
+        'loc.Rating',
+        'loc.Reviews',
+        'mainImg.FilePath',
+        'oldImg.FilePath',
+      ])
+      .addSelect('loc.Desc', 'description')
+      .addSelect('loc.FullDesc', 'fullDescription')
+      .getRawMany();
 
-  return locations.map(loc => ({
-    LocationID: loc.loc_LocationID,
-    Name: loc.loc_Name,
-    Latitude: parseFloat(loc.loc_Latitude) || null,
-    Longitude: parseFloat(loc.loc_Longitude) || null,
-    Address: loc.loc_Address,
-    Image: loc.loc_Image,
-    OldImage: loc.loc_OldImage,
-    imageYear: loc.loc_ImageYear,
-    oldImageYear: loc.loc_OldImageYear,
-    description: loc.description,              // ← Alias từ addSelect
-    fullDescription: loc.fullDescription,      // ← Alias từ addSelect
-    CategoryID: loc.loc_CategoryID,
-    categoryName: loc.category_Name || 'Chưa phân loại',
-    Rating: parseFloat(loc.loc_Rating) || null,
-    Reviews: loc.loc_Reviews,
-  }));
+    return locations.map(loc => ({
+      LocationID: loc.loc_LocationID,
+      Name: loc.loc_Name,
+      Latitude: parseFloat(loc.loc_Latitude) || null,
+      Longitude: parseFloat(loc.loc_Longitude) || null,
+      Address: loc.loc_Address,
+      MainImageID: loc.loc_MainImageID,
+      OldImageID: loc.loc_OldImageID,
+      MainImagePath: loc.mainImg_FilePath || null,
+      OldImagePath: loc.oldImg_FilePath || null,
+      description: loc.description,
+      fullDescription: loc.fullDescription,
+      Rating: parseFloat(loc.loc_Rating) || null,
+      Reviews: loc.loc_Reviews,
+    }));
+  } catch (error) {
+    this.logger.error('Error in findAll():', error);
+    throw error;
+  }
 }
 
   async create(createLocationDto: any) {
@@ -72,23 +73,18 @@ export class MapLocationsService {
       throw new BadRequestException('Title, address, latitude, and longitude are required');
     }
 
-    const newLocation = this.mapLocationsRepository.create({
-      Name: createLocationDto.title,
-      Latitude: createLocationDto.latitude,
-      Longitude: createLocationDto.longitude,
-      Rating: createLocationDto.rating ?? 0,
-      Reviews: createLocationDto.reviews ?? 0,
-      Address: createLocationDto.address,
-      Image: createLocationDto.image || null,
-      ImageYear: createLocationDto.imageYear ?? null,
-      OldImage: createLocationDto.oldImage || null,
-      OldImageYear: createLocationDto.oldImageYear ?? null,
-      description: createLocationDto.desc || null,           // ĐÃ ĐỔI
-      fullDescription: createLocationDto.fullDesc || null,   // ĐÃ ĐỔI
-      ArticleID: createLocationDto.articleId ?? null,
-      TimelineID: createLocationDto.timelineId ?? null,
-      CategoryID: createLocationDto.categoryId ?? null,
-    });
+    const newLocation = new MapLocations();
+    newLocation.Name = createLocationDto.title;
+    newLocation.Latitude = createLocationDto.latitude;
+    newLocation.Longitude = createLocationDto.longitude;
+    newLocation.Rating = createLocationDto.rating ?? 0;
+    newLocation.Reviews = createLocationDto.reviews ?? 0;
+    newLocation.Address = createLocationDto.address;
+    newLocation.MainImageID = null; // TODO: Assign from Images table
+    newLocation.OldImageID = null;  // TODO: Assign from Images table
+    newLocation.description = createLocationDto.desc || null;
+    newLocation.fullDescription = createLocationDto.fullDesc || null;
+    newLocation.ArticleID = createLocationDto.articleId ?? null;
 
     try {
       const savedLocation = await this.mapLocationsRepository.save(newLocation);
@@ -109,15 +105,10 @@ export class MapLocationsService {
       Latitude: updateLocationDto.latitude ?? location.Latitude,
       Longitude: updateLocationDto.longitude ?? location.Longitude,
       Address: updateLocationDto.address || location.Address,
-      Image: updateLocationDto.image || location.Image,
-      ImageYear: updateLocationDto.imageYear ?? location.ImageYear,
-      OldImage: updateLocationDto.oldImage || location.OldImage,
-      OldImageYear: updateLocationDto.oldImageYear ?? location.OldImageYear,
-      description: updateLocationDto.desc || location.description,           // ĐÃ ĐỔI
-      fullDescription: updateLocationDto.fullDesc || location.fullDescription, // ĐÃ ĐỔI
+      // MainImageID/OldImageID: TODO - Assign from Images table
+      description: updateLocationDto.desc || location.description,
+      fullDescription: updateLocationDto.fullDesc || location.fullDescription,
       ArticleID: updateLocationDto.articleId ?? location.ArticleID,
-      TimelineID: updateLocationDto.timelineId ?? location.TimelineID,
-      CategoryID: updateLocationDto.categoryId ?? location.CategoryID,
       Rating: updateLocationDto.rating ?? location.Rating,
       Reviews: updateLocationDto.reviews ?? location.Reviews,
     });

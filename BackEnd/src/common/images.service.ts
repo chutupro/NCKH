@@ -22,12 +22,14 @@ export class ImagesService {
     articleId?: number | null,
     altText?: string | null,
     type?: string | null,
+    categoryId?: number | null,
   ): Promise<Images> {
     const image = this.imagesRepo.create({
       FilePath: filePath,
       ArticleID: articleId ?? null,
       AltText: altText ?? null,
       Type: type ?? 'post',
+      CategoryID: categoryId ?? null,
     });
 
     const saved = await this.imagesRepo.save(image);

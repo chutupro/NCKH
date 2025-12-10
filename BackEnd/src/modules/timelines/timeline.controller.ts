@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, ParseIntPipe, Query, Body, NotFoundException, BadRequestException } from '@nestjs/common';
 import { TimelineService } from './timeline.service';
 
 @Controller('timeline')
@@ -52,5 +52,37 @@ export class TimelineController {
       throw new NotFoundException(`Timeline #${id} not found`);
     }
     return item;
+  }
+
+  // ===============================
+  // CREATE Timeline
+  // ===============================
+  @Post()
+  async create(@Body() body: any) {
+    if (!body.ImageID) {
+      throw new BadRequestException('ImageID bắt buộc');
+    }
+    if (!body.title || !body.eventDate) {
+      throw new BadRequestException('Tiêu đề và ngày sự kiện bắt buộc');
+    }
+    // LocationID không bắt buộc - có thể null
+    return this.timelineService.create(body);
+  }
+
+  // ===============================
+  // UPDATE Timeline
+  // ===============================
+  @Put(':id')
+  async update(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
+    return this.timelineService.update(id, body);
+  }
+
+  // ===============================
+  // DELETE Timeline
+  // ===============================
+  @Delete(':id')
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    await this.timelineService.delete(id);
+    return { success: true, message: `Timeline #${id} đã xóa` };
   }
 }
