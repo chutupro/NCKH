@@ -13,12 +13,13 @@ import {
   Logger,
   ParseIntPipe,
   NotFoundException,
+  Req,
 } from '@nestjs/common';
 import { MapLocationsService } from './map-locations.service';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import type { Express } from 'express';
+import { MediaClientService } from 'src/common/media-client.service';
+import { ImagesService } from 'src/common/images.service';
 
 const normalizeYearInput = (val?: string | number) => {
   if (val === undefined || val === null || val === '') return undefined;
@@ -30,7 +31,11 @@ const normalizeYearInput = (val?: string | number) => {
 export class MapLocationsController {
   private readonly logger = new Logger(MapLocationsController.name);
 
-  constructor(private readonly mapLocationsService: MapLocationsService) {}
+  constructor(
+    private readonly mapLocationsService: MapLocationsService,
+    private readonly mediaClient: MediaClientService,
+    private readonly imagesService: ImagesService,
+  ) {}
 
   // GET /map-locations
   @Get()
@@ -47,19 +52,11 @@ export class MapLocationsController {
         { name: 'oldImage', maxCount: 1 },
       ],
       {
-        storage: diskStorage({
-          destination: './uploads',
-          filename: (req, file, cb) => {
-            const randomName = Array(32)
-              .fill(null)
-              .map(() => Math.round(Math.random() * 16).toString(16))
-              .join('');
-            cb(null, `${randomName}${extname(file.originalname)}`);
-          },
-        }),
+        storage: require('multer').memoryStorage(),
+        limits: { fileSize: 20 * 1024 * 1024 },
         fileFilter: (req, file, cb) => {
           const allowedTypes = /jpeg|jpg|png|gif|webp/;
-          const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(extname(file.originalname).toLowerCase());
+          const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(file.originalname.toLowerCase());
           if (isValid) {
             cb(null, true);
           } else {
@@ -76,9 +73,13 @@ export class MapLocationsController {
       image?: Express.Multer.File[];
       oldImage?: Express.Multer.File[];
     },
+    @Req() req: any,
   ) {
     this.logger.log('POST /map-locations - Raw FormData:', body);
     this.logger.log('Uploaded files:', files);
+
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    const category = body.category || 'van-hoa';
 
     // === XỬ LÝ CÁC TRƯỜNG BẮT BUỘC ===
     const title = body.title?.trim();
@@ -105,12 +106,37 @@ export class MapLocationsController {
     const imageYear = normalizeYearInput(body.imageYear ?? body.ImageYear);
     const oldImageYear = normalizeYearInput(body.oldImageYear ?? body.OldImageYear);
 
-    // === XỬ LÝ ẢNH ===
-    const imageUrl =
-      files?.image?.[0] ? `/uploads/${files.image[0].filename}` : body.image || null;
+    // === XỬ LÝ ẢNH - UPLOAD TO MEDIA SERVICE ===
+    let imageUrl = body.image || null;
+    let oldImageUrl = body.oldImage || null;
 
-    const oldImageUrl =
-      files?.oldImage?.[0] ? `/uploads/${files.oldImage[0].filename}` : body.oldImage || null;
+    // Upload new image if provided
+    if (files?.image?.[0]) {
+      const uploadResult = await this.mediaClient.uploadToMediaService(
+        files.image[0],
+        token,
+        'post',
+        category,
+      );
+      imageUrl = uploadResult.url;
+      
+      // Save to DB Images
+      await this.imagesService.create(imageUrl, undefined, `Map location: ${title}`, 'map');
+    }
+
+    // Upload old image if provided
+    if (files?.oldImage?.[0]) {
+      const uploadResult = await this.mediaClient.uploadToMediaService(
+        files.oldImage[0],
+        token,
+        'post',
+        category,
+      );
+      oldImageUrl = uploadResult.url;
+      
+      // Save to DB Images
+      await this.imagesService.create(oldImageUrl, undefined, `Map location (old): ${title}`, 'map');
+    }
 
     // === TẠO DTO ===
     const dto = {
@@ -143,16 +169,17 @@ export class MapLocationsController {
         { name: 'oldImage', maxCount: 1 },
       ],
       {
-        storage: diskStorage({
-          destination: './uploads',
-          filename: (req, file, cb) => {
-            const randomName = Array(32)
-              .fill(null)
-              .map(() => Math.round(Math.random() * 16).toString(16))
-              .join('');
-            cb(null, `${randomName}${extname(file.originalname)}`);
-          },
-        }),
+        storage: require('multer').memoryStorage(),
+        limits: { fileSize: 20 * 1024 * 1024 },
+        fileFilter: (req, file, cb) => {
+          const allowedTypes = /jpeg|jpg|png|gif|webp/;
+          const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(file.originalname.toLowerCase());
+          if (isValid) {
+            cb(null, true);
+          } else {
+            cb(new BadRequestException(`File type không hợp lệ: ${file.originalname}`), false);
+          }
+        },
       },
     ),
   )
@@ -164,18 +191,42 @@ export class MapLocationsController {
       image?: Express.Multer.File[];
       oldImage?: Express.Multer.File[];
     },
+    @Req() req: any,
   ) {
     this.logger.log(`PUT /map-locations/${id} - Body:`, body);
 
-    const imageUrl =
-      files?.image?.[0]
-        ? `/uploads/${files.image[0].filename}`
-        : body.image || undefined;
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    const category = body.category || 'van-hoa';
 
-    const oldImageUrl =
-      files?.oldImage?.[0]
-        ? `/uploads/${files.oldImage[0].filename}`
-        : body.oldImage || undefined;
+    // Upload new image if provided
+    let imageUrl = body.image || undefined;
+    if (files?.image?.[0]) {
+      const uploadResult = await this.mediaClient.uploadToMediaService(
+        files.image[0],
+        token,
+        'post',
+        category,
+      );
+      imageUrl = uploadResult.url;
+      
+      // Save to DB Images
+      await this.imagesService.create(imageUrl, undefined, `Map location: ${body.title}`, 'map');
+    }
+
+    // Upload old image if provided
+    let oldImageUrl = body.oldImage || undefined;
+    if (files?.oldImage?.[0]) {
+      const uploadResult = await this.mediaClient.uploadToMediaService(
+        files.oldImage[0],
+        token,
+        'post',
+        category,
+      );
+      oldImageUrl = uploadResult.url;
+      
+      // Save to DB Images
+      await this.imagesService.create(oldImageUrl, undefined, `Map location (old): ${body.title}`, 'map');
+    }
 
     let categoryId: number | null = null;
     if (body.CategoryID !== undefined) {
@@ -232,19 +283,11 @@ export class MapLocationsController {
     FileFieldsInterceptor(
       [{ name: 'images', maxCount: 5 }],
       {
-        storage: diskStorage({
-          destination: './uploads',
-          filename: (req, file, cb) => {
-            const randomName = Array(32)
-              .fill(null)
-              .map(() => Math.round(Math.random() * 16).toString(16))
-              .join('');
-            cb(null, `${randomName}${extname(file.originalname)}`);
-          },
-        }),
+        storage: require('multer').memoryStorage(),
+        limits: { fileSize: 20 * 1024 * 1024 },
         fileFilter: (req, file, cb) => {
           const allowedTypes = /jpeg|jpg|png|gif|webp/;
-          const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(extname(file.originalname).toLowerCase());
+          const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(file.originalname.toLowerCase());
           if (isValid) {
             cb(null, true);
           } else {
@@ -266,13 +309,31 @@ export class MapLocationsController {
     files: {
       images?: Express.Multer.File[];
     },
+    @Req() req: any,
   ) {
     if (!feedbackDto.userId || !feedbackDto.rating || !feedbackDto.comment) {
       throw new BadRequestException('userId, rating, comment là bắt buộc');
     }
 
-    // Build imageUrls array from uploaded files
-    const imageUrls = files?.images?.map(f => `/uploads/${f.filename}`) || [];
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    const category = 'feedback';
+
+    // Upload all images to media-service
+    const imageUrls: string[] = [];
+    if (files?.images && files.images.length > 0) {
+      for (const file of files.images) {
+        const uploadResult = await this.mediaClient.uploadToMediaService(
+          file,
+          token,
+          'post',
+          category,
+        );
+        imageUrls.push(uploadResult.url);
+        
+        // Save to DB Images
+        await this.imagesService.create(uploadResult.url, undefined, `Feedback for location ${id}`, 'feedback');
+      }
+    }
 
     return this.mapLocationsService.addFeedback(id, feedbackDto.userId, {
       rating: feedbackDto.rating,

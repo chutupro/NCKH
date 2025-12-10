@@ -154,7 +154,7 @@ const CommunitySidebar = ({ activeFilter, onFilterChange, onSearchChange, search
       .slice(0, 3)
       .map(post => ({
         id: post.id,
-        image: post.image || post.imagePath || '/uploads/default.png',
+        image: post.image || post.imagePath || 'https://via.placeholder.com/400x300?text=No+Image',
         title: (post.title || '').substring(0, 60) + ((post.title || '').length > 60 ? '...' : ''),
         likes: post.likeCount ?? post.likes ?? 0,
         category: post.category || ''

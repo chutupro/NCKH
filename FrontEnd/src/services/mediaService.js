@@ -32,15 +32,15 @@ export const uploadAvatar = async (file) => {
   // Get access token from backend
   const accessToken = await getAccessToken();
 
-  // Make direct axios request with explicit Authorization header
-  const response = await axios.post(`${MEDIA_SERVICE_URL}/upload`, formData, {
+  // 👉 GỌI BACKEND, không gọi trực tiếp media-service
+  const response = await axios.post(`${MAIN_BACKEND_URL}/upload`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
       'Authorization': `Bearer ${accessToken}`,
     },
   });
 
-  return response.data.url; // "http://localhost:3001/storage/avatar/user-456/xxx.jpg"
+  return response.data.filePath; // Backend trả URL từ media-service
 };
 
 /**
@@ -58,14 +58,15 @@ export const uploadPostImage = async (file, category) => {
   // Get access token from backend
   const accessToken = await getAccessToken();
 
-  const response = await axios.post(`${MEDIA_SERVICE_URL}/upload`, formData, {
+  // 👉 GỌI BACKEND, không gọi trực tiếp media-service
+  const response = await axios.post(`${MAIN_BACKEND_URL}/upload`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
       'Authorization': `Bearer ${accessToken}`,
     },
   });
 
-  return response.data.url;
+  return response.data.filePath; // Backend trả URL từ media-service
 };
 
 /**

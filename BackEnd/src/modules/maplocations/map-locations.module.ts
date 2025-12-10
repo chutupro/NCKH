@@ -6,17 +6,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MapLocations } from '../entities/map-location.entity';
 import { Timelines } from '../entities/timeline.entity';
 import { Articles } from '../entities/article.entity';
-import { Feedback } from '../entities/feedback.entity'; // Thêm Feedback entity
-import { MulterModule } from '@nestjs/platform-express';
+import { Feedback } from '../entities/feedback.entity';
+import { Images } from '../entities/image.entity';
+import { MediaClientService } from 'src/common/media-client.service';
+import { ImagesService } from 'src/common/images.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MapLocations, Timelines, Articles, Feedback]), // Thêm Feedback
-    MulterModule.register({
-      dest: './uploads/',
-    }),
+    TypeOrmModule.forFeature([MapLocations, Timelines, Articles, Feedback, Images]),
   ],
   controllers: [MapLocationsController],
-  providers: [MapLocationsService],
+  providers: [MapLocationsService, MediaClientService, ImagesService],
 })
 export class MapLocationsModule {}

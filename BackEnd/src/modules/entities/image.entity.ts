@@ -7,19 +7,19 @@ export class Images {
   ImageID: number;
 
   @Column({ type: 'int', nullable: true })
-  ArticleID: number;
+  ArticleID: number | null;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
   FilePath: string;
 
   @Column({ type: 'nvarchar', length: 100, nullable: true })
-  AltText: string;
+  AltText: string | null;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  Type: string;
+  Type: string | null;
 
   // --- RELATIONS ---
-  @ManyToOne(() => Articles, (article) => article.images)
+  @ManyToOne(() => Articles, (article) => article.images, { nullable: true })
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
 }

@@ -47,6 +47,7 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
         { path: '/admin/locations', icon: '🗺️', label: 'Quản lý Địa điểm', badge: null },
         { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: pendingCount > 0 ? String(pendingCount) : null },
         { path: '/admin/comparisons', icon: '📸', label: 'Quản lý So Sánh', badge: null },
+        { path: '/admin/timeline-management', icon: '⏱️', label: 'Quản lý Timeline', badge: null },
         
       ],
     },

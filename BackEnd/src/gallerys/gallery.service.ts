@@ -2,8 +2,6 @@ import { Injectable, NotFoundException, InternalServerErrorException, BadRequest
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Images } from 'src/modules/entities/image.entity';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class GalleryService {
@@ -59,21 +57,19 @@ export class GalleryService {
     return item;
   }
 
-  async create(file: Express.Multer.File, meta: any) {
+  async create(file: Express.Multer.File, meta: any, mediaServiceUrl: string) {
     if (!file) throw new InternalServerErrorException('No file uploaded');
 
     const { fileField, titleField, descField, cols, createdAtField } = this.detectFields();
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'gallery');
-    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
-    const relPath = path.join('uploads', 'gallery', file.filename);
     const payload: any = {};
 
-    if (fileField) payload[fileField] = relPath;
-    else if (cols.includes('FilePath')) payload['FilePath'] = relPath;
-    else if (cols.includes('filePath')) payload['filePath'] = relPath;
-    else if (cols.includes('path')) payload['path'] = relPath;
-    else payload['filePath'] = relPath;
+    // Use media-service URL instead of local path
+    if (fileField) payload[fileField] = mediaServiceUrl;
+    else if (cols.includes('FilePath')) payload['FilePath'] = mediaServiceUrl;
+    else if (cols.includes('filePath')) payload['filePath'] = mediaServiceUrl;
+    else if (cols.includes('path')) payload['path'] = mediaServiceUrl;
+    else payload['filePath'] = mediaServiceUrl;
 
     if (titleField) payload[titleField] = meta?.title ?? file.originalname;
     if (descField && meta?.description) payload[descField] = meta.description;
@@ -98,7 +94,6 @@ export class GalleryService {
       const saved = await this.imagesRepo.save(image);
       return saved;
     } catch (err) {
-      try { fs.unlinkSync(path.join(process.cwd(), relPath)); } catch {}
       throw err;
     }
   }
@@ -114,22 +109,11 @@ export class GalleryService {
   }
 
   async remove(id: number) {
-    const { pk, fileField } = this.detectFields();
+    const { pk } = this.detectFields();
     const found = await this.imagesRepo.findOneBy({ [pk]: Number(id) } as any);
     if (!found) throw new NotFoundException('Not found');
-    const possible = [
-      (fileField && (found as any)[fileField]),
-      (found as any).filePath,
-      (found as any).FilePath,
-      (found as any).path,
-      (found as any).url,
-    ].filter(Boolean);
-    for (const p of possible) {
-      try {
-        const full = path.isAbsolute(p) ? p : path.join(process.cwd(), p);
-        if (fs.existsSync(full) && fs.statSync(full).isFile()) fs.unlinkSync(full);
-      } catch {}
-    }
+    
+    // Note: File cleanup is handled by media-service, not here
     await this.imagesRepo.delete((found as any)[pk]);
     return { deleted: true };
   }

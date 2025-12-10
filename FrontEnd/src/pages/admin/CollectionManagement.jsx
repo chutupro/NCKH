@@ -181,7 +181,7 @@ const CollectionManagement = () => {
         const token = getCookie('access_token') || 'dummy-token-for-testing';
 
         try {
-          const uploadResponse = await fetch('http://localhost:3001/upload', {
+          const uploadResponse = await fetch('http://localhost:3000/upload', { // 👈 Gọi backend
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

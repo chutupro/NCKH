@@ -12,24 +12,23 @@ import {
   HttpCode,
   UsePipes,
   ValidationPipe,
+  Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as fs from 'fs';
-import * as path from 'path';
 import { GalleryService } from './gallery.service';
 import { CreateGalleryDto } from './dto/create-gallery.dto';
 import { UpdateGalleryDto } from './dto/update-gallery.dto';
-
-function ensureUploadsDir() {
-  const dir = path.join(process.cwd(), 'uploads', 'gallery');
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  return dir;
-}
+import { MediaClientService } from 'src/common/media-client.service';
+import { ImagesService } from 'src/common/images.service';
 
 @Controller('gallery')
 export class GalleryController {
-  constructor(private readonly galleryService: GalleryService) {}
+  constructor(
+    private readonly galleryService: GalleryService,
+    private readonly mediaClient: MediaClientService,
+    private readonly imagesService: ImagesService,
+  ) {}
 
   // 👉 Trả về tất cả hình ảnh, không cần query params
   @Get()
@@ -45,23 +44,45 @@ export class GalleryController {
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: () => ensureUploadsDir(),
-        filename: (_req, file, cb) => {
-          const timestamp = Date.now();
-          const safe = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-          cb(null, `${timestamp}_${safe}`);
-        },
-      }),
-      limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+      storage: require('multer').memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 },
+      fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif|webp/;
+        const isValid = allowedTypes.test(file.mimetype) && allowedTypes.test(file.originalname.toLowerCase());
+        if (isValid) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException(`File type không hợp lệ: ${file.originalname}`), false);
+        }
+      },
     }),
   )
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateGalleryDto,
+    @Req() req: any,
   ) {
-    return this.galleryService.create(file, body);
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    const category = body.categoryId || 'gallery';
+
+    // Upload to media-service
+    const uploadResult = await this.mediaClient.uploadToMediaService(
+      file,
+      token,
+      'post',
+      category,
+    );
+
+    // Save to DB Images
+    await this.imagesService.create(
+      uploadResult.url,
+      undefined,
+      body.title || 'Gallery image',
+      'gallery',
+    );
+
+    return this.galleryService.create(file, body, uploadResult.url);
   }
 
   @Put(':id')

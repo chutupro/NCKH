@@ -40,6 +40,7 @@ import AdminContributions from "../Component/admin/AdminContributions";
 import MapManagement from "../pages/admin/MapManagement";
 import Logs from "../pages/admin/Logs";
 import ComparisonManager from "../pages/admin/ComparisonManager";
+import TimelineManagement from "../pages/admin/TimelineManagement";
 import ProtectedRoute from "../Component/common/ProtectedRoute";
 
 const Routee = () => {
@@ -113,6 +114,7 @@ const Routee = () => {
         <Route path="locations" element={<LocationManagement />} />
         <Route path="contributions" element={<AdminContributions />} />
         <Route path="comparisons" element={<ComparisonManager />} />
+        <Route path="timeline-management" element={<TimelineManagement />} />
         <Route path="map-management" element={<MapManagement />} />
         <Route path="ai-models" element={<AIModels />} />
         <Route path="system-monitor" element={<SystemMonitor />} />

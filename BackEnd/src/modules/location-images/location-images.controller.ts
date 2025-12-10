@@ -8,35 +8,32 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import type { Express } from 'express';
 import { LocationImagesService } from './location-images.service';
+import { MediaClientService } from 'src/common/media-client.service';
+import { ImagesService } from 'src/common/images.service';
 
 @Controller('location-images')
 export class LocationImagesController {
-  constructor(private readonly svc: LocationImagesService) {}
+  constructor(
+    private readonly svc: LocationImagesService,
+    private readonly mediaClient: MediaClientService,
+    private readonly imagesService: ImagesService,
+  ) {}
 
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: require('multer').memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 },
       fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const isValid =
           allowedTypes.test(file.mimetype) &&
-          allowedTypes.test(extname(file.originalname).toLowerCase());
+          allowedTypes.test(file.originalname.toLowerCase());
         if (isValid) {
           cb(null, true);
         } else {
@@ -51,8 +48,10 @@ export class LocationImagesController {
       locationId: string;
       userId?: string;
       year?: string;
+      category?: string;
     },
     @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
   ) {
     if (!file) {
       throw new BadRequestException('Ảnh là bắt buộc');
@@ -65,9 +64,28 @@ export class LocationImagesController {
     const userId = body.userId ? parseInt(body.userId, 10) : undefined;
     const year = body.year ? parseInt(body.year, 10) : undefined;
 
+    // Upload to media-service
+    const token = req.headers.authorization?.replace('Bearer ', '') || '';
+    const category = body.category || 'van-hoa';
+    
+    const uploadResult = await this.mediaClient.uploadToMediaService(
+      file,
+      token,
+      'post',
+      category,
+    );
+
+    // Save to DB Images
+    await this.imagesService.create(
+      uploadResult.url,
+      undefined,
+      `Location image for ${locationId}`,
+      'location',
+    );
+
     return this.svc.create(
       { locationId, userId, year },
-      `/uploads/${file.filename}`,
+      uploadResult.url,
     );
   }
 

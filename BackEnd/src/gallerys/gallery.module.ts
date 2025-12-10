@@ -6,10 +6,12 @@ import { Images } from 'src/modules/entities/image.entity';
 import { Articles } from 'src/modules/entities/article.entity';
 import { Categories } from 'src/modules/entities/category.entity';
 import { Likes } from 'src/modules/entities/like.entity';
+import { MediaClientService } from 'src/common/media-client.service';
+import { ImagesService } from 'src/common/images.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Images, Articles, Categories, Likes])],
   controllers: [GalleryController],
-  providers: [GalleryService],
+  providers: [GalleryService, MediaClientService, ImagesService],
 })
 export class GalleryModule {}

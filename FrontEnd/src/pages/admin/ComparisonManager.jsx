@@ -181,8 +181,8 @@ const ComparisonManager = () => {
         formData.append('file', imageFile);
         formData.append('type', 'post');
         formData.append('category', 'van-hoa'); // Category phải là một trong: van-hoa, du-lich, thien-nhien, kien-truc
-        const uploadResponse = await axios.post('http://localhost:3001/upload', formData);
-        imagePath = uploadResponse.data.url || uploadResponse.data.path;
+        const uploadResponse = await axios.post('http://localhost:3000/upload', formData); // 👈 Gọi backend
+        imagePath = uploadResponse.data.filePath || uploadResponse.data.url;
       }
 
       // Validate: phải có ImagePath

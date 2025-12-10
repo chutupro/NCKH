@@ -59,11 +59,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // --- Serve static files from uploads ---
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
-  });
-
   // --- Listen server ---
   const port = process.env.PORT ?? 3000;
   await app.listen(port);

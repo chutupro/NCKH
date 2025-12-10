@@ -1,7 +1,5 @@
 // src/app.module.ts
 import { Module } from '@nestjs/common';
-import { join } from 'path';
-import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { DatabaseModule } from './common/database.module';
 import { TimelineModule } from './modules/timelines/timeline.module';
@@ -19,12 +17,6 @@ import { LocationImagesModule } from './modules/location-images/location-images.
 
 @Module({
   imports: [
-    // 👇 Cho phép truy cập file ảnh qua URL
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
-    }),
-
     DatabaseModule,
     TimelineModule,
     MapLocationsModule,
