@@ -25,7 +25,9 @@ export class GalleryService {
 
   async findAll(options: { skip?: number; take?: number; q?: string; categoryId?: number } = {}) {
     const { skip = 0, take = 20, q, categoryId } = options;
-    const qb = this.imagesRepo.createQueryBuilder('img');
+    const qb = this.imagesRepo.createQueryBuilder('img')
+      .leftJoinAndSelect('img.collection', 'col')
+      .leftJoinAndSelect('img.category', 'cat');
     const { createdAtField, cols } = this.detectFields();
 
     if (createdAtField) qb.orderBy(`img.${createdAtField}`, 'DESC');
@@ -71,7 +73,8 @@ export class GalleryService {
     else if (cols.includes('path')) payload['path'] = mediaServiceUrl;
     else payload['filePath'] = mediaServiceUrl;
 
-    if (titleField) payload[titleField] = meta?.title ?? file.originalname;
+    // KHÔNG DÙNG file.originalname (bị lỗi encoding) - Chỉ dùng meta.title
+    if (titleField && meta?.title) payload[titleField] = meta.title;
     if (descField && meta?.description) payload[descField] = meta.description;
 
     // ✅ Gắn ArticleID (hoặc CategoryID)
@@ -80,6 +83,14 @@ export class GalleryService {
     } else if (cols.includes('CategoryID') && meta?.categoryId) {
       payload['CategoryID'] = Number(meta.categoryId);
     }
+
+    // ✅ Gắn CollectionID nếu có
+    if (cols.includes('CollectionID') && meta?.collectionId) {
+      payload['CollectionID'] = Number(meta.collectionId);
+      console.log(`[Gallery Service] Setting CollectionID=${meta.collectionId} for image`);
+    }
+    
+    console.log(`[Gallery Service] Payload:`, JSON.stringify(payload, null, 2));
 
     if (createdAtField && !payload[createdAtField]) payload[createdAtField] = new Date();
 

@@ -21,6 +21,10 @@ export class CreateGalleryDto {
   categoryId?: string;
 
   @IsOptional()
+  @IsNumberString()
+  collectionId?: string;
+
+  @IsOptional()
   @IsString()
   tags?: string;
 

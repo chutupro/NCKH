@@ -197,14 +197,14 @@ const Timeline = () => {
                         className="timeline-card-image"
                         style={{ backgroundImage: `url(${item.image})` }}
                       >
-                        <span className="timeline-badge">{item.category}</span>
+                        <span className="timeline-badge">{item.imageCategory || item.category}</span>
                       </div>
                       <div className="timeline-card-body">
                         <time className="timeline-date">
                           {item.date.slice(0, 4)}
                         </time>
                         <h3 className="timeline-title">{item.title}</h3>
-                        <p className="timeline-desc">{item.desc}</p>
+                        <p className="timeline-desc">{item.desc || 'Không có mô tả'}</p>
                       </div>
                     </div>
                   </Link>

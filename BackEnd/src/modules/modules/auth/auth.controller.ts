@@ -118,7 +118,7 @@ export class AuthController {
     // 🔥 SET CẢ ACCESS_TOKEN VÀ REFRESH_TOKEN VÀO HTTPONLY COOKIE
     res.cookie('access_token', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 60 * 60 * 1000, // 1 hour (khớp với JWT expiry)
     });
 
     res.cookie('refresh_token', result.refreshToken, {
@@ -201,7 +201,7 @@ export class AuthController {
     // 🔥 SET ACCESS TOKEN VÀO HTTPONLY COOKIE
     res.cookie('access_token', result.accessToken, {
       ...cookieOptions,
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 60 * 60 * 1000, // 1 hour (khớp với JWT expiry)
     });
 
     // 🔥 SET REFRESH TOKEN MỚI VÀO HTTPONLY COOKIE (ROTATION)

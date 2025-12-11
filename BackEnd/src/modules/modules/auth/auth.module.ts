@@ -24,7 +24,7 @@ import { RedisService } from '../../../common/redis.service';
       imports: [ConfigModule],
       useFactory: async (cs: ConfigService) => ({
         secret: cs.get<string>('JWT_ACCESS_SECRET') || 'access_secret',
-        signOptions: { expiresIn: cs.get<number>('JWT_ACCESS_EXPIRES') || 900 }, // 900s = 15 phút
+        signOptions: { expiresIn: `${cs.get<number>('JWT_ACCESS_EXPIRES') || 3600}s` }, // 3600s = 1 giờ
       }),
       inject: [ConfigService],
     }),

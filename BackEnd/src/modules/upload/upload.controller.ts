@@ -53,13 +53,17 @@ export class UploadController {
       category,
     );
 
-    // 2. Save to DB Images với CategoryID
+    // 2. Save to DB Images với CategoryID và CollectionID
+    // KHÔNG DÙNG file.originalname (bị lỗi encoding UTF-8)
+    const collectionId = body.collectionId ? parseInt(body.collectionId) : null;
+    
     const imageRecord = await this.imagesService.create(
       uploadResult.url,
       undefined,
-      body.altText || file.originalname,
+      body.altText || body.title || null,  // Lưu tiêu đề vào AltText
       type,
       categoryId,  // Truyền CategoryID
+      collectionId, // Truyền CollectionID
     );
 
     return {

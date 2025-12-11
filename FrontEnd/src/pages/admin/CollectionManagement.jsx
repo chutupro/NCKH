@@ -169,6 +169,7 @@ const CollectionManagement = () => {
         imageFormData.append('file', selectedImage);
         imageFormData.append('type', 'post');
         imageFormData.append('categoryId', formData.CategoryID); // Truyền CategoryID thay vì string
+        imageFormData.append('title', formData.title || formData.name); // ✅ Truyền title để lưu vào AltText
 
         // Get token from cookie
         const getCookie = (name) => {
@@ -191,7 +192,8 @@ const CollectionManagement = () => {
           
           if (uploadResponse.ok) {
             const uploadData = await uploadResponse.json();
-            imagePath = uploadData.url || uploadData.path;
+            imagePath = uploadData.filePath || uploadData.url || uploadData.path;
+            console.log('🟢 [CollectionManagement] Upload SUCCESS:', { uploadData, imagePath });
             toast.success('✅ Đã tải ảnh lên');
           } else {
             const errorData = await uploadResponse.json().catch(() => ({}));
@@ -214,6 +216,8 @@ const CollectionManagement = () => {
         ImagePath: imagePath || null,
         ImageDescription: formData.imageDescription || null,
       };
+      
+      console.log('🚀 [CollectionManagement] Sending collection payload:', payload);
 
       if (editingCollection) {
         // Update

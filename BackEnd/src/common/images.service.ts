@@ -23,6 +23,7 @@ export class ImagesService {
     altText?: string | null,
     type?: string | null,
     categoryId?: number | null,
+    collectionId?: number | null,
   ): Promise<Images> {
     const image = this.imagesRepo.create({
       FilePath: filePath,
@@ -30,6 +31,7 @@ export class ImagesService {
       AltText: altText ?? null,
       Type: type ?? 'post',
       CategoryID: categoryId ?? null,
+      CollectionID: collectionId ?? null,
     });
 
     const saved = await this.imagesRepo.save(image);

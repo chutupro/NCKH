@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Articles } from './article.entity';
 import { Categories } from './category.entity';
+import { Collections } from './collection.entity';
 
 @Entity('Images')
 export class Images {
@@ -22,6 +23,9 @@ export class Images {
   @Column({ type: 'int', nullable: true })
   CategoryID: number | null;
 
+  @Column({ type: 'int', nullable: true })
+  CollectionID: number | null;
+
   // --- RELATIONS ---
   @ManyToOne(() => Articles, (article) => article.images, { nullable: true })
   @JoinColumn({ name: 'ArticleID' })
@@ -30,4 +34,8 @@ export class Images {
   @ManyToOne(() => Categories, (category) => category.images, { nullable: true })
   @JoinColumn({ name: 'CategoryID' })
   category: Categories;
+
+  @ManyToOne(() => Collections, { nullable: true })
+  @JoinColumn({ name: 'CollectionID' })
+  collection: Collections;
 }

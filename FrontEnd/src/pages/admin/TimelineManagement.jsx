@@ -66,7 +66,6 @@ const TimelineManagement = () => {
   const pendingImages = images.filter(img => {
     // Kiểm tra xem ImageID có trong timelines chưa
     const hasTimeline = timelines.some(t => t.ImageID === img.ImageID);
-    console.log(`Image ${img.ImageID} (${img.AltText}): hasTimeline = ${hasTimeline}`);
     return !hasTimeline;
   });
   
@@ -74,8 +73,23 @@ const TimelineManagement = () => {
   console.log('Total images:', images.length);
   console.log('Total timelines:', timelines.length);
   console.log('Pending images:', pendingImages.length);
-  console.log('Images:', images.map(i => ({ ImageID: i.ImageID, AltText: i.AltText })));
-  console.log('Timeline ImageIDs:', timelines.map(t => t.ImageID));
+  
+  // Debug: Hiển thị thông tin chi tiết của ảnh chờ duyệt
+  if (pendingImages.length > 0) {
+    console.log('📷 Pending Images Detail:');
+    pendingImages.forEach(img => {
+      console.log(`  ImageID=${img.ImageID}:`);
+      console.log(`    - AltText: "${img.AltText || 'NULL'}"`);
+      console.log(`    - Title: "${img.Title || 'NULL'}"`);
+      console.log(`    - CategoryID: ${img.CategoryID}`);
+      console.log(`    - CollectionID: ${img.CollectionID || 'NULL'}`);
+      console.log(`    - Collection: `, img.collection);
+      if (img.collection) {
+        console.log(`      * Name: "${img.collection.Name || 'NULL'}"`);
+        console.log(`      * Title: "${img.collection.Title || 'NULL'}"`);
+      }
+    });
+  }
 
   // LOGIC MỚI: Duyệt nhanh ảnh (tạo timeline với status = approved, không cần điền form)
   const handleQuickApprove = async (imageId) => {
@@ -262,7 +276,15 @@ const TimelineManagement = () => {
     try {
       await axios.delete(`http://localhost:3000/timeline/${id}`);
       alert('Xóa timeline thành công!');
-      fetchTimelines();
+      
+      // Xóa khỏi state trực tiếp (không reload) để giữ nguyên tab hiện tại
+      setTimelines(prev => prev.filter(t => t.timelineID !== id));
+      
+      // ✅ QUAN TRỌNG: Refresh lại danh sách ảnh vì backend đã xóa Image
+      // Khi xóa Timeline, backend cũng xóa Image tương ứng
+      // → Cần fetch lại để loại bỏ ảnh đã xóa khỏi "Ảnh chờ duyệt"
+      await fetchImages();
+      
       if (selectedTimeline?.timelineID === id) {
         setSelectedTimeline(null);
       }
@@ -471,18 +493,21 @@ const TimelineManagement = () => {
                   />
                 </div>
                 <div className="card-info">
-                  <h4 className="image-title">{image.AltText || `Ảnh #${image.ImageID}`}</h4>
-                  <p className="image-meta">
-                    <span className="badge-id">ID: {image.ImageID}</span>
-                    {image.CategoryID && (
-                      <span className="badge-category">
-                        {image.CategoryID === 1 ? '🏛️ Di sản' : 
-                         image.CategoryID === 2 ? '🎉 Văn hóa' :
-                         image.CategoryID === 3 ? '🌳 Thiên nhiên' : '🎪 Sự kiện'}
-                      </span>
-                    )}
-                  </p>
-                  <p className="image-note">📌 Thông tin ảnh này không sửa được trong Timeline</p>
+                  <h4 className="image-title">
+                    {(() => {
+                      // Hiển thị TÊN BỘ SƯU TẬP (Name) trước, sau đó mới tới Title
+                      if (image.collection?.Name) return image.collection.Name;
+                      if (image.collection?.Title) return image.collection.Title;
+                      
+                      // Fallback về tên danh mục
+                      if (image.CategoryID === 1) return '🏛️ Di sản';
+                      if (image.CategoryID === 2) return '🎉 Văn hóa';
+                      if (image.CategoryID === 3) return '🌳 Thiên nhiên';
+                      if (image.CategoryID === 4) return '🎪 Sự kiện';
+                      return '📷 Không phân loại';
+                    })()}
+                  </h4>
+                  <p className="image-note">{image.AltText || image.Title || 'Chưa có tiêu đề'}</p>
                 </div>
                 <div className="card-actions">
                   <button 

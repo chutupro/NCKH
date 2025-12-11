@@ -86,16 +86,14 @@ export class GalleryController {
       categoryFolder,
     );
 
-    // Save to DB Images với CategoryID
-    await this.imagesService.create(
-      uploadResult.url,
-      undefined,
-      body.title || 'Gallery image',
-      'gallery',
-      categoryId,  // Truyền CategoryID vào DB
-    );
-
-    return this.galleryService.create(file, body, uploadResult.url);
+    // Save to DB Images với CategoryID và CollectionID
+    // QUAN TRỌNG: Chỉ tạo 1 bản ghi duy nhất trong Images table
+    const collectionId = body.collectionId ? parseInt(body.collectionId.toString()) : null;
+    const imageRecord = await this.galleryService.create(file, body, uploadResult.url) as any;
+    
+    console.log(`[Gallery Upload] ✅ Created ImageID=${imageRecord?.ImageID}, AltText="${imageRecord?.AltText}", CollectionID=${imageRecord?.CollectionID}`);
+    
+    return imageRecord;
   }
 
   @Put(':id')

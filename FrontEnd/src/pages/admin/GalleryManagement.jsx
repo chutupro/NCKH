@@ -5,6 +5,7 @@ import '../../Styles/Admin/GalleryManagement.css';
 const GalleryManagement = () => {
   const [images, setImages] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [collections, setCollections] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   
   // Form state
@@ -12,6 +13,7 @@ const GalleryManagement = () => {
     file: null,
     title: '',
     categoryId: 1, // Default: Di sản
+    collectionId: '', // Bộ sưu tập (tùy chọn)
   });
   
   const [previewUrl, setPreviewUrl] = useState('');
@@ -20,6 +22,7 @@ const GalleryManagement = () => {
   useEffect(() => {
     fetchImages();
     fetchCategories();
+    fetchCollections();
   }, []);
 
   const fetchImages = async () => {
@@ -40,6 +43,16 @@ const GalleryManagement = () => {
       console.log('[Gallery] Fetched categories:', response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchCollections = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/collections');
+      setCollections(response.data || []);
+      console.log('[Gallery] Fetched collections:', response.data);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
     }
   };
 
@@ -71,6 +84,9 @@ const GalleryManagement = () => {
       formData.append('file', uploadForm.file);
       formData.append('title', uploadForm.title);
       formData.append('categoryId', uploadForm.categoryId);
+      if (uploadForm.collectionId) {
+        formData.append('collectionId', uploadForm.collectionId);
+      }
 
       const response = await axios.post('http://localhost:3000/gallery', formData, {
         headers: {
@@ -82,7 +98,7 @@ const GalleryManagement = () => {
       alert('Upload ảnh thành công!');
       
       // Reset form
-      setUploadForm({ file: null, title: '', categoryId: 1 });
+      setUploadForm({ file: null, title: '', categoryId: 1, collectionId: '' });
       setPreviewUrl('');
       setShowUploadModal(false);
       
@@ -236,6 +252,22 @@ const GalleryManagement = () => {
                   {categories.map((cat) => (
                     <option key={cat.CategoryID} value={cat.CategoryID}>
                       {cat.Name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Bộ sưu tập (tùy chọn)</label>
+                <select
+                  value={uploadForm.collectionId}
+                  onChange={(e) => setUploadForm({ ...uploadForm, collectionId: e.target.value })}
+                  disabled={uploading}
+                >
+                  <option value="">-- Không chọn bộ sưu tập --</option>
+                  {collections.map((col) => (
+                    <option key={col.CollectionID} value={col.CollectionID}>
+                      {col.Title || col.Name}
                     </option>
                   ))}
                 </select>

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Collections } from '../entities/collection.entity';
 import { CollectionArticles } from '../entities/collection-article.entity';
 import { Articles } from '../entities/article.entity';
+import { Images } from '../entities/image.entity';
 
 @Injectable()
 export class CollectionsService {
@@ -14,9 +15,13 @@ export class CollectionsService {
     private collectionArticleRepo: Repository<CollectionArticles>,
     @InjectRepository(Articles)
     private articleRepo: Repository<Articles>,
+    @InjectRepository(Images)
+    private imagesRepo: Repository<Images>,
   ) {}
 
   async create(payload: { Name: string; Title?: string; Description?: string; ImagePath?: string; ImageDescription?: string; CategoryID?: number; ArticleIDs?: number[] }) {
+    console.log('🔵 [Collections.create] Received payload:', JSON.stringify(payload, null, 2));
+    
     const collection = this.collectionRepo.create({
       Name: payload.Name,
       Title: payload.Title,
@@ -26,6 +31,39 @@ export class CollectionsService {
       CategoryID: payload.CategoryID ?? undefined,
     });
     const saved = await this.collectionRepo.save(collection as any);
+
+    // ✅ TỰ ĐỘNG update/tạo ảnh trong Images table khi tạo Collection
+    if (payload.ImagePath) {
+      console.log(`🔍 [Collections] Searching for existing image with FilePath: "${payload.ImagePath}"`);
+      
+      // Tìm ảnh đã tồn tại với FilePath này (từ /upload API)
+      const existingImage = await this.imagesRepo.findOne({
+        where: { FilePath: payload.ImagePath }
+      });
+      
+      console.log(`🔍 [Collections] Search result:`, existingImage ? `Found ImageID=${existingImage.ImageID}` : 'NOT FOUND');
+
+      if (existingImage) {
+        // UPDATE ảnh đã có
+        existingImage.CollectionID = (saved as any).CollectionID;
+        existingImage.AltText = payload.Title || payload.Name;
+        existingImage.Type = 'collection';
+        await this.imagesRepo.save(existingImage);
+        console.log(`[Collections] ✅ Updated existing Image (ImageID=${existingImage.ImageID}) with CollectionID=${(saved as any).CollectionID}, AltText="${payload.Title || payload.Name}"`);
+      } else {
+        // TẠO MỚI nếu chưa có
+        const image = this.imagesRepo.create({
+          FilePath: payload.ImagePath,
+          AltText: payload.Title || payload.Name,
+          Type: 'collection',
+          CategoryID: payload.CategoryID ?? null,
+          CollectionID: (saved as any).CollectionID,
+          ArticleID: null,
+        });
+        await this.imagesRepo.save(image);
+        console.log(`[Collections] ✅ Created new Image for Collection "${payload.Title || payload.Name}" (CollectionID=${(saved as any).CollectionID})`);
+      }
+    }
 
     if (payload.ArticleIDs && payload.ArticleIDs.length) {
       const mappings = payload.ArticleIDs.map((aid) =>
