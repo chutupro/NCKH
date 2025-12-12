@@ -22,6 +22,10 @@ export class CreateCollectionDto {
 
   @IsOptional()
   @IsNumber()
+  Year?: number;
+
+  @IsOptional()
+  @IsNumber()
   CategoryID?: number;
 
   @IsOptional()

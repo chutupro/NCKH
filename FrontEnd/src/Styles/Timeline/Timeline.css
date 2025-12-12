@@ -188,6 +188,7 @@
   cursor: grab;
   user-select: none;
   -webkit-overflow-scrolling: touch;
+  background: transparent !important;
 }
 
 /* center gradient line */
@@ -215,6 +216,7 @@
   gap: 60px;
   position: relative;
   z-index: 5;
+  background: transparent !important;
 }
 
 
@@ -244,9 +246,9 @@
 
 .timeline-card {
   width: 220px;
-  background: #ffffff;
+  background: linear-gradient(135deg, rgba(61, 47, 31, 0.95) 0%, rgba(45, 35, 25, 0.98) 100%);
   border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(139, 111, 71, 0.3);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -256,12 +258,13 @@
   border: 1.5px solid rgba(212, 197, 176, 0.3);
   position: relative;
   z-index: 10;
+  backdrop-filter: blur(10px);
 }
 .timeline-card:hover {
   transform: translateY(-12px) scale(1.04);
-  box-shadow: 0 16px 48px rgba(139, 111, 71, 0.6), 0 2px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 16px 48px rgba(139, 111, 71, 0.8), 0 4px 16px rgba(212, 197, 176, 0.4);
   border-color: #b8956a;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, rgba(75, 60, 42, 0.98) 0%, rgba(55, 45, 35, 1) 100%);
 }
 
 .timeline-card-image {
@@ -314,28 +317,31 @@
 
 .timeline-date {
   display: block;
-  color: #8b6f47;
+  color: #d4af77;
   font-size: 13px;
   margin-bottom: 6px;
   text-align: center;
   font-weight: 600;
   letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .timeline-title {
   margin: 0 0 8px 0;
   font-size: 16px;
-  color: #1a1410;
+  color: #f5e6d3;
   text-align: center;
   font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .timeline-desc {
   margin: 0;
-  color: #3d2f1f;
+  color: #d4c5b0;
   font-size: 13px;
   line-height: 1.5;
   text-align: center;
+  opacity: 0.95;
 }
 
 /* responsive */
@@ -380,6 +386,23 @@
   cursor: -webkit-grabbing;
 }
 
+/* Custom scrollbar for timeline container */
+.timeline-container::-webkit-scrollbar {
+  height: 12px;
+}
+.timeline-container::-webkit-scrollbar-track {
+  background: rgba(45, 35, 25, 0.5);
+  border-radius: 10px;
+}
+.timeline-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #8b6f47 0%, #b8956a 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(45, 35, 25, 0.5);
+}
+.timeline-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #a0845a 0%, #d4af77 100%);
+}
+
 /* Timeline Content Wrapper - Flexbox for main content + sidebar */
 .timeline-content-wrapper {
   display: flex;
@@ -387,11 +410,13 @@
   align-items: flex-start;
   max-width: 1400px;
   margin: 0 auto;
+  background: transparent !important;
 }
 
 .timeline-container {
   flex: 1;
   min-width: 0;
+  background: transparent !important;
 }
 
 /* Sidebar */

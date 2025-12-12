@@ -1,5 +1,5 @@
 // src/pages/Timeline/TimelineDetail.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../Styles/Timeline/TimelineDetail.css";
 
@@ -10,6 +10,8 @@ const TimelineDetail = () => {
   const [yearEvents, setYearEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeMonth, setActiveMonth] = useState(null);
+  const monthRefs = useRef({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,6 +66,23 @@ const TimelineDetail = () => {
     "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
   ];
 
+  // Scroll to month
+  const scrollToMonth = (month) => {
+    setActiveMonth(month);
+    if (monthRefs.current[month]) {
+      monthRefs.current[month].scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+    }
+  };
+
+  // Count events per month
+  const getMonthEventCount = (month, monthGroups) => {
+    return monthGroups[month]?.length || 0;
+  };
+
   if (loading) {
     return (
       <div className="timeline-detail-loading">
@@ -108,10 +127,34 @@ const TimelineDetail = () => {
           </div>
         </div>
 
+        {/* Month Navigation Bar */}
+        <div className="month-navigation-sticky">
+          <div className="month-nav-container">
+            <h2 className="nav-title">⏳ Chọn tháng trong năm {year}</h2>
+            <div className="month-nav-grid">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
+                const eventCount = getMonthEventCount(month, monthGroups);
+                const hasEvents = eventCount > 0;
+                
+                return (
+                  <button
+                    key={month}
+                    className={`month-nav-btn ${activeMonth === month ? 'active' : ''} ${!hasEvents ? 'disabled' : ''}`}
+                    onClick={() => hasEvents && scrollToMonth(month)}
+                    disabled={!hasEvents}
+                  >
+                    <span className="month-nav-number">{month}</span>
+                    <span className="month-nav-name">{monthNames[month - 1]}</span>
+                    {hasEvents && <span className="month-nav-count">{eventCount}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Timeline by Month */}
         <div className="timeline-monthly">
-          <h2 className="section-title">⏳ Các sự kiện trong năm {year}</h2>
-          
           {yearEvents.length === 0 ? (
             <p className="no-events">Không có sự kiện nào trong năm này.</p>
           ) : (
@@ -121,10 +164,15 @@ const TimelineDetail = () => {
                 if (events.length === 0) return null;
 
                 return (
-                  <div key={month} className="month-block">
+                  <div 
+                    key={month} 
+                    className="month-block"
+                    ref={(el) => monthRefs.current[month] = el}
+                  >
                     <div className="month-header">
                       <span className="month-number">{month}</span>
                       <span className="month-name">{monthNames[month - 1]}</span>
+                      <span className="month-event-count">{events.length} sự kiện</span>
                     </div>
                     <div className="month-events">
                       {events.map((event) => (

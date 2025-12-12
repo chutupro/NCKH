@@ -77,11 +77,14 @@ export class GalleryService {
     if (titleField && meta?.title) payload[titleField] = meta.title;
     if (descField && meta?.description) payload[descField] = meta.description;
 
-    // ✅ Gắn ArticleID (hoặc CategoryID)
-    if (cols.includes('ArticleID') && meta?.categoryId) {
-      payload['ArticleID'] = Number(meta.categoryId);
-    } else if (cols.includes('CategoryID') && meta?.categoryId) {
+    // ✅ Gắn CategoryID (không gắn ArticleID nếu chỉ có categoryId)
+    if (cols.includes('CategoryID') && meta?.categoryId) {
       payload['CategoryID'] = Number(meta.categoryId);
+    }
+    
+    // ✅ Gắn ArticleID riêng nếu có articleId trong meta
+    if (cols.includes('ArticleID') && meta?.articleId) {
+      payload['ArticleID'] = Number(meta.articleId);
     }
 
     // ✅ Gắn CollectionID nếu có

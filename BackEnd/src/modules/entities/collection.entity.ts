@@ -23,6 +23,9 @@ export class Collections {
   @Column({ type: 'nvarchar', length: 500, nullable: true })
   ImageDescription: string;
 
+  @Column({ type: 'int', nullable: true })
+  Year?: number;
+
   // Optional Category association (nullable FK)
   @Column({ type: 'int', nullable: true })
   CategoryID: number;

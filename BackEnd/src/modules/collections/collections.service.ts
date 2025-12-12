@@ -19,7 +19,7 @@ export class CollectionsService {
     private imagesRepo: Repository<Images>,
   ) {}
 
-  async create(payload: { Name: string; Title?: string; Description?: string; ImagePath?: string; ImageDescription?: string; CategoryID?: number; ArticleIDs?: number[] }) {
+  async create(payload: { Name: string; Title?: string; Description?: string; ImagePath?: string; ImageDescription?: string; Year?: number; CategoryID?: number; ArticleIDs?: number[] }) {
     console.log('🔵 [Collections.create] Received payload:', JSON.stringify(payload, null, 2));
     
     const collection = this.collectionRepo.create({
@@ -28,6 +28,7 @@ export class CollectionsService {
       Description: payload.Description,
       ImagePath: payload.ImagePath,
       ImageDescription: payload.ImageDescription,
+      Year: payload.Year || undefined,
       CategoryID: payload.CategoryID ?? undefined,
     });
     const saved = await this.collectionRepo.save(collection as any);
@@ -85,6 +86,7 @@ export class CollectionsService {
       Category: c.category ? { CategoryID: c.category.CategoryID, Name: c.category.Name } : null,
       Title: c.Title,
       Description: c.Description,
+      Year: c.Year,
       ImagePath: c.ImagePath,
       ImageDescription: c.ImageDescription,
       CreatedAt: c.CreatedAt,
@@ -102,6 +104,7 @@ export class CollectionsService {
       Category: c.category ? { CategoryID: c.category.CategoryID, Name: c.category.Name } : null,
       Title: c.Title,
       Description: c.Description,
+      Year: c.Year,
       ImagePath: c.ImagePath,
       ImageDescription: c.ImageDescription,
       CreatedAt: c.CreatedAt,
@@ -109,7 +112,7 @@ export class CollectionsService {
     };
   }
 
-  async update(id: number, payload: { Name?: string; Title?: string; Description?: string; ImagePath?: string; ImageDescription?: string; CategoryID?: number; ArticleIDs?: number[] }) {
+  async update(id: number, payload: { Name?: string; Title?: string; Description?: string; Year?: number; ImagePath?: string; ImageDescription?: string; CategoryID?: number; ArticleIDs?: number[] }) {
     const collection = await this.collectionRepo.findOne({ where: { CollectionID: id } });
     if (!collection) {
       throw new Error('Collection not found');
@@ -119,6 +122,7 @@ export class CollectionsService {
     if (payload.Name !== undefined) collection.Name = payload.Name;
     if (payload.Title !== undefined) collection.Title = payload.Title;
     if (payload.Description !== undefined) collection.Description = payload.Description;
+    if (payload.Year !== undefined) collection.Year = payload.Year;
     if (payload.ImagePath !== undefined) collection.ImagePath = payload.ImagePath;
     if (payload.ImageDescription !== undefined) collection.ImageDescription = payload.ImageDescription;
     if (payload.CategoryID !== undefined) collection.CategoryID = payload.CategoryID;

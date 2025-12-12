@@ -23,7 +23,22 @@ export const useAuthRestore = () => {
       try {
         console.log("🔄 [useAuthRestore] Starting session restore...");
 
-        // 🔥 GỌỈ /users/me - Backend tự đọc token từ HttpOnly cookie
+        // 🔥 BƯỚC 1: Thử refresh token trước (để đảm bảo access token còn hiệu lực)
+        try {
+          await axios.post("http://localhost:3000/auth/refresh", {}, {
+            withCredentials: true,
+            timeout: 2000,
+          });
+          console.log("✅ [useAuthRestore] Token refreshed successfully");
+        } catch (refreshError) {
+          // Nếu refresh thất bại (401) → user chưa đăng nhập hoặc refresh token hết hạn
+          // Không throw error, tiếp tục thử gọi /users/me (có thể access token vẫn còn)
+          if (refreshError.response?.status === 401) {
+            console.log("ℹ️ [useAuthRestore] Refresh token expired or not found");
+          }
+        }
+
+        // 🔥 BƯỚC 2: GỌI /users/me - Backend tự đọc token từ HttpOnly cookie
         const response = await axios.get("http://localhost:3000/users/me", {
           withCredentials: true,
           timeout: 3000, // ⏱️ Tăng timeout lên 3000ms để đảm bảo request hoàn thành

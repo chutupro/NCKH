@@ -21,6 +21,7 @@ const CollectionManagement = () => {
     name: '',
     title: '',
     description: '',
+    year: '',
     CategoryID: '',
     imagePath: '',
     imageDescription: '',
@@ -90,6 +91,7 @@ const CollectionManagement = () => {
         name: collection.Name || '',
         title: collection.Title || '',
         description: collection.Description || '',
+        year: collection.Year || '',
         CategoryID: collection.CategoryID || '',
         imagePath: collection.ImagePath || '',
         imageDescription: collection.ImageDescription || '',
@@ -118,6 +120,7 @@ const CollectionManagement = () => {
       name: '',
       title: '',
       description: '',
+      year: '',
       CategoryID: '',
       imagePath: '',
       imageDescription: '',
@@ -212,6 +215,7 @@ const CollectionManagement = () => {
         Name: formData.name,
         Title: formData.title || null,
         Description: formData.description || null,
+        Year: formData.year ? parseInt(formData.year) : null,
         CategoryID: formData.CategoryID ? parseInt(formData.CategoryID) : null,
         ImagePath: imagePath || null,
         ImageDescription: formData.imageDescription || null,
@@ -377,6 +381,7 @@ const CollectionManagement = () => {
                 <th>ID</th>
                 <th>Tên</th>
                 <th>Tiêu đề</th>
+                <th>Năm</th>
                 <th>Mô tả</th>
                 <th>Danh mục</th>
                 <th>Ngày tạo</th>
@@ -395,6 +400,11 @@ const CollectionManagement = () => {
                   <td>
                     <div style={{ color: '#374151', fontSize: '0.875rem' }}>
                       {collection.Title || '-'}
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ color: '#374151', fontSize: '0.875rem', textAlign: 'center' }}>
+                      {collection.Year || '-'}
                     </div>
                   </td>
                   <td>
@@ -573,6 +583,35 @@ const CollectionManagement = () => {
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     resize: 'vertical',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '0.5rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                  }}
+                >
+                  Năm
+                </label>
+                <input
+                  type="number"
+                  name="year"
+                  value={formData.year}
+                  onChange={handleInputChange}
+                  placeholder="Nhập năm (VD: 2024)"
+                  min="1900"
+                  max="2100"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
                   }}
                 />
               </div>
