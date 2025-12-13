@@ -9,7 +9,6 @@ import { createArticlePost } from '../../API/articlesPost'
 import { getCategories } from '../../API/collections'
 import { useEffect, useContext } from 'react'
 import AppContext from '../../context/context'
-import getAiFeatureConfig, { getAiEndpointUrl } from '../../config/aiConfig'
 const BACKEND_BASE = 'http://localhost:3000'
 
 // helper: convert dataURL -> Blob
@@ -127,15 +126,38 @@ const ContributeInformation = () => {
           return
         }
 
+        // Log FormData contents (file meta + fields) so developer can inspect what is uploaded
+        try {
+          const fdLog = {}
+          for (const pair of fd.entries()) {
+            const [k, v] = pair
+            if (v instanceof File) fdLog[k] = { name: v.name, type: v.type, size: v.size }
+            else fdLog[k] = v
+          }
+          console.log('[Contribute] Uploading file to', `${BACKEND_BASE}/upload`, fdLog)
+        } catch (logErr) {
+          console.warn('Failed to serialize upload FormData for logging', logErr)
+        }
+
         const res = await fetch(`${BACKEND_BASE}/upload`, {
           method: 'POST',
           body: fd,
         })
         if (!res.ok) throw new Error('Upload failed: ' + res.status)
         const json = await res.json()
+        console.log('[Contribute] upload response JSON:', json)
         const fp = json?.filePath || json?.file_path || null
         if (fp && mounted) {
+          // keep server-returned path as-is, but log normalized preview URL for debugging
           setUploadedPath(fp)
+          try {
+            const normalized = String(fp).startsWith('http')
+              ? fp
+              : `${BACKEND_BASE}${fp.startsWith('/') ? '' : '/'}${fp}`
+            console.log('[Contribute] stored uploadedPath:', fp, 'normalized preview URL:', normalized)
+          } catch (e) {
+            console.warn('Failed to compute normalized preview URL', e)
+          }
         }
       } catch (err) {
         console.error('Failed to upload image to server:', err)
@@ -256,6 +278,19 @@ const ContributeInformation = () => {
       fd.append('place', 'Hà Nội')
 
       const endpoint = 'http://26.68.60.194:8000/gemini/generate'
+      // Log FormData for AI generation request so we can see what is sent
+      try {
+        const fdLog = {}
+        for (const pair of fd.entries()) {
+          const [k, v] = pair
+          if (v instanceof File) fdLog[k] = { name: v.name, type: v.type, size: v.size }
+          else fdLog[k] = v
+        }
+        console.log('[Contribute][AI] POST ->', endpoint, fdLog)
+      } catch (logErr) {
+        console.warn('Failed to serialize AI FormData for logging', logErr)
+      }
+
       const res = await fetch(endpoint, {
         method: 'POST',
         body: fd
@@ -374,6 +409,12 @@ const ContributeInformation = () => {
         // do NOT fallback to the title — title and image description are separate.
         imageDescription: alt || ''
       }
+      // Log the JSON payload that will be sent to backend for article creation
+      try {
+        console.log('[Contribute] createArticlePost payload:', payload)
+      } catch (logErr) {
+        console.warn('Failed to log createArticlePost payload', logErr)
+      }
       await createArticlePost(payload)
       navigate('/community')
     } catch (err) {
@@ -399,9 +440,17 @@ const ContributeInformation = () => {
   // from the original File (keeps full resolution), and finally the
   // fallback dataURL preview.
   let previewDisplay = null
-  if (uploadedPath) previewDisplay = `${BACKEND_BASE}${uploadedPath}`
-  else if (localObjectUrl) previewDisplay = localObjectUrl
+  if (uploadedPath) {
+    // uploadedPath may be either a server-relative path ("/uploads/...")
+    // or an absolute URL returned by backend. Normalize to a usable URL.
+    previewDisplay = String(uploadedPath).startsWith('http')
+      ? uploadedPath
+      : `${BACKEND_BASE}${uploadedPath.startsWith('/') ? '' : '/'}${uploadedPath}`
+  } else if (localObjectUrl) previewDisplay = localObjectUrl
   else previewDisplay = imageSrc
+
+  // Helpful debug log to understand which source is used for preview
+  
 
   // create/revoke object URL for original File when available
   useEffect(() => {
