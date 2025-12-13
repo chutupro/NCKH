@@ -57,7 +57,7 @@ export class GalleryController {
       },
     }),
   )
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: false }))
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Body() body: CreateGalleryDto,

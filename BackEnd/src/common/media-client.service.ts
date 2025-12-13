@@ -31,9 +31,9 @@ export class MediaClientService {
         formData.append('category', category);
       }
 
-      console.log(`[MediaClient] Uploading to ${this.MEDIA_SERVICE_URL}/upload`);
+      console.log(`[MediaClient] Uploading to ${this.MEDIA_SERVICE_URL}/media/upload`);
 
-      const response = await axios.post(`${this.MEDIA_SERVICE_URL}/upload`, formData, {
+      const response = await axios.post(`${this.MEDIA_SERVICE_URL}/media/upload`, formData, {
         headers: {
           ...formData.getHeaders(),
           Authorization: `Bearer ${token}`,

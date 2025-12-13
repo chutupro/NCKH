@@ -30,6 +30,22 @@ async function bootstrap() {
     }),
   );
 
+  // --- Proxy để serve ảnh từ media-service ---
+  app.use('/storage', async (req, res, next) => {
+    // Proxy /storage/* → media-service:3001/storage/*
+    const mediaServiceUrl = `http://localhost:3001${req.originalUrl}`;
+    try {
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(mediaServiceUrl);
+      if (!response.ok) return res.status(response.status).send('Not found');
+      const buffer = await response.buffer();
+      res.set('Content-Type', response.headers.get('content-type'));
+      res.send(buffer);
+    } catch (err) {
+      next();
+    }
+  });
+
   // --- Cấu hình CORS ---
   app.enableCors({
     origin: ['http://localhost:3000', 'http://localhost:5173'], // Cho phép FE truy cập

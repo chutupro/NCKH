@@ -8,16 +8,12 @@ const CompareModal = ({ place, onClose }) => {
   const sliderRef = useRef(null);
   const autoplayRef = useRef(null);
 
-  const oldImageUrl = place.oldImage
-    ? `http://localhost:3000${place.oldImage}`
-    : "https://via.placeholder.com/600x400?text=Chưa+có+hình+xưa";
-
-  const currentImageUrl = place.image
-    ? `http://localhost:3000${place.image}`
-    : "https://via.placeholder.com/600x400?text=Chưa+có+hình+hiện+tại";
+  // ✅ FIX: Backend đã trả về URL đầy đủ, không cần thêm BASE_URL
+  const oldImageUrl = place.oldImage || "https://via.placeholder.com/600x400?text=Chưa+có+hình+xưa";
+  const currentImageUrl = place.image || "https://via.placeholder.com/600x400?text=Chưa+có+hình+hiện+tại";
 
   const oldYearLabel = place.oldImageYear || "Chưa rõ";
-  const newYearLabel = place.imageYear || "Chưa rõ";
+  const newYearLabel = place.imageYear || "Hiện đại"; // ✅ Hiển thị "Hiện đại" thay vì "Chưa rõ"
 
   // Autoplay effect
   const startAutoplay = useCallback(() => {

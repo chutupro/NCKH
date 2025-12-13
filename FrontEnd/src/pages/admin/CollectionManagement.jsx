@@ -170,9 +170,8 @@ const CollectionManagement = () => {
       if (selectedImage) {
         const imageFormData = new FormData();
         imageFormData.append('file', selectedImage);
-        imageFormData.append('type', 'post');
-        imageFormData.append('categoryId', formData.CategoryID); // Truyền CategoryID thay vì string
-        imageFormData.append('title', formData.title || formData.name); // ✅ Truyền title để lưu vào AltText
+        imageFormData.append('categoryId', formData.CategoryID);
+        imageFormData.append('description', formData.title || formData.name); // Dùng description thay vì title
 
         // Get token from cookie
         const getCookie = (name) => {
@@ -185,7 +184,7 @@ const CollectionManagement = () => {
         const token = getCookie('access_token') || 'dummy-token-for-testing';
 
         try {
-          const uploadResponse = await fetch('http://localhost:3000/upload', { // 👈 Gọi backend
+          const uploadResponse = await fetch('http://localhost:3000/gallery', { // ✅ Dùng /gallery
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -195,7 +194,8 @@ const CollectionManagement = () => {
           
           if (uploadResponse.ok) {
             const uploadData = await uploadResponse.json();
-            imagePath = uploadData.filePath || uploadData.url || uploadData.path;
+            // Gallery trả về FilePath từ Images table
+            imagePath = uploadData.FilePath || uploadData.filePath || uploadData.url || uploadData.path;
             console.log('🟢 [CollectionManagement] Upload SUCCESS:', { uploadData, imagePath });
             toast.success('✅ Đã tải ảnh lên');
           } else {

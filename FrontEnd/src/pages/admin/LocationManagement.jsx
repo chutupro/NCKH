@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MapAdmin from '../map/MapAdmin';
+import MapAdminNew from '../map/MapAdminNew';
 import PhotoModeration from './PhotoModeration';
 import '../../Styles/Admin/AdminDashboard.css';
 
@@ -61,7 +61,7 @@ const LocationManagement = () => {
 
       {/* Tab Content */}
       <div>
-        {activeTab === 'map' && <MapAdmin />}
+        {activeTab === 'map' && <MapAdminNew />}
         {activeTab === 'photos' && <PhotoModeration />}
       </div>
     </div>

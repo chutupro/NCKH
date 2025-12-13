@@ -6,22 +6,58 @@ export const fetchMapLocations = createAsyncThunk(
   'mapLocations/fetchMapLocations',
   async () => {
     const response = await axios.get('http://localhost:3000/map-locations');
-    return response.data.map(place => ({
-      id: place.LocationID,
-      position: [place.Latitude, place.Longitude],
-      title: place.Name,
-      rating: place.Rating || 0,
-      reviews: place.Reviews || 0,
-      address: place.Address || '',
-      image: place.Image || '',
-      imageYear: place.imageYear || place.ImageYear || null,
-      oldImage: place.OldImage || '',
-      oldImageYear: place.oldImageYear || place.OldImageYear || null,
-      desc: place.description || '',
-      fullDesc: place.fullDescription || '',
-      categoryId: place.CategoryID || null,
-      categoryName: place.categoryName || 'Chưa phân loại', // DÙNG TRỰC TIẾP categoryName TỪ BACKEND
-    }));
+    
+    // Log tất cả locations
+    console.log('🔍 [Backend Response - ALL]', JSON.stringify(response.data, null, 2));
+    
+    // Log location 17 cụ thể
+    const loc17 = response.data.find(p => p.LocationID === 17);
+    if (loc17) {
+      console.log('🎯 [Location 17 RAW]', JSON.stringify(loc17, null, 2));
+    }
+    
+    const first = response.data[0];
+    console.log('🔍 [Backend Response - FIRST]', {
+      LocationID: first?.LocationID,
+      Name: first?.Name,
+      Image: first?.Image,
+      ImageYear: first?.ImageYear,
+      OldImage: first?.OldImage,
+      OldImageYear: first?.OldImageYear,
+      MainImageID: first?.MainImageID,
+      OldImageID: first?.OldImageID,
+    });
+    
+    return response.data.map(place => {
+      const mapped = {
+        id: place.LocationID,
+        position: [place.Latitude, place.Longitude],
+        title: place.Name,
+        rating: place.Rating || 0,
+        reviews: place.Reviews || 0,
+        address: place.Address || '',
+        image: place.Image || '',
+        imageYear: place.imageYear || place.ImageYear || null,
+        oldImage: place.OldImage || '',
+        oldImageYear: place.oldImageYear || place.OldImageYear || null,
+        desc: place.description || '',
+        fullDesc: place.fullDescription || '',
+        categoryId: place.CategoryID || null,
+        categoryName: place.CategoryName || place.categoryName || 'Chưa phân loại',
+      };
+      
+      if (place.LocationID === 17) {
+        console.log('🎯 [Frontend Mapped Location 17]', {
+          id: mapped.id,
+          title: mapped.title,
+          image: mapped.image,
+          imageYear: mapped.imageYear,
+          oldImage: mapped.oldImage,
+          oldImageYear: mapped.oldImageYear,
+        });
+      }
+      return mapped;
+    });
   }
 );
 

@@ -21,7 +21,11 @@ export class MapLocationsService {
     const locations = await this.mapLocationsRepository
       .createQueryBuilder('loc')
       .leftJoin('loc.mainImage', 'mainImg')
+      .leftJoin('mainImg.collection', 'mainCol')
+      .leftJoin('mainImg.category', 'mainCat')
       .leftJoin('loc.oldImage', 'oldImg')
+      .leftJoin('oldImg.collection', 'oldCol')
+      .leftJoin('oldImg.category', 'oldCat')
       .select([
         'loc.LocationID',
         'loc.Name',
@@ -34,27 +38,59 @@ export class MapLocationsService {
         'loc.Rating',
         'loc.Reviews',
         'mainImg.FilePath',
+        'mainImg.ImageID',
+        'mainImg.CollectionID',
+        'mainImg.CategoryID',
+        'mainCat.Name',
+        'mainCol.Year',
         'oldImg.FilePath',
+        'oldImg.ImageID',
+        'oldImg.CollectionID',
+        'oldImg.CategoryID',
+        'oldCat.Name',
+        'oldCol.Year',
       ])
       .addSelect('loc.Desc', 'description')
       .addSelect('loc.FullDesc', 'fullDescription')
       .getRawMany();
 
-    return locations.map(loc => ({
-      LocationID: loc.loc_LocationID,
-      Name: loc.loc_Name,
-      Latitude: parseFloat(loc.loc_Latitude) || null,
-      Longitude: parseFloat(loc.loc_Longitude) || null,
-      Address: loc.loc_Address,
-      MainImageID: loc.loc_MainImageID,
-      OldImageID: loc.loc_OldImageID,
-      MainImagePath: loc.mainImg_FilePath || null,
-      OldImagePath: loc.oldImg_FilePath || null,
-      description: loc.description,
-      fullDescription: loc.fullDescription,
-      Rating: parseFloat(loc.loc_Rating) || null,
-      Reviews: loc.loc_Reviews,
-    }));
+    // Debug log location 17 (newest with images)
+    const loc17 = locations.find(l => l.loc_LocationID === 17);
+    if (loc17) {
+      this.logger.log('🎯 [findAll] LocationID=17 (NEW):', JSON.stringify(loc17, null, 2));
+    }
+
+    return locations.map(loc => {
+      // Ưu tiên category từ modern image, fallback sang old image
+      const categoryId = loc.mainImg_CategoryID || loc.oldImg_CategoryID || null;
+      const categoryName = loc.mainCat_Name || loc.oldCat_Name || null;
+      
+      const mapped = {
+        LocationID: loc.loc_LocationID,
+        Name: loc.loc_Name,
+        Latitude: parseFloat(loc.loc_Latitude) || null,
+        Longitude: parseFloat(loc.loc_Longitude) || null,
+        Address: loc.loc_Address,
+        MainImageID: loc.loc_MainImageID,
+        OldImageID: loc.loc_OldImageID,
+        CategoryID: categoryId,
+        CategoryName: categoryName,
+        Image: loc.mainImg_FilePath || null,
+        ImageYear: loc.mainCol_Year || null,
+        OldImage: loc.oldImg_FilePath || null,
+        OldImageYear: loc.oldCol_Year || null,
+        description: loc.description,
+        fullDescription: loc.fullDescription,
+        Rating: parseFloat(loc.loc_Rating) || null,
+        Reviews: loc.loc_Reviews,
+      };
+      
+      if (loc.loc_LocationID === 17) {
+        this.logger.log('✅ [findAll] Mapped LocationID=17:', JSON.stringify(mapped, null, 2));
+      }
+      
+      return mapped;
+    });
   } catch (error) {
     this.logger.error('Error in findAll():', error);
     throw error;
@@ -80,8 +116,8 @@ export class MapLocationsService {
     newLocation.Rating = createLocationDto.rating ?? 0;
     newLocation.Reviews = createLocationDto.reviews ?? 0;
     newLocation.Address = createLocationDto.address;
-    newLocation.MainImageID = null; // TODO: Assign from Images table
-    newLocation.OldImageID = null;  // TODO: Assign from Images table
+    newLocation.MainImageID = createLocationDto.mainImageID || null;
+    newLocation.OldImageID = createLocationDto.oldImageID || null;
     newLocation.description = createLocationDto.desc || null;
     newLocation.fullDescription = createLocationDto.fullDesc || null;
     newLocation.ArticleID = createLocationDto.articleId ?? null;

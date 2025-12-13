@@ -1315,9 +1315,7 @@ const MapPage = () => {
           place.id
         }">
           <img src="${
-            place.image
-              ? `${BASE_URL}${place.image}`
-              : "https://via.placeholder.com/200x100?text=Chưa+có+hình"
+            place.image || "https://via.placeholder.com/200x100?text=Chưa+có+hình"
           }" style="width:100%;height:100px;object-fit:cover;border-radius:4px;margin-bottom:8px;" />
           <h4 style="margin:0 0 4px;font-size:0.95rem;font-weight:600;color:#333;">${
             place.title
@@ -2676,6 +2674,14 @@ const MapPage = () => {
     communityPhotosRef.current.set(place.id, communityPhotos);
 
     const categoryName = place.categoryName || "Chưa phân loại";
+    
+    console.log('🖼️ [Sidebar Image Debug]', {
+      placeId: place.id,
+      placeTitle: place.title,
+      placeImage: place.image,
+      placeOldImage: place.oldImage,
+      placeOldImageYear: place.oldImageYear,
+    });
 
     sidebarRef.current.innerHTML = `
       <div style="padding:20px;position:relative">
@@ -2684,9 +2690,7 @@ const MapPage = () => {
         </div>
 
         <img src="${
-          place.image
-            ? `${BASE_URL}${place.image}`
-            : "https://via.placeholder.com/360x180?text=Chưa+có+hình"
+          place.image || "https://via.placeholder.com/360x180?text=Chưa+có+hình"
         }" style="width:100%;height:180px;object-fit:cover;border-radius:12px;margin-bottom:16px" />
 
         <div style="margin-bottom:12px;">
@@ -2699,6 +2703,13 @@ const MapPage = () => {
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            ${
+              place.image
+                ? place.imageYear
+                  ? `<span style="background:#dbeafe;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:600;color:#1e40af;white-space:nowrap;">🖼️ Hiện đại: ${place.imageYear}</span>`
+                  : `<span style="background:#dcfce7;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:600;color:#166534;white-space:nowrap;">🖼️ Hiện đại</span>`
+                : ""
+            }
             ${
               place.oldImageYear
                 ? `<span style="background:#fee2e2;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:600;color:#991b1b;white-space:nowrap;">📅 Năm: ${place.oldImageYear}</span>`

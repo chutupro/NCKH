@@ -20,6 +20,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Express } from 'express';
 import { MediaClientService } from 'src/common/media-client.service';
 import { ImagesService } from 'src/common/images.service';
+import { CollectionsService } from '../collections/collections.service';
 
 const normalizeYearInput = (val?: string | number) => {
   if (val === undefined || val === null || val === '') return undefined;
@@ -35,6 +36,7 @@ export class MapLocationsController {
     private readonly mapLocationsService: MapLocationsService,
     private readonly mediaClient: MediaClientService,
     private readonly imagesService: ImagesService,
+    private readonly collectionsService: CollectionsService,
   ) {}
 
   // GET /map-locations
@@ -105,12 +107,46 @@ export class MapLocationsController {
     // === XỬ LÝ NĂM ẢNH ===
     const imageYear = normalizeYearInput(body.imageYear ?? body.ImageYear);
     const oldImageYear = normalizeYearInput(body.oldImageYear ?? body.OldImageYear);
+    
+    this.logger.log(`🔍 [DEBUG] Raw imageYear from body: ${body.imageYear}, Raw oldImageYear: ${body.oldImageYear}`);
+    this.logger.log(`🔍 [DEBUG] Normalized imageYear: ${imageYear}, oldImageYear: ${oldImageYear}`);
 
-    // === XỬ LÝ ẢNH - UPLOAD TO MEDIA SERVICE ===
+    // === XỬ LÝ ẢNH ===
     let imageUrl = body.image || null;
     let oldImageUrl = body.oldImage || null;
+    let mainImageID: number | null = null;
+    let oldImageID: number | null = null;
 
-    // Upload new image if provided
+    // Option 1: Nhận ImageID từ frontend (workflow mới với /gallery)
+    if (body.mainImageID || body.MainImageID) {
+      mainImageID = parseInt(body.mainImageID || body.MainImageID, 10);
+      this.logger.log(`✅ Received MainImageID from frontend: ${mainImageID}`);
+      
+      // ✅ Nếu có năm hiện đại, tạo collection mới và gán vào modern image
+      if (imageYear && imageYear > 0) {
+        this.logger.log(`📅 Creating collection with year ${imageYear} for modern image`);
+        const collection = await this.collectionsService.create({
+          Name: `${title} - ${imageYear}`,
+          Year: imageYear,
+          Title: title,
+          CategoryID: categoryId ?? undefined,
+          Description: `Modern image from ${imageYear}`,
+        });
+        
+        if (collection && collection.CollectionID) {
+          // Cập nhật CollectionID cho modern image
+          await this.imagesService.updateCollectionId(mainImageID, collection.CollectionID);
+          this.logger.log(`✅ Updated CollectionID=${collection.CollectionID} for ImageID=${mainImageID}`);
+        }
+      }
+    }
+    
+    if (body.oldImageID || body.OldImageID) {
+      oldImageID = parseInt(body.oldImageID || body.OldImageID, 10);
+      this.logger.log(`✅ Received OldImageID from frontend: ${oldImageID}`);
+    }
+
+    // Option 2: Upload files (workflow cũ với MapAdmin.jsx)
     if (files?.image?.[0]) {
       const uploadResult = await this.mediaClient.uploadToMediaService(
         files.image[0],
@@ -120,11 +156,11 @@ export class MapLocationsController {
       );
       imageUrl = uploadResult.url;
       
-      // Save to DB Images
-      await this.imagesService.create(imageUrl, undefined, `Map location: ${title}`, 'map');
+      const savedImage = await this.imagesService.create(imageUrl, categoryId, `Map location: ${title}`, 'map');
+      mainImageID = savedImage.ImageID;
+      this.logger.log(`✅ Uploaded and saved MainImage with ID=${mainImageID}`);
     }
 
-    // Upload old image if provided
     if (files?.oldImage?.[0]) {
       const uploadResult = await this.mediaClient.uploadToMediaService(
         files.oldImage[0],
@@ -134,8 +170,9 @@ export class MapLocationsController {
       );
       oldImageUrl = uploadResult.url;
       
-      // Save to DB Images
-      await this.imagesService.create(oldImageUrl, undefined, `Map location (old): ${title}`, 'map');
+      const savedImage = await this.imagesService.create(oldImageUrl, categoryId, `Map location (old): ${title}`, 'map');
+      oldImageID = savedImage.ImageID;
+      this.logger.log(`✅ Uploaded and saved OldImage with ID=${oldImageID}`);
     }
 
     // === TẠO DTO ===
@@ -146,6 +183,8 @@ export class MapLocationsController {
       address,
       image: imageUrl,
       oldImage: oldImageUrl,
+      mainImageID,
+      oldImageID,
       desc: body.desc?.trim() || null,
       fullDesc: body.fullDesc?.trim() || null,
       categoryId,

@@ -35,9 +35,11 @@ const MapManagement = () => {
     image: null,
     imagePreview: "",
     imageYear: "",
+    mainImageID: "", // ✅ Add ImageID field for gallery workflow
     oldImage: null,
     oldImagePreview: "",
     oldImageYear: "",
+    oldImageID: "", // ✅ Add ImageID field for gallery workflow
     desc: "",
     fullDesc: "",
     categoryId: "",
@@ -293,6 +295,15 @@ const MapManagement = () => {
       return;
     }
 
+    console.log("🔍 Form state before submit:", {
+      imageYear: form.imageYear,
+      oldImageYear: form.oldImageYear,
+      mainImageID: form.mainImageID,
+      oldImageID: form.oldImageID,
+      image: form.image,
+      oldImage: form.oldImage,
+    });
+
     const formData = new FormData();
     formData.append("title", form.title);
     formData.append("address", form.address);
@@ -301,13 +312,22 @@ const MapManagement = () => {
     formData.append("desc", form.desc || "");
     formData.append("fullDesc", form.fullDesc || "");
     formData.append("CategoryID", form.categoryId || "");
-    if (form.imageYear) {
-      formData.append("imageYear", form.imageYear);
+    
+    // ✅ Always send year fields (even if empty) so backend can process them
+    formData.append("imageYear", form.imageYear || "");
+    formData.append("oldImageYear", form.oldImageYear || "");
+    
+    // ✅ Send ImageIDs if provided (gallery workflow)
+    if (form.mainImageID) {
+      formData.append("mainImageID", form.mainImageID);
     }
-    if (form.oldImageYear) {
-      formData.append("oldImageYear", form.oldImageYear);
+    if (form.oldImageID) {
+      formData.append("oldImageID", form.oldImageID);
     }
+    
+    console.log("📤 Sending imageYear:", form.imageYear, "oldImageYear:", form.oldImageYear);
 
+    // Send File objects if uploading directly (old workflow)
     if (form.image instanceof File) {
       formData.append("image", form.image);
     }
@@ -329,9 +349,11 @@ const MapManagement = () => {
         image: null,
         imagePreview: "",
         imageYear: "",
+        mainImageID: "",
         oldImage: null,
         oldImagePreview: "",
         oldImageYear: "",
+        oldImageID: "",
         desc: "",
         fullDesc: "",
         categoryId: "",
@@ -451,23 +473,43 @@ const MapManagement = () => {
                 {/* ẢNH HIỆN ĐẠI */}
                 <div style={{ marginBottom: "20px" }}>
                   <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh hiện đại</label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <button type="button" onClick={() => handleImageClick("image")} style={{ width: "140px", height: "90px", border: "2px dashed #ccc", borderRadius: "12px", background: form.imagePreview ? "transparent" : "#f8f9fa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden" }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = "#1a73e8"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = "#ccc"}
-                    >
-                      {form.imagePreview ? <img src={form.imagePreview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} /> : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="#666" viewBox="0 0 16 16" style={{ marginBottom: "4px" }}>
-                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
-                            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
-                          </svg>
-                          <span style={{ fontSize: "0.8rem", color: "#555", fontWeight: "500" }}>Chọn ảnh</span>
-                        </>
-                      )}
-                    </button>
-                    {form.image && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.image.name}</div>}
+                  
+                  {/* Option 1: Upload file trực tiếp */}
+                  <div style={{ marginBottom: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <button type="button" onClick={() => handleImageClick("image")} style={{ width: "140px", height: "90px", border: "2px dashed #ccc", borderRadius: "12px", background: form.imagePreview ? "transparent" : "#f8f9fa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden" }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = "#1a73e8"}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = "#ccc"}
+                      >
+                        {form.imagePreview ? <img src={form.imagePreview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} /> : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="#666" viewBox="0 0 16 16" style={{ marginBottom: "4px" }}>
+                              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                              <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                            </svg>
+                            <span style={{ fontSize: "0.8rem", color: "#555", fontWeight: "500" }}>Chọn ảnh</span>
+                          </>
+                        )}
+                      </button>
+                      {form.image && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.image.name}</div>}
+                    </div>
                   </div>
+
+                  {/* Option 2: Nhập ImageID từ Gallery */}
+                  <div style={{ marginBottom: "10px" }}>
+                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>
+                      Hoặc nhập ImageID từ Gallery <small style={{ color: "#999" }}>(đã upload qua Ảnh quản lý)</small>
+                    </label>
+                    <input
+                      type="number"
+                      value={form.mainImageID}
+                      onChange={e => setForm(prev => ({ ...prev, mainImageID: e.target.value }))}
+                      placeholder="VD: 84"
+                      style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "8px" }}
+                    />
+                  </div>
+
+                  {/* Year input */}
                   <div style={{ marginTop: "12px" }}>
                     <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>Năm ảnh hiện đại (không bắt buộc)</label>
                     <input
@@ -485,23 +527,43 @@ const MapManagement = () => {
                 {/* ẢNH XƯA */}
                 <div style={{ marginBottom: "20px" }}>
                   <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh xưa</label>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <button type="button" onClick={() => handleImageClick("oldImage")} style={{ width: "140px", height: "90px", border: "2px dashed #ccc", borderRadius: "12px", background: form.oldImagePreview ? "transparent" : "#f8f9fa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden" }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = "#1a73e8"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = "#ccc"}
-                    >
-                      {form.oldImagePreview ? <img src={form.oldImagePreview} alt="Old Preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} /> : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="#666" viewBox="0 0 16 16" style={{ marginBottom: "4px" }}>
-                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
-                            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
-                          </svg>
-                          <span style={{ fontSize: "0.8rem", color: "#555", fontWeight: "500" }}>Chọn ảnh</span>
-                        </>
-                      )}
-                    </button>
-                    {form.oldImage && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.oldImage.name}</div>}
+                  
+                  {/* Option 1: Upload file trực tiếp */}
+                  <div style={{ marginBottom: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <button type="button" onClick={() => handleImageClick("oldImage")} style={{ width: "140px", height: "90px", border: "2px dashed #ccc", borderRadius: "12px", background: form.oldImagePreview ? "transparent" : "#f8f9fa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden" }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = "#1a73e8"}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = "#ccc"}
+                      >
+                        {form.oldImagePreview ? <img src={form.oldImagePreview} alt="Old Preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} /> : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="#666" viewBox="0 0 16 16" style={{ marginBottom: "4px" }}>
+                              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                              <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                            </svg>
+                            <span style={{ fontSize: "0.8rem", color: "#555", fontWeight: "500" }}>Chọn ảnh</span>
+                          </>
+                        )}
+                      </button>
+                      {form.oldImage && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.oldImage.name}</div>}
+                    </div>
                   </div>
+
+                  {/* Option 2: Nhập ImageID từ Gallery */}
+                  <div style={{ marginBottom: "10px" }}>
+                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>
+                      Hoặc nhập ImageID từ Gallery <small style={{ color: "#999" }}>(đã upload qua Ảnh quản lý)</small>
+                    </label>
+                    <input
+                      type="number"
+                      value={form.oldImageID}
+                      onChange={e => setForm(prev => ({ ...prev, oldImageID: e.target.value }))}
+                      placeholder="VD: 83"
+                      style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "8px" }}
+                    />
+                  </div>
+
+                  {/* Year input */}
                   <div style={{ marginTop: "12px" }}>
                     <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>Năm ảnh xưa (không bắt buộc)</label>
                     <input

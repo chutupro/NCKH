@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
   Req,
@@ -89,6 +90,27 @@ export class LocationImagesController {
     );
   }
 
+  /**
+   * API MỚI: Lấy danh sách ảnh có thể gắn location
+   * Chỉ lấy ảnh từ Images table, không upload
+   */
+  @Get('available-images')
+  async getAvailableImages(
+    @Query('category') category?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 50;
+    
+    return this.imagesService.getAvailableImagesForLocation(category, pageNum, limitNum);
+  }
+
+  @Get('pending')
+  findPending() {
+    return this.svc.findPending();
+  }
+
   @Get('location/:locationId')
   findApprovedByLocation(@Param('locationId') locationId: string) {
     const id = parseInt(locationId, 10);
@@ -98,9 +120,37 @@ export class LocationImagesController {
     return this.svc.findApprovedByLocation(id);
   }
 
-  @Get('pending')
-  findPending() {
-    return this.svc.findPending();
+  /**
+   * API MỚI: Gắn location vào ảnh có sẵn (không upload)
+   * Admin quản lý địa điểm chỉ chọn ảnh và gắn vị trí
+   */
+  @Post('assign')
+  async assignLocationToImage(
+    @Body()
+    body: {
+      imageId: number;
+      locationId: number;
+      userId?: number;
+      year?: number;
+    },
+  ) {
+    const { imageId, locationId, userId, year } = body;
+
+    if (!imageId || !locationId) {
+      throw new BadRequestException('imageId và locationId là bắt buộc');
+    }
+
+    // Lấy thông tin ảnh từ Images table
+    const image = await this.imagesService.findOne(imageId);
+    if (!image) {
+      throw new BadRequestException('Không tìm thấy ảnh');
+    }
+
+    // Tạo location-image với đường dẫn ảnh có sẵn
+    return this.svc.create(
+      { locationId, userId, year },
+      image.FilePath,
+    );
   }
 
   @Patch(':id/status')

@@ -12,7 +12,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MediaService } from './media.service';
 
-@Controller()
+@Controller('media')
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 

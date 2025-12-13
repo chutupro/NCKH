@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMapLocations } from "./mapLocationsSlice";
+import ImageSelectionModal from "../admin/ImageSelectionModal";
 import axios from "axios";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -27,11 +28,9 @@ const MapAdmin = () => {
     title: "",
     position: [16.0544, 108.2022],
     address: "",
-    image: null,
-    imagePreview: "",
+    selectedImage: null, // Thay đổi: Lưu image object thay vì file
     imageYear: "",
-    oldImage: null,
-    oldImagePreview: "",
+    selectedOldImage: null, // Thay đổi: Lưu image object thay vì file
     oldImageYear: "",
     desc: "",
     fullDesc: "",
@@ -40,11 +39,12 @@ const MapAdmin = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectingImageType, setSelectingImageType] = useState(null); // 'image' hoặc 'oldImage'
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef(new Map());
   const currentMarkerRef = useRef(null);
-  const fileInputRef = useRef(null);
   const debounceTimeout = useRef(null);
 
   // === KHỞI TẠO MAP ===
@@ -245,26 +245,29 @@ const MapAdmin = () => {
     });
   }, [places]);
 
-  // === XỬ LÝ ẢNH ===
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const field = e.target.dataset.field;
-    const preview = URL.createObjectURL(file);
-    setForm((prev) => ({
-      ...prev,
-      [field]: file,
-      [`${field}Preview`]: preview,
-    }));
-    e.target.value = "";
+  // === XỦ LÝ CHỎN ẢNH TỪ THƯ VIỆN ===
+  const handleOpenImageModal = (type) => {
+    setSelectingImageType(type); // 'image' hoặc 'oldImage'
+    setShowImageModal(true);
   };
 
-  const handleImageClick = (field) => {
-    fileInputRef.current.dataset.field = field;
-    fileInputRef.current.click();
+  const handleImageSelect = (selectedImage) => {
+    if (selectingImageType === 'image') {
+      setForm((prev) => ({
+        ...prev,
+        selectedImage: selectedImage,
+      }));
+    } else if (selectingImageType === 'oldImage') {
+      setForm((prev) => ({
+        ...prev,
+        selectedOldImage: selectedImage,
+      }));
+    }
+    setShowImageModal(false);
+    setSelectingImageType(null);
   };
 
-  // === SUBMIT – ĐÃ SỬA HOÀN CHỈNH ===
+  // === SUBMIT – GẮN LOCATION VÀO ẢNH CÓ SẴN ===
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.address || !form.position[0] || !form.position[1]) {
@@ -272,44 +275,52 @@ const MapAdmin = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("title", form.title);
-    formData.append("address", form.address);
-    formData.append("latitude", form.position[0].toString());
-    formData.append("longitude", form.position[1].toString());
-    formData.append("desc", form.desc || "");
-    formData.append("fullDesc", form.fullDesc || "");
-    formData.append("CategoryID", form.categoryId || "");
-    if (form.imageYear) {
-      formData.append("imageYear", form.imageYear);
-    }
-    if (form.oldImageYear) {
-      formData.append("oldImageYear", form.oldImageYear);
-    }
-
-    if (form.image instanceof File) {
-      formData.append("image", form.image);
-    }
-    if (form.oldImage instanceof File) {
-      formData.append("oldImage", form.oldImage); // TÊN ĐÚNG
-    }
-
     try {
-      await axios.post(`${BASE_URL}/map-locations`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      // BƯớc 1: Tạo location
+      const locationData = {
+        title: form.title,
+        address: form.address,
+        latitude: form.position[0],
+        longitude: form.position[1],
+        desc: form.desc || "",
+        fullDesc: form.fullDesc || "",
+        CategoryID: form.categoryId || null,
+      };
 
-      alert("Thêm địa điểm thành công!");
+      const locationRes = await axios.post(`${BASE_URL}/map-locations`, locationData);
+      const newLocationId = locationRes.data.LocationID || locationRes.data.id;
+
+      if (!newLocationId) {
+        throw new Error('Không lấy được LocationID');
+      }
+
+      // Bước 2: Gắn ảnh hiện đại (nếu có)
+      if (form.selectedImage) {
+        await axios.post(`${BASE_URL}/location-images/assign`, {
+          imageId: form.selectedImage.ImageID,
+          locationId: newLocationId,
+          year: form.imageYear ? parseInt(form.imageYear, 10) : null,
+        });
+      }
+
+      // Bước 3: Gắn ảnh xưa (nếu có)
+      if (form.selectedOldImage) {
+        await axios.post(`${BASE_URL}/location-images/assign`, {
+          imageId: form.selectedOldImage.ImageID,
+          locationId: newLocationId,
+          year: form.oldImageYear ? parseInt(form.oldImageYear, 10) : null,
+        });
+      }
+
+      alert("Đã thêm địa điểm và gắn ảnh thành công!");
       setForm({
         id: null,
         title: "",
         position: [16.0544, 108.2022],
         address: "",
-        image: null,
-        imagePreview: "",
+        selectedImage: null,
         imageYear: "",
-        oldImage: null,
-        oldImagePreview: "",
+        selectedOldImage: null,
         oldImageYear: "",
         desc: "",
         fullDesc: "",
@@ -403,25 +414,71 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            {/* ẢNH HIỆN ĐẠI */}
+            {/* ẢNH HIỆN ĐẠI - CHỎN TỪ THƯ VIỆN */}
             <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh hiện đại</label>
+              <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>
+                🖼️ Ảnh hiện đại (từ thư viện)
+              </label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <button type="button" onClick={() => handleImageClick("image")} style={{ width: "140px", height: "90px", border: "2px dashed #ccc", borderRadius: "12px", background: form.imagePreview ? "transparent" : "#f8f9fa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = "#1a73e8"}
+                <button 
+                  type="button" 
+                  onClick={() => handleOpenImageModal('image')} 
+                  style={{ 
+                    width: "140px", 
+                    height: "90px", 
+                    border: "2px dashed #ccc", 
+                    borderRadius: "12px", 
+                    background: form.selectedImage ? "transparent" : "#f8f9fa", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    cursor: "pointer", 
+                    position: "relative", 
+                    overflow: "hidden" 
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "#667eea"}
                   onMouseLeave={e => e.currentTarget.style.borderColor = "#ccc"}
                 >
-                  {form.imagePreview ? <img src={form.imagePreview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} /> : (
+                  {form.selectedImage ? (
+                    <img 
+                      src={form.selectedImage.FilePath} 
+                      alt="Preview" 
+                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} 
+                    />
+                  ) : (
                     <>
                       <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="#666" viewBox="0 0 16 16" style={{ marginBottom: "4px" }}>
-                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
-                        <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                        <path d="M4.502 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                        <path d="M14.002 13a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5A2 2 0 0 1 2 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-1.998 2zM14 2H4a1 1 0 0 0-1 1h9.002a2 2 0 0 1 2 2v7A1 1 0 0 0 15 11V3a1 1 0 0 0-1-1zM2.002 4a1 1 0 0 0-1 1v8l2.646-2.354a.5.5 0 0 1 .63-.062l2.66 1.773 3.71-3.71a.5.5 0 0 1 .577-.094l1.777 1.947V5a1 1 0 0 0-1-1h-10z"/>
                       </svg>
                       <span style={{ fontSize: "0.8rem", color: "#555", fontWeight: "500" }}>Chọn ảnh</span>
                     </>
                   )}
                 </button>
-                {form.image && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.image.name}</div>}
+                {form.selectedImage && (
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "0.85rem", color: "#374151", fontWeight: "500" }}>
+                      {form.selectedImage.AltText || `Ảnh #${form.selectedImage.ImageID}`}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setForm(prev => ({ ...prev, selectedImage: null }))}
+                      style={{
+                        marginTop: "6px",
+                        padding: "4px 10px",
+                        background: "#fee",
+                        border: "1px solid #fcc",
+                        borderRadius: "6px",
+                        color: "#c33",
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✖ Xóa
+                    </button>
+                  </div>
+                )}
               </div>
               <div style={{ marginTop: "12px" }}>
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>Năm ảnh hiện đại (không bắt buộc)</label>
@@ -437,25 +494,71 @@ const MapAdmin = () => {
               </div>
             </div>
 
-            {/* ẢNH XƯA */}
+            {/* ẢNH XƯA - CHỎN TỪ THƯ VIỆN */}
             <div style={{ marginBottom: "20px" }}>
-              <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Ảnh xưa</label>
+              <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>
+                🖼️ Ảnh xưa (từ thư viện)
+              </label>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <button type="button" onClick={() => handleImageClick("oldImage")} style={{ width: "140px", height: "90px", border: "2px dashed #ccc", borderRadius: "12px", background: form.oldImagePreview ? "transparent" : "#f8f9fa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = "#1a73e8"}
+                <button 
+                  type="button" 
+                  onClick={() => handleOpenImageModal('oldImage')} 
+                  style={{ 
+                    width: "140px", 
+                    height: "90px", 
+                    border: "2px dashed #ccc", 
+                    borderRadius: "12px", 
+                    background: form.selectedOldImage ? "transparent" : "#f8f9fa", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    cursor: "pointer", 
+                    position: "relative", 
+                    overflow: "hidden" 
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "#667eea"}
                   onMouseLeave={e => e.currentTarget.style.borderColor = "#ccc"}
                 >
-                  {form.oldImagePreview ? <img src={form.oldImagePreview} alt="Old Preview" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} /> : (
+                  {form.selectedOldImage ? (
+                    <img 
+                      src={form.selectedOldImage.FilePath} 
+                      alt="Old Preview" 
+                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "10px" }} 
+                    />
+                  ) : (
                     <>
                       <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="#666" viewBox="0 0 16 16" style={{ marginBottom: "4px" }}>
-                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
-                        <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                        <path d="M4.502 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                        <path d="M14.002 13a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5A2 2 0 0 1 2 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-1.998 2zM14 2H4a1 1 0 0 0-1 1h9.002a2 2 0 0 1 2 2v7A1 1 0 0 0 15 11V3a1 1 0 0 0-1-1zM2.002 4a1 1 0 0 0-1 1v8l2.646-2.354a.5.5 0 0 1 .63-.062l2.66 1.773 3.71-3.71a.5.5 0 0 1 .577-.094l1.777 1.947V5a1 1 0 0 0-1-1h-10z"/>
                       </svg>
                       <span style={{ fontSize: "0.8rem", color: "#555", fontWeight: "500" }}>Chọn ảnh</span>
                     </>
                   )}
                 </button>
-                {form.oldImage && <div style={{ fontSize: "0.85rem", color: "#666", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{form.oldImage.name}</div>}
+                {form.selectedOldImage && (
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "0.85rem", color: "#374151", fontWeight: "500" }}>
+                      {form.selectedOldImage.AltText || `Ảnh #${form.selectedOldImage.ImageID}`}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setForm(prev => ({ ...prev, selectedOldImage: null }))}
+                      style={{
+                        marginTop: "6px",
+                        padding: "4px 10px",
+                        background: "#fee",
+                        border: "1px solid #fcc",
+                        borderRadius: "6px",
+                        color: "#c33",
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✖ Xóa
+                    </button>
+                  </div>
+                )}
               </div>
               <div style={{ marginTop: "12px" }}>
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "500", color: "#555", marginBottom: "6px" }}>Năm ảnh xưa (không bắt buộc)</label>
@@ -470,8 +573,6 @@ const MapAdmin = () => {
                 />
               </div>
             </div>
-
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} accept="image/*" data-field="" />
 
             <div style={{ marginBottom: "20px" }}>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "500", color: "#555", marginBottom: "8px" }}>Mô tả ngắn</label>
@@ -557,6 +658,16 @@ const MapAdmin = () => {
       </div>
 
       {status === "failed" && <div style={{ color: "red", marginTop: "20px", textAlign: "center" }}>Lỗi: {status}</div>}
+      
+      {/* Modal chọn ảnh từ thư viện */}
+      <ImageSelectionModal
+        isOpen={showImageModal}
+        onClose={() => {
+          setShowImageModal(false);
+          setSelectingImageType(null);
+        }}
+        onSelect={handleImageSelect}
+      />
     </div>
   );
 };
