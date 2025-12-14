@@ -80,9 +80,11 @@ export class ImagesService {
       .createQueryBuilder('image')
       .leftJoinAndSelect('image.category', 'category')
       .leftJoinAndSelect('image.collection', 'collection')
-      .leftJoin('MapLocations', 'mapLoc', 'mapLoc.OldImageID = image.ImageID')
+      .leftJoin('MapLocations', 'mapLocMain', 'mapLocMain.MainImageID = image.ImageID')
+      .leftJoin('MapLocations', 'mapLocOld', 'mapLocOld.OldImageID = image.ImageID')
       .where('image.CollectionID IS NOT NULL') // ✅ CHỈ lấy ảnh có bộ sưu tập (ảnh xưa)
-      .andWhere('mapLoc.LocationID IS NULL') // ✅ Chưa được gắn vào MapLocations (OldImageID)
+      .andWhere('mapLocMain.LocationID IS NULL') // ✅ Chưa được gắn làm MainImageID
+      .andWhere('mapLocOld.LocationID IS NULL') // ✅ Chưa được gắn làm OldImageID
       .orderBy('image.ImageID', 'DESC')
       .skip(skip)
       .take(limit);
@@ -93,6 +95,13 @@ export class ImagesService {
     }
 
     const [images, total] = await queryBuilder.getManyAndCount();
+
+    console.log(`📚 [getAvailableImagesForLocation] Found ${total} available images (category=${category}, page=${page})`);
+    
+    // Debug: Log first 3 images
+    if (images.length > 0) {
+      console.log(`🖼️ [Sample] First image: ImageID=${images[0].ImageID}, CollectionID=${images[0].CollectionID}`);
+    }
 
     return {
       images: images.map(img => ({

@@ -138,7 +138,10 @@ const MapAdminNew = () => {
         params.append('category', category);
       }
 
+      console.log(`📚 [loadImagesFromLibrary] Loading with category=${category}, page=${pageNum}`);
       const res = await axios.get(`${BASE_URL}/location-images/available-images?${params}`);
+      console.log(`✅ [loadImagesFromLibrary] Received ${res.data.images?.length || 0} images, total=${res.data.total}`);
+      
       setImages(res.data.images || []);
       setFilteredImages(res.data.images || []);
       setTotalPages(res.data.totalPages || 1);
@@ -384,11 +387,12 @@ const MapAdminNew = () => {
 
       alert("✅ Đã gắn địa điểm vào ảnh thành công!");
       
-      // Loại bỏ ảnh xưa đã chọn khỏi danh sách
-      if (selectedOldImage) {
-        setImages(prev => prev.filter(img => img.ImageID !== selectedOldImage.ImageID));
-        setFilteredImages(prev => prev.filter(img => img.ImageID !== selectedOldImage.ImageID));
-      }
+      // ✅ Reload library to update available images (remove assigned ones)
+      // Delay 500ms để database cập nhật xong
+      console.log('🔄 [MapAdmin] Reloading library after creating location...');
+      setTimeout(() => {
+        loadImagesFromLibrary(selectedCategory, page);
+      }, 500);
       
       // Reset form
       setUploadedModernImage(null);
@@ -408,7 +412,6 @@ const MapAdminNew = () => {
       if (currentMarkerRef.current) mapInstance.current.removeLayer(currentMarkerRef.current);
       
       dispatch(fetchMapLocations());
-      // KHÔNG load lại thư viện để tránh ảnh hiện đại vừa upload xuất hiện
     } catch (err) {
       console.error("Lỗi gắn địa điểm:", err);
       alert("❌ Lỗi: " + (err.response?.data?.message || err.message));

@@ -127,7 +127,13 @@ export class GalleryService {
     const found = await this.imagesRepo.findOneBy({ [pk]: Number(id) } as any);
     if (!found) throw new NotFoundException('Not found');
     
+    // ✅ Clean up references before deleting
+    // TypeORM with onDelete: 'SET NULL' will automatically handle this,
+    // but we log for debugging
+    console.log(`[Gallery] Deleting Image #${id}, references will be set to NULL automatically`);
+    
     // Note: File cleanup is handled by media-service, not here
+    // Foreign keys with ON DELETE SET NULL will automatically nullify references
     await this.imagesRepo.delete((found as any)[pk]);
     return { deleted: true };
   }

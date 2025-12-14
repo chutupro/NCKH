@@ -35,7 +35,7 @@ export class Images {
   @JoinColumn({ name: 'CategoryID' })
   category: Categories;
 
-  @ManyToOne(() => Collections, { nullable: true })
+  @ManyToOne(() => Collections, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'CollectionID' })
   collection: Collections;
 }

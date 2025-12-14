@@ -152,26 +152,15 @@ export class TimelineService {
     return updated;
   }
 
-  // DELETE - Xóa vĩnh viễn timeline VÀ ảnh gốc
+  // DELETE - Xóa timeline entry (KHÔNG xóa ảnh gốc)
   async delete(id: number) {
     const timeline = await this.timelineRepo.findOne({ where: { timelineID: id } });
     if (!timeline) {
       throw new NotFoundException(`Timeline #${id} không tồn tại`);
     }
 
-    // Lưu ImageID trước khi xóa timeline
-    const imageId = timeline.ImageID;
-
-    // 1. Xóa timeline
+    // Chỉ xóa timeline entry, giữ nguyên ảnh trong Gallery
     await this.timelineRepo.remove(timeline);
-
-    // 2. Xóa ảnh gốc khỏi bảng Images (nếu có)
-    if (imageId) {
-      const image = await this.imagesRepo.findOne({ where: { ImageID: imageId } });
-      if (image) {
-        await this.imagesRepo.remove(image);
-        console.log(`[Timeline] ✅ Đã xóa Timeline #${id} và Image #${imageId}`);
-      }
-    }
+    console.log(`[Timeline] ✅ Đã xóa Timeline #${id} (giữ nguyên Image #${timeline.ImageID})`);
   }
 }

@@ -77,7 +77,22 @@ export class CollectionsService {
   }
 
   async findAll() {
-  const cols = await this.collectionRepo.find({ relations: ['collectionArticles', 'collectionArticles.article', 'collectionArticles.article.images', 'category'] });
+    // ✅ CHỈ trả về collections có ảnh CHƯA được gắn vào MapLocations
+    const query = this.collectionRepo.createQueryBuilder('col')
+      .leftJoinAndSelect('col.collectionArticles', 'colArticles')
+      .leftJoinAndSelect('colArticles.article', 'article')
+      .leftJoinAndSelect('article.images', 'articleImages')
+      .leftJoinAndSelect('col.category', 'category')
+      .leftJoin('Images', 'img', 'img.CollectionID = col.CollectionID')
+      .leftJoin('MapLocations', 'mapLocMain', 'mapLocMain.MainImageID = img.ImageID')
+      .leftJoin('MapLocations', 'mapLocOld', 'mapLocOld.OldImageID = img.ImageID')
+      .where('mapLocMain.LocationID IS NULL') // Ảnh CHƯA được dùng làm MainImageID
+      .andWhere('mapLocOld.LocationID IS NULL') // Ảnh CHƯA được dùng làm OldImageID
+      .orderBy('col.CollectionID', 'DESC');
+
+    const cols = await query.getMany();
+
+    console.log(`📚 [Collections.findAll] Found ${cols.length} collections (available for public library)`);
 
     return cols.map((c) => ({
       CollectionID: c.CollectionID,

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MapLocations } from '../entities/map-location.entity';
 import { Feedback } from '../entities/feedback.entity';
+import { Images } from '../entities/image.entity';
 
 @Injectable()
 export class MapLocationsService {
@@ -14,6 +15,8 @@ export class MapLocationsService {
     private mapLocationsRepository: Repository<MapLocations>,
     @InjectRepository(Feedback)
     private feedbackRepository: Repository<Feedback>,
+    @InjectRepository(Images)
+    private imagesRepository: Repository<Images>,
   ) {}
 
  async findAll() {
@@ -153,8 +156,78 @@ export class MapLocationsService {
   }
 
   async remove(id: number) {
+    // 1. Lấy thông tin marker trước khi xóa
+    const marker = await this.mapLocationsRepository.findOne({ 
+      where: { LocationID: id },
+      select: ['LocationID', 'MainImageID', 'OldImageID', 'Name']
+    });
+
+    if (!marker) {
+      this.logger.warn(`❌ [remove] Marker ${id} not found`);
+      return null;
+    }
+
+    const mainImageId = marker.MainImageID;
+    const oldImageId = marker.OldImageID;
+
+    // 2. Xóa marker
     const result = await this.mapLocationsRepository.delete(id);
-    return result.affected ? id : null;
+    
+    if (!result.affected) {
+      this.logger.warn(`❌ [remove] Failed to delete marker ${id}`);
+      return null;
+    }
+
+    this.logger.log(`✅ [remove] Deleted marker ${id}: "${marker.Name}"`);
+
+    // 3. XÓA CỨNG: Xóa ảnh nếu không còn marker nào khác đang dùng
+    const imagesToDelete: number[] = [];
+
+    // Check MainImageID
+    if (mainImageId) {
+      const usageCount = await this.mapLocationsRepository.count({
+        where: [
+          { MainImageID: mainImageId },
+          { OldImageID: mainImageId }
+        ]
+      });
+      
+      if (usageCount === 0) {
+        imagesToDelete.push(mainImageId);
+        this.logger.log(`🗑️ [remove] MainImageID ${mainImageId} không còn dùng → XÓA`);
+      } else {
+        this.logger.log(`⚠️ [remove] MainImageID ${mainImageId} còn ${usageCount} marker đang dùng → GIỮ LẠI`);
+      }
+    }
+
+    // Check OldImageID
+    if (oldImageId && oldImageId !== mainImageId) {
+      const usageCount = await this.mapLocationsRepository.count({
+        where: [
+          { MainImageID: oldImageId },
+          { OldImageID: oldImageId }
+        ]
+      });
+      
+      if (usageCount === 0) {
+        imagesToDelete.push(oldImageId);
+        this.logger.log(`🗑️ [remove] OldImageID ${oldImageId} không còn dùng → XÓA`);
+      } else {
+        this.logger.log(`⚠️ [remove] OldImageID ${oldImageId} còn ${usageCount} marker đang dùng → GIỮ LẠI`);
+      }
+    }
+
+    // Xóa ảnh
+    if (imagesToDelete.length > 0) {
+      try {
+        await this.imagesRepository.delete(imagesToDelete);
+        this.logger.log(`💥 [remove] ĐÃ XÓA CỨNG ${imagesToDelete.length} ảnh: [${imagesToDelete.join(', ')}]`);
+      } catch (error) {
+        this.logger.error(`❌ [remove] Lỗi xóa ảnh:`, error);
+      }
+    }
+
+    return id;
   }
 
   async getFeedbackByLocation(locationId: number) {

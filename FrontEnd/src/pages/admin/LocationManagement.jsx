@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapAdminNew from '../map/MapAdminNew';
 import PhotoModeration from './PhotoModeration';
+import MapMarkerManagement from './MapMarkerManagement';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const LocationManagement = () => {
-  const [activeTab, setActiveTab] = useState('map'); // 'map' hoặc 'photos'
+  // Lưu activeTab vào localStorage để không bị reset khi component re-render
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('locationManagementActiveTab') || 'map';
+  });
+
+  // Lưu activeTab vào localStorage mỗi khi thay đổi
+  useEffect(() => {
+    localStorage.setItem('locationManagementActiveTab', activeTab);
+  }, [activeTab]);
 
   return (
     <div>
@@ -57,12 +66,34 @@ const LocationManagement = () => {
           <span>🖼️</span>
           <span>Duyệt Ảnh</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('markers')}
+          style={{
+            padding: '0.75rem 1.5rem',
+            fontSize: '1rem',
+            fontWeight: 600,
+            background: activeTab === 'markers' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+            color: activeTab === 'markers' ? 'white' : '#6b7280',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}
+        >
+          <span>📍</span>
+          <span>Danh sách Marker</span>
+        </button>
       </div>
 
       {/* Tab Content */}
       <div>
         {activeTab === 'map' && <MapAdminNew />}
         {activeTab === 'photos' && <PhotoModeration />}
+        {activeTab === 'markers' && <MapMarkerManagement />}
       </div>
     </div>
   );

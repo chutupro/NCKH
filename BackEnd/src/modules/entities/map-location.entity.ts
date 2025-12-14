@@ -56,11 +56,11 @@ export class MapLocations {
   @JoinColumn({ name: 'ArticleID' })
   article: Articles;
 
-  @ManyToOne(() => Images, { nullable: true })
+  @ManyToOne(() => Images, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'MainImageID' })
   mainImage: Images;
 
-  @ManyToOne(() => Images, { nullable: true })
+  @ManyToOne(() => Images, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'OldImageID' })
   oldImage: Images;
 
