@@ -9,7 +9,6 @@ import ShareModal from "./ShareModal";
 import ReactDOM from "react-dom";
 import axios from "axios";
 import { useAppContext } from "../../context/useAppContext";
-import { useAuthRestore } from "../../hooks/useAuthRestore";
 import getAiFeatureConfig, { getAiEndpointUrl } from "../../config/aiConfig";
 
 const BASE_URL = "http://localhost:3000";
@@ -71,8 +70,9 @@ const MapPage = () => {
   const { places, status, error } = useSelector((state) => state.mapLocations);
   const { user, isAuthLoading } = useAppContext(); // ✅ LẤY USER + AUTH LOADING STATE
 
-  // ✅ RESTORE SESSION SAU KHI F5 (quan trọng!)
-  useAuthRestore();
+  // ✅ REF để đọc giá trị mới nhất trong event listeners (tránh stale closure)
+  const userRef = useRef(user);
+  const isAuthLoadingRef = useRef(isAuthLoading);
 
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -151,6 +151,12 @@ const MapPage = () => {
       JSON.stringify(favoritePhotosByUser)
     );
   }, [favoritePhotosByUser]);
+
+  // ✅ Sync refs with latest state values (để tránh stale closure trong event listeners)
+  useEffect(() => {
+    userRef.current = user;
+    isAuthLoadingRef.current = isAuthLoading;
+  }, [user, isAuthLoading]);
 
   const escapeHtml = (value = "") =>
     String(value)
@@ -3939,16 +3945,26 @@ const MapPage = () => {
   const openPhotoUploadModal = (place) => {
     closePhotoUploadModal();
 
+    // ✅ Đọc giá trị MỚI NHẤT từ ref (tránh stale closure)
+    const currentUser = userRef.current;
+    const currentIsAuthLoading = isAuthLoadingRef.current;
+
     // ✅ Kiểm tra auth state TRƯỚC KHI tạo modal
     console.log(
       "📸 Opening photo modal - isAuthLoading:",
-      isAuthLoading,
+      currentIsAuthLoading,
       "user:",
-      user?.userId
+      currentUser?.userId
     );
 
+    // ⚠️ Nếu đang loading auth, chờ
+    if (currentIsAuthLoading) {
+      console.log("⏳ Đang restore session, vui lòng đợi...");
+      return;
+    }
+
     // ⚠️ Nếu chưa đăng nhập, HIỂN THỊ MODAL XÁC NHẬN
-    if (!user || !user.userId) {
+    if (!currentUser || !currentUser.userId) {
       console.log("❌ User chưa đăng nhập");
       (async () => {
         const shouldLogin = await showLoginConfirmModal(
@@ -3980,7 +3996,7 @@ const MapPage = () => {
         place.title
       }</strong>. Ảnh sẽ được kiểm duyệt trước khi hiển thị.</p>
       ${
-        user && user.userId
+        currentUser && currentUser.userId
           ? `
         <div style="display:flex;flex-direction:column;gap:12px;">
           <div>
@@ -4012,7 +4028,7 @@ const MapPage = () => {
       .querySelector("#close-photo-modal")
       ?.addEventListener("click", closePhotoUploadModal);
 
-    if (!user || !user.userId) {
+    if (!currentUser || !currentUser.userId) {
       modal
         .querySelector("#photo-modal-login")
         ?.addEventListener("click", (e) => {
@@ -4046,7 +4062,7 @@ const MapPage = () => {
 
       const formData = new FormData();
       formData.append("locationId", place.id);
-      formData.append("userId", user.userId);
+      formData.append("userId", currentUser.userId);
       if (yearInput?.value) {
         formData.append("year", yearInput.value);
       }
