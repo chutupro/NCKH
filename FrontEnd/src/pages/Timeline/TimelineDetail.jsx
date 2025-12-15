@@ -49,16 +49,27 @@ const TimelineDetail = () => {
     fetchData();
   }, [id]);
 
-  // Group events by month
+  // Group events by month - CHỈ group timeline CÓ THÁNG, loại bỏ ảnh năm
   const groupByMonth = (events) => {
     const months = {};
+    const yearOnlyEvents = []; // Ảnh năm (eventDate = YYYY-01-01)
+    
     events.forEach((event) => {
-      const date = new Date(event.date);
-      const month = date.getMonth() + 1; // 1-12
-      if (!months[month]) months[month] = [];
-      months[month].push(event);
+      const dateParts = event.date.split('-'); // [YYYY, MM, DD]
+      const month = parseInt(dateParts[1]);
+      const day = parseInt(dateParts[2]);
+      
+      // Nếu là 01-01 → Ảnh năm, KHÔNG group vào tháng
+      if (month === 1 && day === 1) {
+        yearOnlyEvents.push(event);
+      } else {
+        // Timeline tháng cụ thể → Group vào tháng
+        if (!months[month]) months[month] = [];
+        months[month].push(event);
+      }
     });
-    return months;
+    
+    return { months, yearOnlyEvents };
   };
 
   const monthNames = [
@@ -106,7 +117,7 @@ const TimelineDetail = () => {
   }
 
   const year = mainEvent.date.slice(0, 4);
-  const monthGroups = groupByMonth(yearEvents);
+  const { months: monthGroups, yearOnlyEvents } = groupByMonth(yearEvents);
 
   return (
     <main className="timeline-detail-page">
@@ -186,14 +197,27 @@ const TimelineDetail = () => {
                           }}
                         >
                           <div className="event-image" style={{ backgroundImage: `url(${event.image})` }}>
-                            <span className="event-badge">{event.category}</span>
+                            <span className="event-badge">{mainEvent.category}</span>
                           </div>
                           <div className="event-content">
                             <time className="event-date">
-                              {new Date(event.date).toLocaleDateString('vi-VN')}
+                              {(() => {
+                                const eventDate = new Date(event.date);
+                                const month = eventDate.getMonth() + 1;
+                                const year = eventDate.getFullYear();
+                                const day = eventDate.getDate();
+                                
+                                // Nếu có tháng cụ thể (không phải ngày 01) → hiển thị tháng/năm
+                                // Nếu là ngày 01 (mặc định) → chỉ hiển thị năm
+                                if (day > 1 || event.desc) {
+                                  return `Tháng ${month}/${year}`;
+                                } else {
+                                  return `Năm ${year}`;
+                                }
+                              })()}
                             </time>
                             <h3 className="event-title">{event.title}</h3>
-                            <p className="event-desc">{event.desc}</p>
+                            <p className="event-desc">{event.desc || 'Không có mô tả'}</p>
                           </div>
                         </div>
                       ))}
@@ -205,37 +229,35 @@ const TimelineDetail = () => {
           )}
         </div>
 
-        {/* Main Event Detail */}
-        <div className="main-event-detail">
-          <h2 className="section-title">📖 Chi tiết sự kiện</h2>
-          <div className="detail-content">
-            <div className="detail-image">
-              <img src={mainEvent.image} alt={mainEvent.title} />
-            </div>
-            <div className="detail-text">
-              <h3>{mainEvent.title}</h3>
-              <time>{new Date(mainEvent.date).toLocaleDateString('vi-VN', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</time>
-              <div className="description">
-                {mainEvent.desc ? (
-                  mainEvent.desc.split("\n").map((p, i) => (
-                    <p key={i}>{p}</p>
-                  ))
-                ) : (
-                  <p>Không có mô tả chi tiết.</p>
+        {/* Ảnh tiêu biểu của năm - Hiển thị chi tiết */}
+        {yearOnlyEvents.length > 0 && (
+          <div className="main-event-detail">
+            <h2 className="section-title">🏆 Ảnh tiêu biểu của năm {year}</h2>
+            <div className="detail-content">
+              <div className="detail-image">
+                <img src={yearOnlyEvents[0].image} alt={yearOnlyEvents[0].title} />
+              </div>
+              <div className="detail-text">
+                <h3>{yearOnlyEvents[0].title}</h3>
+                <time>Năm {year}</time>
+                <div className="description">
+                  {yearOnlyEvents[0].desc ? (
+                    yearOnlyEvents[0].desc.split("\n").map((p, i) => (
+                      <p key={i}>{p}</p>
+                    ))
+                  ) : (
+                    <p>Ảnh đại diện tiêu biểu cho năm {year}.</p>
+                  )}
+                </div>
+                {yearOnlyEvents[0].sourceUrl && (
+                  <a href={yearOnlyEvents[0].sourceUrl} target="_blank" rel="noopener noreferrer" className="source-link">
+                    🔗 Xem nguồn gốc
+                  </a>
                 )}
               </div>
-              {mainEvent.sourceUrl && (
-                <a href={mainEvent.sourceUrl} target="_blank" rel="noopener noreferrer" className="source-link">
-                  🔗 Xem nguồn gốc
-                </a>
-              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </main>
   );

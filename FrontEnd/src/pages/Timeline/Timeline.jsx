@@ -61,7 +61,21 @@ const Timeline = () => {
     fetchTimeline();
   }, [fromYear, toYear, selectedCategory]);
 
-  const filtered = useMemo(() => timelineData, [timelineData]);
+  const filtered = useMemo(() => {
+    console.log('🔍 [Timeline Debug] Timeline Data:', timelineData);
+    if (timelineData.length > 0) {
+      console.log('🔍 [First Item]:', timelineData[0]);
+      console.log('🔍 [First Item JSON]:', JSON.stringify(timelineData[0], null, 2));
+      console.log('🔍 [All Items]:', timelineData.map(item => ({
+        id: item.id,
+        title: item.title,
+        category: item.category,
+        collectionName: item.collectionName,
+        collectionYear: item.collectionYear,
+      })));
+    }
+    return timelineData;
+  }, [timelineData]);
 
   const clearFilters = () => {
     setFromYear("");
@@ -197,14 +211,33 @@ const Timeline = () => {
                         className="timeline-card-image"
                         style={{ backgroundImage: `url(${item.image})` }}
                       >
-                        <span className="timeline-badge">{item.imageCategory || item.category}</span>
+                        <span className="timeline-badge">{item.category}</span>
                       </div>
                       <div className="timeline-card-body">
                         <time className="timeline-date">
-                          {item.date.slice(0, 4)}
+                          {(() => {
+                            const year = item.collectionYear;
+                            
+                            // Nếu có collectionName → Timeline từ gallery → CHỈ hiện năm
+                            if (item.collectionName) {
+                              return `Năm ${year}`;
+                            }
+                            
+                            // Nếu KHÔNG có collectionName → Timeline từ "Gắn vào Sự kiện" → Hiện tháng/năm
+                            const month = item.date ? parseInt(item.date.split('-')[1]) : null;
+                            if (month && month > 0) {
+                              return `Tháng ${month}/${year}`;
+                            } else {
+                              return `Năm ${year}`;
+                            }
+                          })()}
                         </time>
-                        <h3 className="timeline-title">{item.title}</h3>
-                        <p className="timeline-desc">{item.desc || 'Không có mô tả'}</p>
+                        <h3 className="timeline-title">{item.collectionName || item.title}</h3>
+                        <p className="timeline-desc">
+                          {item.collectionName && item.collectionName === item.desc 
+                            ? '' 
+                            : (item.desc || 'Không có mô tả')}
+                        </p>
                       </div>
                     </div>
                   </Link>

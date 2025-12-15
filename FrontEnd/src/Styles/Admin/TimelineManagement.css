@@ -500,7 +500,8 @@
 
 .btn-view,
 .btn-edit,
-.btn-delete {
+.btn-delete,
+.btn-attach {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 6px;
@@ -518,6 +519,17 @@
 .btn-view:hover {
   background: #138496;
   transform: translateY(-2px);
+}
+
+.btn-attach {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-attach:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .btn-edit {
@@ -1019,7 +1031,7 @@
 }
 
 
-/* ===== MODAL G?N ?NH VÀO S? KI?N ===== */
+/* ===== MODAL G?N ?NH Vï¿½O S? KI?N ===== */
 .attach-modal .modal-content { max-width: 700px; }
 
 .image-to-attach { text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 1.5rem; }

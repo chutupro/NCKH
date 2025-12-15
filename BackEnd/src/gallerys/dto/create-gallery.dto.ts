@@ -35,4 +35,8 @@ export class CreateGalleryDto {
   @IsOptional()
   @IsNumberString()
   articleId?: string;
+
+  @IsOptional()
+  @IsString()
+  type?: string;
 }

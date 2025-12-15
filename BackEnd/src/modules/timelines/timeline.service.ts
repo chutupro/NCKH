@@ -37,22 +37,32 @@ export class TimelineService {
     query.orderBy('t.eventDate', 'ASC');
     const data = await query.getMany();
 
-    return data.map(t => ({
-      id: t.timelineID,
-      title: t.title, // Tiêu đề sự kiện timeline
-      date: t.eventDate, // Ngày sự kiện
-      desc: t.description || '',
-      image: t.image?.FilePath || '',
-      category: t.image?.category?.Name || 'Khác',
-      // Thông tin ảnh gốc từ Gallery
-      imageTitle: t.image?.AltText || '', // Tiêu đề ảnh gốc
-      imageCategory: t.image?.category?.Name || 'Khác', // Thể loại ảnh
-      collectionName: t.image?.collection?.Title || t.image?.collection?.Name || '', // Tên bộ sưu tập
-      timelineID: t.timelineID,
-      ImageID: t.ImageID,
-      LocationID: t.LocationID,
-      sourceUrl: t.sourceUrl,
-    }));
+    return data.map(t => {
+      // Lấy năm: Ưu tiên từ collection, nếu không có thì lấy từ eventDate
+      const year = t.image?.collection?.Year || 
+                   (t.eventDate ? parseInt(t.eventDate.substring(0, 4)) : null);
+      
+      // Lấy category: Luôn từ image.category (category gốc của ảnh)
+      const categoryName = t.image?.category?.Name || 'Khác';
+      
+      return {
+        id: t.timelineID,
+        title: t.title, // Tiêu đề sự kiện timeline
+        date: t.eventDate, // Ngày sự kiện
+        desc: t.description || '',
+        image: t.image?.FilePath || '',
+        category: categoryName, // ✅ Category của ảnh gốc
+        // Thông tin ảnh gốc từ Gallery
+        imageTitle: t.image?.AltText || '', // Tiêu đề ảnh gốc
+        imageCategory: categoryName, // ✅ Thể loại ảnh
+        collectionName: t.image?.collection?.Title || t.image?.collection?.Name || '', // Tên bộ sưu tập
+        collectionYear: year, // ✅ Năm từ collection hoặc eventDate
+        timelineID: t.timelineID,
+        ImageID: t.ImageID,
+        LocationID: t.LocationID,
+        sourceUrl: t.sourceUrl,
+      };
+    });
   }
 
   // Lấy chi tiết timeline theo ID
@@ -63,6 +73,10 @@ export class TimelineService {
     });
 
     if (!t) return null;
+
+    // Lấy năm: Ưu tiên từ collection, nếu không có thì lấy từ eventDate
+    const year = t.image?.collection?.Year || 
+                 (t.eventDate ? parseInt(t.eventDate.substring(0, 4)) : null);
 
     return {
       id: t.timelineID,
@@ -75,6 +89,7 @@ export class TimelineService {
       imageTitle: t.image?.AltText || '', // Tiêu đề ảnh gốc
       imageCategory: t.image?.category?.Name || 'Khác', // Thể loại ảnh
       collectionName: t.image?.collection?.Title || t.image?.collection?.Name || '', // Tên bộ sưu tập
+      collectionYear: year, // ✅ Năm từ collection hoặc eventDate
       location: t.location ? {
         LocationID: t.location.LocationID,
         Name: t.location.Name,
@@ -152,15 +167,24 @@ export class TimelineService {
     return updated;
   }
 
-  // DELETE - Xóa timeline entry (KHÔNG xóa ảnh gốc)
+  // DELETE - Xóa CỨNG timeline và ảnh
   async delete(id: number) {
     const timeline = await this.timelineRepo.findOne({ where: { timelineID: id } });
     if (!timeline) {
       throw new NotFoundException(`Timeline #${id} không tồn tại`);
     }
 
-    // Chỉ xóa timeline entry, giữ nguyên ảnh trong Gallery
+    const imageId = timeline.ImageID;
+
+    // Bước 1: Xóa timeline
     await this.timelineRepo.remove(timeline);
-    console.log(`[Timeline] ✅ Đã xóa Timeline #${id} (giữ nguyên Image #${timeline.ImageID})`);
+    
+    // Bước 2: Xóa cứng ảnh khỏi Images table
+    if (imageId) {
+      await this.imagesRepo.delete({ ImageID: imageId });
+      console.log(`[Timeline] 💥 Đã xóa CỨNG Timeline #${id} và Image #${imageId}`);
+    } else {
+      console.log(`[Timeline] ✅ Đã xóa Timeline #${id} (không có Image)`);
+    }
   }
 }

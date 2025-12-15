@@ -66,7 +66,11 @@ const TimelineManagement = () => {
   const pendingImages = images.filter(img => {
     // Kiểm tra xem ImageID có trong timelines chưa
     const hasTimeline = timelines.some(t => t.ImageID === img.ImageID);
-    return !hasTimeline;
+    
+    // ✅ LOẠI BỎ ảnh từ Map Admin (Type='map')
+    const isMapImage = img.Type === 'map';
+    
+    return !hasTimeline && !isMapImage;
   });
   
   console.log('📊 [Timeline Debug]');
@@ -94,34 +98,28 @@ const TimelineManagement = () => {
   // LOGIC MỚI: Duyệt nhanh ảnh (tạo timeline với status = approved, không cần điền form)
   const handleQuickApprove = async (imageId) => {
     const image = images.find(i => i.ImageID === imageId);
-    if (!image) {
-      alert('Không tìm thấy ảnh!');
-      return;
-    }
+    if (!image) return;
 
-    const defaultTitle = image.AltText || `Sự kiện ${new Date().getFullYear()}`;
-    const defaultDate = new Date().toISOString().split('T')[0];
-
-    if (!window.confirm(`Duyệt ảnh "${image.AltText || 'Ảnh #' + imageId}" lên Timeline công khai?\n\nHệ thống sẽ tự động tạo timeline với tiêu đề: "${defaultTitle}"`)) {
-      return;
-    }
+    // ✅ Lấy năm từ collection, fallback về năm hiện tại
+    const year = image.collection?.Year || new Date().getFullYear();
+    const defaultTitle = image.collection?.Title || image.collection?.Name || image.AltText || `Sự kiện ${year}`;
+    // ✅ EventDate = Năm-01-01 (ảnh năm, không có tháng cụ thể)
+    const defaultDate = `${year}-01-01`;
 
     try {
       await axios.post('http://localhost:3000/timeline', {
         ImageID: imageId,
-        LocationID: null, // Không bắt buộc địa điểm
+        LocationID: null,
         title: defaultTitle,
         eventDate: defaultDate,
         description: image.AltText || '',
-        status: 'approved', // Duyệt luôn
+        status: 'approved',
       });
 
-      alert('Duyệt ảnh thành công! Timeline đã được tạo.');
       fetchTimelines();
       fetchImages();
     } catch (error) {
       console.error('Error quick approve:', error);
-      alert(`Lỗi: ${error.response?.data?.message || error.message}`);
     }
   };
 
@@ -218,7 +216,10 @@ const TimelineManagement = () => {
       // Upload file + metadata cùng lúc qua /gallery endpoint
       const formData = new FormData();
       formData.append('file', selectedGalleryImage.file);
-      formData.append('categoryId', '4'); // 4 = Sự kiện
+      // ✅ Lấy CategoryID từ ảnh pending đang chọn (selectedImageToAttach)
+      if (selectedImageToAttach?.CategoryID) {
+        formData.append('categoryId', selectedImageToAttach.CategoryID.toString());
+      }
       formData.append('title', timelineForm.title);
       formData.append('description', timelineForm.description || '');
       
@@ -404,18 +405,13 @@ const TimelineManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa timeline này?')) return;
-
     try {
       await axios.delete(`http://localhost:3000/timeline/${id}`);
-      alert('Xóa timeline thành công!');
       
-      // Xóa khỏi state trực tiếp (không reload) để giữ nguyên tab hiện tại
+      // Xóa khỏi state trực tiếp
       setTimelines(prev => prev.filter(t => t.timelineID !== id));
       
-      // ✅ QUAN TRỌNG: Refresh lại danh sách ảnh vì backend đã xóa Image
-      // Khi xóa Timeline, backend cũng xóa Image tương ứng
-      // → Cần fetch lại để loại bỏ ảnh đã xóa khỏi "Ảnh chờ duyệt"
+      // Refresh lại danh sách ảnh (backend đã xóa cứng ảnh)
       await fetchImages();
       
       if (selectedTimeline?.timelineID === id) {
@@ -423,7 +419,6 @@ const TimelineManagement = () => {
       }
     } catch (error) {
       console.error('Error deleting timeline:', error);
-      alert(`Lỗi: ${error.response?.data?.message || error.message}`);
     }
   };
 
@@ -569,10 +564,14 @@ const TimelineManagement = () => {
                   </td>
                   <td className="timeline-actions">
                     <button 
-                      className="btn-view"
-                      onClick={() => fetchTimelineDetail(timeline.timelineID)}
+                      className="btn-attach"
+                      onClick={() => {
+                        const img = images.find(i => i.ImageID === timeline.ImageID);
+                        if (img) handleAttachToEvent(img.ImageID);
+                      }}
+                      title="Gắn ảnh vào sự kiện"
                     >
-                      Xem
+                      📌 Gắn vào Sự kiện
                     </button>
                     <button 
                       className="btn-delete"
@@ -641,23 +640,174 @@ const TimelineManagement = () => {
                   <button 
                     className="btn-approve"
                     onClick={() => handleQuickApprove(image.ImageID)}
-                    title="Duyệt nhanh lên Timeline công khai"
+                    title="Duyệt ảnh lên Timeline công khai"
                   >
-                    ✓ Duyệt nhanh
-                  </button>
-                  <button 
-                    className="btn-create-detailed"
-                    onClick={() => {
-                      console.log('🔴 BUTTON CLICKED! ImageID:', image.ImageID);
-                      handleAttachToEvent(image.ImageID);
-                    }}
-                    title="Đăng ảnh vào Timeline theo tháng"
-                  >
-                    📅 Gắn vào Sự kiện
+                    ✅ Duyệt
                   </button>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Modal gắn ảnh vào Timeline - CHỈ dùng trong tab Timeline đã tạo */}
+      {showAttachModal && selectedImageToAttach && (
+        <div className="modal-overlay" onClick={() => setShowAttachModal(false)}>
+          <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto'}}>
+            <div className="modal-header">
+              <h2>📅 Gắn ảnh vào Timeline</h2>
+              <button className="btn-close" onClick={() => setShowAttachModal(false)}>×</button>
+            </div>
+
+            <div style={{padding: '2rem'}}>
+              {/* Hiển thị ảnh đã chọn */}
+              <div style={{textAlign: 'center', marginBottom: '2rem', padding: '1rem', background: '#f8f9fa', borderRadius: '12px'}}>
+                <img 
+                  src={selectedImageToAttach.FilePath.startsWith('http') ? selectedImageToAttach.FilePath : `http://localhost:3001/${selectedImageToAttach.FilePath}`}
+                  alt={selectedImageToAttach.AltText}
+                  style={{maxWidth: '400px', maxHeight: '300px', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)'}}
+                />
+                <p style={{marginTop: '1rem', fontWeight: '600', fontSize: '1.1rem', color: '#2c3e50'}}>
+                  {selectedImageToAttach.collection?.Name || selectedImageToAttach.collection?.Title || selectedImageToAttach.AltText}
+                </p>
+              </div>
+
+              {/* Bước 1: Chọn năm */}
+              <div style={{marginBottom: '2rem'}}>
+                <h3 style={{fontSize: '20px', marginBottom: '1rem', color: '#2c3e50'}}>📅 Bước 1: Chọn năm của sự kiện</h3>
+                <input 
+                  type="number"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  placeholder="Nhập năm (VD: 1989, 2005...)"
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    fontSize: '1.1rem',
+                    border: '2px solid #dee2e6',
+                    borderRadius: '8px'
+                  }}
+                  min="1000"
+                  max="2100"
+                />
+              </div>
+
+              {/* Bước 2: Chọn tháng (nếu đã có năm) */}
+              {selectedYear && (
+                <div style={{marginBottom: '2rem'}}>
+                  <h3 style={{fontSize: '20px', marginBottom: '1rem', color: '#2c3e50'}}>📅 Bước 2: Chọn tháng</h3>
+                  <select 
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      fontSize: '1.1rem',
+                      border: '2px solid #dee2e6',
+                      borderRadius: '8px'
+                    }}
+                  >
+                    <option value="">-- Chọn tháng --</option>
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
+                      <option key={m} value={m.toString().padStart(2, '0')}>
+                        Tháng {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Bước 3: Upload ảnh (nếu đã có năm + tháng) */}
+              {selectedYear && selectedMonth && (
+                <div style={{marginBottom: '2rem'}}>
+                  <h3 style={{fontSize: '20px', marginBottom: '1rem', color: '#2c3e50'}}>📁 Bước 3: Upload ảnh</h3>
+                  <div style={{textAlign: 'center', padding: '2rem', border: '2px dashed #007bff', borderRadius: '12px', background: '#f0f8ff'}}>
+                    <input 
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setSelectedGalleryImage({file: file, preview: URL.createObjectURL(file)});
+                        }
+                      }}
+                      style={{display: 'none'}}
+                      id="timeline-image-upload"
+                    />
+                    <label 
+                      htmlFor="timeline-image-upload"
+                      style={{
+                        display: 'inline-block',
+                        padding: '1rem 2rem',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '1.1rem'
+                      }}
+                    >
+                      📁 Chọn File Ảnh
+                    </label>
+                    
+                    {selectedGalleryImage?.preview && (
+                      <div style={{marginTop: '1.5rem'}}>
+                        <img 
+                          src={selectedGalleryImage.preview} 
+                          alt="Preview"
+                          style={{maxWidth: '300px', maxHeight: '250px', objectFit: 'contain', borderRadius: '8px'}}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Bước 4: Nhập thông tin sự kiện */}
+              {selectedYear && selectedMonth && selectedGalleryImage?.file && (
+                <div style={{marginBottom: '2rem'}}>
+                  <h3 style={{fontSize: '20px', marginBottom: '1rem', color: '#2c3e50'}}>📝 Bước 4: Nhập thông tin sự kiện</h3>
+                  <div style={{marginBottom: '1.5rem'}}>
+                    <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '600'}}>Tiêu đề sự kiện *</label>
+                    <input 
+                      type="text"
+                      value={timelineForm.title}
+                      onChange={(e) => setTimelineForm({...timelineForm, title: e.target.value})}
+                      placeholder="VD: Khai trương chùa Bà..."
+                      style={{width: '100%', padding: '0.75rem', border: '2px solid #dee2e6', borderRadius: '8px'}}
+                    />
+                  </div>
+                  <div style={{marginBottom: '1.5rem'}}>
+                    <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '600'}}>Mô tả sự kiện</label>
+                    <textarea 
+                      value={timelineForm.description}
+                      onChange={(e) => setTimelineForm({...timelineForm, description: e.target.value})}
+                      placeholder="Mô tả chi tiết..."
+                      rows="4"
+                      style={{width: '100%', padding: '0.75rem', border: '2px solid #dee2e6', borderRadius: '8px'}}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAttachToExisting}
+                    disabled={!timelineForm.title}
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      background: timelineForm.title ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '1.1rem',
+                      fontWeight: '600',
+                      cursor: timelineForm.title ? 'pointer' : 'not-allowed'
+                    }}
+                  >
+                    ✅ Xác nhận gắn vào Timeline
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

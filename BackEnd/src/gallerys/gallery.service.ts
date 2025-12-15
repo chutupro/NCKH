@@ -92,6 +92,12 @@ export class GalleryService {
       payload['CollectionID'] = Number(meta.collectionId);
       console.log(`[Gallery Service] Setting CollectionID=${meta.collectionId} for image`);
     }
+
+    // ✅ Gắn Type nếu có (để phân biệt ảnh từ Map Admin)
+    if (cols.includes('Type') && meta?.type) {
+      payload['Type'] = meta.type;
+      console.log(`[Gallery Service] Setting Type=${meta.type} for image`);
+    }
     
     console.log(`[Gallery Service] Payload:`, JSON.stringify(payload, null, 2));
 

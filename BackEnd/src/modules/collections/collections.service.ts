@@ -77,22 +77,30 @@ export class CollectionsService {
   }
 
   async findAll() {
-    // ✅ CHỈ trả về collections có ảnh CHƯA được gắn vào MapLocations
-    const query = this.collectionRepo.createQueryBuilder('col')
+    // ✅ Trả về collections cho thư viện công khai
+    // LOẠI BỎ collections CHỈ chứa ảnh Type='map' (ảnh hiện đại từ Map Admin)
+    const allCols = await this.collectionRepo.createQueryBuilder('col')
       .leftJoinAndSelect('col.collectionArticles', 'colArticles')
       .leftJoinAndSelect('colArticles.article', 'article')
       .leftJoinAndSelect('article.images', 'articleImages')
       .leftJoinAndSelect('col.category', 'category')
-      .leftJoin('Images', 'img', 'img.CollectionID = col.CollectionID')
-      .leftJoin('MapLocations', 'mapLocMain', 'mapLocMain.MainImageID = img.ImageID')
-      .leftJoin('MapLocations', 'mapLocOld', 'mapLocOld.OldImageID = img.ImageID')
-      .where('mapLocMain.LocationID IS NULL') // Ảnh CHƯA được dùng làm MainImageID
-      .andWhere('mapLocOld.LocationID IS NULL') // Ảnh CHƯA được dùng làm OldImageID
-      .orderBy('col.CollectionID', 'DESC');
+      .orderBy('col.CollectionID', 'DESC')
+      .getMany();
 
-    const cols = await query.getMany();
+    // Lọc bỏ collections CHỈ có ảnh Type='map'
+    const cols: Collections[] = [];
+    for (const col of allCols) {
+      // Lấy tất cả ảnh của collection này
+      const images = await this.imagesRepo.find({ where: { CollectionID: col.CollectionID } });
+      
+      // Nếu collection KHÔNG CÓ ảnh nào, hoặc có ít nhất 1 ảnh không phải 'map' -> giữ lại
+      const hasNonMapImage = images.length === 0 || images.some(img => img.Type !== 'map');
+      if (hasNonMapImage) {
+        cols.push(col);
+      }
+    }
 
-    console.log(`📚 [Collections.findAll] Found ${cols.length} collections (available for public library)`);
+    console.log(`📚 [Collections.findAll] Found ${cols.length} collections (public library, excluded ${allCols.length - cols.length} map-only collections)`);
 
     return cols.map((c) => ({
       CollectionID: c.CollectionID,

@@ -346,6 +346,7 @@ const MapAdminNew = () => {
         formData.append('file', uploadedModernFile);
         formData.append('description', `Ảnh hiện đại - ${locationForm.title}`);
         formData.append('categoryId', locationForm.categoryId || '1');
+        formData.append('type', 'map'); // ✅ Đánh dấu ảnh từ Map Admin
 
         const galleryResponse = await axios.post(`${BASE_URL}/gallery`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
