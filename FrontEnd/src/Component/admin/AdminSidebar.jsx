@@ -36,7 +36,6 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
       section: 'Main',
       items: [
         { path: '/admin', icon: '📊', label: 'Dashboard', badge: null },
-        { path: '/admin/analytics', icon: '📈', label: 'Analytics', badge: null },
       ],
     },
     {
@@ -48,20 +47,6 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
         { path: '/admin/timeline-management', icon: '⏱️', label: 'Quản lý Timeline', badge: null },
         { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: pendingCount > 0 ? String(pendingCount) : null },
         { path: '/admin/comparisons', icon: '📸', label: 'Quản lý So Sánh', badge: null },
-      ],
-    },
-    {
-      section: 'AI & Automation',
-      items: [
-        { path: '/admin/ai-models', icon: '🤖', label: 'AI Models', badge: null },
-      ],
-    },
-    {
-      section: 'System',
-      items: [
-        { path: '/admin/system-monitor', icon: '🛡️', label: 'Giám sát', badge: null },
-        { path: '/admin/permissions', icon: '⚙️', label: 'Phân quyền', badge: null },
-        { path: '/admin/logs', icon: '📋', label: 'Logs', badge: null },
       ],
     },
   ];

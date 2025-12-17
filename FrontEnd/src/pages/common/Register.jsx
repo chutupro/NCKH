@@ -184,7 +184,7 @@ const Register = () => {
       <div className="auth-container">
         <div className="auth-left">
           <div className="auth-logo-large">
-            <div className="dragon-icon">🐉🪱</div>
+            <div className="dragon-icon">🐉</div>
             <h1 className="auth-brand-large">Đà Nẵng History</h1>
             <p className="auth-tagline">Khám phá lịch sử qua hình ảnh</p>
           </div>
