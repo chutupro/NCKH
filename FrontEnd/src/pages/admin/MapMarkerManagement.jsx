@@ -91,7 +91,8 @@ const MapMarkerManagement = () => {
       // Xóa marker khỏi state ngay lập tức (không cần reload)
       setMarkers(prev => prev.filter(m => m.LocationID !== marker.LocationID));
       
-      alert(`✅ Đã xóa marker "${marker.Name}" thành công!`);
+      // Không dùng alert để tránh trigger browser behavior - chỉ log
+      console.log(`✅ Đã xóa marker "${marker.Name}" thành công!`);
     } catch (err) {
       console.error('Lỗi xóa marker:', err);
       alert(`❌ Lỗi xóa marker: ${err.response?.data?.message || err.message}`);

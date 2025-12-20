@@ -30,24 +30,6 @@ const AdminNavbar = ({ sidebarCollapsed, title = 'Dashboard' }) => {
 
       {/* Right Side */}
       <div className="navbar-right">
-        {/* Search */}
-        <div className="navbar-search">
-          <span className="navbar-search-icon">🔍</span>
-          <input type="text" placeholder="Tìm kiếm..." />
-        </div>
-
-        {/* Notifications */}
-        <button className="navbar-icon-btn">
-          <span>🔔</span>
-          <span className="badge">5</span>
-        </button>
-
-        {/* Messages */}
-        <button className="navbar-icon-btn">
-          <span>💬</span>
-          <span className="badge">3</span>
-        </button>
-
         {/* User Menu */}
         <div
           className="navbar-user"
