@@ -496,19 +496,29 @@
 .timeline-actions {
   display: flex;
   gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+  /* ensure actions stay on the right and buttons sit horizontally */
 }
 
+/* Compact, consistent action buttons for timeline rows */
 .btn-view,
 .btn-edit,
 .btn-delete,
 .btn-attach {
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.9rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  min-height: 36px;
 }
 
 .btn-view {
@@ -516,20 +526,17 @@
   color: white;
 }
 
-.btn-view:hover {
-  background: #138496;
-  transform: translateY(-2px);
-}
+.btn-view:hover { transform: translateY(-2px); }
 
 .btn-attach {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  padding: 0.45rem 0.9rem;
 }
 
 .btn-attach:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 14px rgba(102, 126, 234, 0.28);
 }
 
 .btn-edit {
@@ -537,19 +544,19 @@
   color: #333;
 }
 
-.btn-edit:hover {
-  background: #e0a800;
-  transform: translateY(-2px);
-}
+.btn-edit:hover { transform: translateY(-2px); }
 
 .btn-delete {
   background: #dc3545;
   color: white;
+  padding: 0.45rem 0.85rem;
 }
 
-.btn-delete:hover {
-  background: #c82333;
-  transform: translateY(-2px);
+.btn-delete:hover { transform: translateY(-2px); }
+
+/* Make sure table action cell doesn't force narrow column when buttons are long */
+.timeline-table td.timeline-actions {
+  white-space: nowrap;
 }
 
 .no-data {

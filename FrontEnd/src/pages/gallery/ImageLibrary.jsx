@@ -59,6 +59,30 @@ const ImageLibrary = () => {
     return cat ? (cat.Name || cat.Title || `Danh mục ${code}`) : `Danh mục ${code}`;
   }
 
+  // Format a year for display from different possible fields safely
+  const formatYear = (item) => {
+    if (!item) return '';
+    const parse = (val) => {
+      if (val == null || val === '') return null;
+      if (typeof val === 'number' && Number.isFinite(val)) {
+        // If it's a 4-digit year, return it; otherwise try to interpret as timestamp
+        return String(val).length === 4 ? val : new Date(val).getFullYear();
+      }
+      if (typeof val === 'string') {
+        const trimmed = val.trim();
+        // numeric string like "1995"
+        if (/^\d{4}$/.test(trimmed)) return Number(trimmed);
+        const asNum = Number(trimmed);
+        if (!Number.isNaN(asNum) && String(asNum).length === 4) return asNum;
+        const d = new Date(trimmed);
+        if (!isNaN(d)) return d.getFullYear();
+      }
+      return null;
+    };
+
+    return (parse(item.Year) ?? parse(item.year) ?? parse(item.CreatedAt) ?? parse(item.createdAt) ?? '') || '';
+  };
+
   // Filter collections (search Title/Name/Description and year)
   let filtered = collections.filter(c => {
     const title = (c.Title || '') + ' ' + (c.Name || '');
@@ -259,28 +283,27 @@ const ImageLibrary = () => {
   }, []);
 
   return (
-    <div className="image-library-container">
-      <div className="filters-bar">
+    <div className="imglib-image-library-container">
+      <div className="imglib-filters-bar">
         <input
           type="text"
           placeholder={'Tìm kiếm theo tiêu đề hoặc năm (VD: Chùa, 1995)...'}
           value={search}
           onChange={handleSearch}
-          className="search-input"
+          className="imglib-search-input"
         />
         <select value={category} onChange={handleCategory} className="category-select">
           {categoryCodes.map(code => (
             <option key={code} value={code}>{labelFor(code)}</option>
           ))}
         </select>
-        <select value={sort} onChange={handleSortChange} className="category-select">
+        <select value={sort} onChange={handleSortChange} className="imglib-category-select">
           <option value="moi_nhat">{'Mới nhất'}</option>
           <option value="cu_nhat">{'Cũ nhất'}</option>
         </select>
-  <span className="result-count">{'Tìm thấy'} {filtered.length} {'bài viết'}</span>
+  <span className="imglib-result-count">{'Tìm thấy'} {filtered.length} {'bài viết'}</span>
       </div>
-
-      <div className="articles-grid">
+      <div className="imglib-articles-grid">
         {loading && <div className="loading">Đang tải bộ sưu tập...</div>}
         {error && <div className="error">Lỗi khi tải: {error}</div>}
         {!loading && !error && paginated.map(item => {
@@ -288,21 +311,21 @@ const ImageLibrary = () => {
           return (
             <div
               key={item.CollectionID}
-              className="article-card-link"
+              className="imglib-article-card-link"
               role="button"
               tabIndex={0}
               onClick={() => navigate(`/ImageLibrary/${item.CollectionID}`)}
               onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/ImageLibrary/${item.CollectionID}`); }}
             >
-              <div className="article-card">
-                <div className="card-image" style={{ backgroundImage: `url(${mainImage})` }}>
+              <div className="imglib-article-card">
+                <div className="imglib-card-image" style={{ backgroundImage: `url(${mainImage})` }}>
                   {/* Show Category name inside the image if available, otherwise fallback to CategoryID */}
-                  <span className="card-category">{getCollectionCategoryName(item) || (item.CategoryID ?? item.categoryID ?? item.CategoryId ?? item.categoryId ?? '')}</span>
+                  <span className="imglib-card-category">{getCollectionCategoryName(item) || (item.CategoryID ?? item.categoryID ?? item.CategoryId ?? item.categoryId ?? '')}</span>
                 </div>
-                <div className="card-content">
-                  <h3 className="card-title">{item.Title || item.Name}</h3>
-                  <div className="card-meta">
-                    <span className="card-date">📅 {'Năm'} {item.CreatedAt ? new Date(item.CreatedAt).getFullYear() : ''}</span>
+                <div className="imglib-card-content">
+                  <h3 className="imglib-card-title">{item.Title || item.Name}</h3>
+                  <div className="imglib-card-meta">
+                    <span className="imglib-card-date">{formatYear(item) ? `Năm ${formatYear(item)}` : ''}</span>
                   </div>
                 </div>
               </div>
@@ -311,7 +334,7 @@ const ImageLibrary = () => {
         })}
       </div>
 
-      <div className="pagination-bar">
+      <div className="imglib-pagination-bar">
         {Array.from({ length: totalPages }, (_, i) => (
           <button
             key={i + 1}

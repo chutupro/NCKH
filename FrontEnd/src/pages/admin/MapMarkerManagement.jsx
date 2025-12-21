@@ -204,7 +204,7 @@ const MapMarkerManagement = () => {
                 </div>
 
                 <div className="info-row">
-                  <span className="label">📌 Tọa độ:</span>
+                  <span className="label">Tọa độ:</span>
                   <span className="value">
                     {marker.Latitude?.toFixed(5)}, {marker.Longitude?.toFixed(5)}
                   </span>

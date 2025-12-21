@@ -84,8 +84,8 @@ const CompareDetail = () => {
       <div className="cta-section">
         <h3>Khám phá thêm</h3>
         <div className="cta-buttons">
-          <Link to="/compare" className="cta-btn primary">Xem thêm so sánh</Link>
-          <Link to="/ImageLibrary" className="cta-btn secondary">Thư viện ảnh</Link>
+          <Link to="/compare" className="cta-btn light">Xem thêm bài viết</Link>
+          <Link to="/ImageLibrary" className="cta-btn outline">Thư viện ảnh</Link>
         </div>
       </div>
     </div>

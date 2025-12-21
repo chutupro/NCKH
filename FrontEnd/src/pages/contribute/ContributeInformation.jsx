@@ -617,7 +617,6 @@ const ContributeInformation = () => {
                       </svg>
                     )}
                   </div>
-                  <div className="ai-card-icon">📝</div>
                   <div className="ai-card-title">Tiêu đề</div>
                   <div className="ai-card-desc">Tạo tiêu đề hấp dẫn từ hình ảnh</div>
                 </div>
@@ -633,7 +632,6 @@ const ContributeInformation = () => {
                       </svg>
                     )}
                   </div>
-                  <div className="ai-card-icon">🖼️</div>
                   <div className="ai-card-title">Mô tả ảnh</div>
                   <div className="ai-card-desc">Tạo mô tả chi tiết cho hình ảnh</div>
                 </div>
@@ -649,7 +647,6 @@ const ContributeInformation = () => {
                       </svg>
                     )}
                   </div>
-                  <div className="ai-card-icon">✍️</div>
                   <div className="ai-card-title">Nội dung</div>
                   <div className="ai-card-desc">Tạo nội dung đóng góp đầy đủ</div>
                 </div>

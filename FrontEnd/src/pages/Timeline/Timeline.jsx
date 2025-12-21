@@ -61,20 +61,45 @@ const Timeline = () => {
     fetchTimeline();
   }, [fromYear, toYear, selectedCategory]);
 
+  // Build a list of representative items — one per YEAR — but only for years
+  // that have at least one event dated on January 1st (YYYY-01-01).
   const filtered = useMemo(() => {
     console.log('🔍 [Timeline Debug] Timeline Data:', timelineData);
-    if (timelineData.length > 0) {
-      console.log('🔍 [First Item]:', timelineData[0]);
-      console.log('🔍 [First Item JSON]:', JSON.stringify(timelineData[0], null, 2));
-      console.log('🔍 [All Items]:', timelineData.map(item => ({
-        id: item.id,
-        title: item.title,
-        category: item.category,
-        collectionName: item.collectionName,
-        collectionYear: item.collectionYear,
-      })));
+
+    // Group items by year
+    const yearMap = new Map();
+    timelineData.forEach((item) => {
+      const year = item.collectionYear || (item.date ? String(item.date).split('-')[0] : null);
+      if (!year) return;
+      if (!yearMap.has(year)) yearMap.set(year, []);
+      yearMap.get(year).push(item);
+    });
+
+    // Keep only years that have at least one item with date YYYY-01-01
+    const reps = [];
+    for (const [year, items] of yearMap.entries()) {
+      const hasJanFirst = items.some(it => {
+        if (!it.date) return false;
+        const parts = String(it.date).split('-');
+        return parts[1] === '01' && parts[2] === '01';
+      });
+
+      if (!hasJanFirst) continue; // skip years without Jan 1st events
+
+      // Prefer the item that has the exact YYYY-01-01 date as representative
+      const janItem = items.find(it => it.date && String(it.date).split('-')[1] === '01' && String(it.date).split('-')[2] === '01');
+      reps.push(janItem || items[0]);
     }
-    return timelineData;
+
+    // Sort descending by year
+    reps.sort((a, b) => {
+      const ya = parseInt(a.collectionYear || (a.date ? a.date.split('-')[0] : '0'));
+      const yb = parseInt(b.collectionYear || (b.date ? b.date.split('-')[0] : '0'));
+      return yb - ya;
+    });
+
+    console.log('🔍 [Timeline Debug] Representative items per year (Jan 1 only):', reps.map(r => ({ id: r.id, year: r.collectionYear || (r.date ? r.date.split('-')[0] : null) })));
+    return reps;
   }, [timelineData]);
 
   const clearFilters = () => {
@@ -135,15 +160,15 @@ const Timeline = () => {
     }
   };
 
-  if (loading) return <div className="timeline-loading">Đang tải...</div>;
-  if (error) return <div className="timeline-error">Lỗi: {error}</div>;
+  if (loading) return <div className="tln-timeline-loading">Đang tải...</div>;
+  if (error) return <div className="tln-timeline-error">Lỗi: {error}</div>;
 
   return (
-    <main className="timeline-wrapper">
-      <header className="timeline-header">
-        <h1 className="timeline-main-title">Dòng thời gian lịch sử Đà Nẵng</h1>
-        <div className="timeline-search">
-          <div className="search-field">
+    <main className="tln-timeline-wrapper">
+      <header className="tln-timeline-header">
+        <h1 className="tln-timeline-main-title">Dòng thời gian lịch sử Đà Nẵng</h1>
+        <div className="tln-timeline-search">
+          <div className="tln-search-field">
             <label>Từ năm</label>
             <input
               type="number"
@@ -152,7 +177,7 @@ const Timeline = () => {
               onChange={(e) => setFromYear(e.target.value)}
             />
           </div>
-          <div className="search-field">
+          <div className="tln-search-field">
             <label>Đến năm</label>
             <input
               type="number"
@@ -161,24 +186,24 @@ const Timeline = () => {
               onChange={(e) => setToYear(e.target.value)}
             />
           </div>
-          <button className="btn" onClick={clearFilters}>
+          <button className="tln-btn" onClick={clearFilters}>
             Reset
           </button>
         </div>
         {isInvalidRange() && (
-          <div className="timeline-error">Năm không hợp lệ</div>
+          <div className="tln-timeline-error">Năm không hợp lệ</div>
         )}
       </header>
 
-      <div className="timeline-content-wrapper">
-        <aside className="timeline-sidebar">
-          <h3 className="sidebar-title">Danh mục</h3>
-          <ul className="category-list">
+      <div className="tln-timeline-content-wrapper">
+        <aside className="tln-timeline-sidebar">
+          <h3 className="tln-sidebar-title">Danh mục</h3>
+          <ul className="tln-category-list">
             {categories.map((cat) => (
               <li
                 key={cat}
-                className={`category-item ${
-                  selectedCategory === cat ? "active" : ""
+                className={`tln-category-item ${
+                  selectedCategory === cat ? "tln-active" : ""
                 }`}
                 onClick={() => setSelectedCategory(cat)}
               >
@@ -189,32 +214,32 @@ const Timeline = () => {
         </aside>
 
         <section
-          className="timeline-container"
+          className="tln-timeline-container"
           ref={containerRef}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerLeave={endDrag}
         >
-          <ul className="timeline-list" ref={listRef}>
+          <ul className="tln-timeline-list" ref={listRef}>
             {filtered.length === 0 ? (
-              <li className="timeline-empty">Không có sự kiện phù hợp.</li>
+              <li className="tln-timeline-empty">Không có sự kiện phù hợp.</li>
             ) : (
               filtered.map((item) => (
-                <li className="timeline-item" key={item.id}>
+                <li className="tln-timeline-item" key={item.id}>
                   <Link
                     to={`/timeline/${item.id}`}
-                    className="timeline-card-link"
+                    className="tln-timeline-card-link"
                   >
-                    <div className="timeline-card">
+                    <div className="tln-timeline-card">
                       <div
-                        className="timeline-card-image"
+                        className="tln-timeline-card-image"
                         style={{ backgroundImage: `url(${item.image})` }}
                       >
-                        <span className="timeline-badge">{item.category}</span>
+                        <span className="tln-timeline-badge">{item.category}</span>
                       </div>
-                      <div className="timeline-card-body">
-                        <time className="timeline-date">
+                      <div className="tln-timeline-card-body">
+                        <time className="tln-timeline-date">
                           {(() => {
                             const year = item.collectionYear;
                             
@@ -232,8 +257,13 @@ const Timeline = () => {
                             }
                           })()}
                         </time>
-                        <h3 className="timeline-title">{item.collectionName || item.title}</h3>
-                        <p className="timeline-desc">
+                        
+                        {/* Title under the year */}
+                        {item.title && (
+                          <div className="tln-timeline-event-title">{item.title}</div>
+                        )}
+
+                        <p className="tln-timeline-desc">
                           {item.collectionName && item.collectionName === item.desc 
                             ? '' 
                             : (item.desc || 'Không có mô tả')}
@@ -245,7 +275,7 @@ const Timeline = () => {
               ))
             )}
           </ul>
-          <div className="timeline-line" style={{ width: `${lineWidth}px` }} />
+          <div className="tln-timeline-line" style={{ width: `${lineWidth}px` }} />
         </section>
       </div>
     </main>

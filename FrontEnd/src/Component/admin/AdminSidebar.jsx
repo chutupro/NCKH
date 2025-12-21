@@ -35,18 +35,18 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
     {
       section: 'Main',
       items: [
-        { path: '/admin', icon: '📊', label: 'Dashboard', badge: null },
+        { path: '/admin', label: 'Dashboard', badge: null },
       ],
     },
     {
       section: 'Management',
       items: [
-        { path: '/admin/users', icon: '👥', label: 'Người dùng', badge: null },
-        { path: '/admin/content', icon: '📚', label: 'Thư viện Ảnh', badge: null },
-        { path: '/admin/locations', icon: '🗺️', label: 'Quản lý Địa điểm', badge: null },
-        { path: '/admin/timeline-management', icon: '⏱️', label: 'Quản lý Timeline', badge: null },
-        { path: '/admin/contributions', icon: '📝', label: 'Đóng góp', badge: pendingCount > 0 ? String(pendingCount) : null },
-        { path: '/admin/comparisons', icon: '📸', label: 'Quản lý So Sánh', badge: null },
+        { path: '/admin/users', label: 'Người dùng', badge: null },
+        { path: '/admin/content', label: 'Thư viện Ảnh', badge: null },
+        { path: '/admin/locations', label: 'Quản lý Địa điểm', badge: null },
+        { path: '/admin/timeline-management', label: 'Quản lý Timeline', badge: null },
+        { path: '/admin/contributions', label: 'Đóng góp', badge: pendingCount > 0 ? String(pendingCount) : null },
+        { path: '/admin/comparisons', label: 'Quản lý So Sánh', badge: null },
       ],
     },
   ];
@@ -56,8 +56,8 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
     {
       section: 'Moderation',
       items: [
-        { path: '/admin/contributions', icon: '📝', label: 'Duyệt Ảnh', badge: pendingCount > 0 ? String(pendingCount) : null },
-        { path: '/admin/map-management', icon: '🗺️', label: 'Quản Lý Bản Đồ', badge: null },
+        { path: '/admin/contributions', label: 'Duyệt Ảnh', badge: pendingCount > 0 ? String(pendingCount) : null },
+        { path: '/admin/map-management', label: 'Quản Lý Bản Đồ', badge: null },
       ],
     },
   ];
@@ -70,7 +70,6 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
       {/* Header */}
       <div className="sidebar-header">
         <Link to="/admin" className="sidebar-logo">
-          <div className="sidebar-logo-icon">🏛️</div>
           {!collapsed && <span>Admin Panel</span>}
         </Link>
         <button className="sidebar-toggle" onClick={onToggle}>

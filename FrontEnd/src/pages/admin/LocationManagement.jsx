@@ -42,7 +42,6 @@ const LocationManagement = () => {
             gap: '0.5rem',
           }}
         >
-          <span>🗺️</span>
           <span>Quản lý Địa điểm</span>
         </button>
 
@@ -63,7 +62,7 @@ const LocationManagement = () => {
             gap: '0.5rem',
           }}
         >
-          <span>🖼️</span>
+
           <span>Duyệt Ảnh</span>
         </button>
 
@@ -84,7 +83,7 @@ const LocationManagement = () => {
             gap: '0.5rem',
           }}
         >
-          <span>📍</span>
+
           <span>Danh sách Marker</span>
         </button>
       </div>

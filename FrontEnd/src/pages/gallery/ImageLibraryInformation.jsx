@@ -16,6 +16,28 @@ const ImageLibraryInformation = () => {
   const [error, setError] = React.useState(null);
   const [relatedCompares, setRelatedCompares] = React.useState([]);
 
+  // Format a year for display from different possible fields safely
+  const formatYear = (item) => {
+    if (!item) return '';
+    const parse = (val) => {
+      if (val == null || val === '') return null;
+      if (typeof val === 'number' && Number.isFinite(val)) {
+        return String(val).length === 4 ? val : new Date(val).getFullYear();
+      }
+      if (typeof val === 'string') {
+        const trimmed = val.trim();
+        if (/^\d{4}$/.test(trimmed)) return Number(trimmed);
+        const asNum = Number(trimmed);
+        if (!Number.isNaN(asNum) && String(asNum).length === 4) return asNum;
+        const d = new Date(trimmed);
+        if (!isNaN(d)) return d.getFullYear();
+      }
+      return null;
+    };
+
+    return (parse(item.Year) ?? parse(item.year) ?? parse(item.CreatedAt) ?? parse(item.createdAt) ?? '') || '';
+  };
+
   React.useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -71,13 +93,13 @@ const ImageLibraryInformation = () => {
     return () => { mounted = false; ac.abort(); };
   }, [collection]);
 
-  if (loading) return <div className="lib-info-container"><div className="loading">Đang tải...</div></div>;
-  if (error) return <div className="lib-info-container"><div className="error">Lỗi: {error}</div></div>;
+  if (loading) return <div className="ilinfo-container"><div className="loading">Đang tải...</div></div>;
+  if (error) return <div className="ilinfo-container"><div className="error">Lỗi: {error}</div></div>;
   if (!collection) return (
-    <div className="lib-info-container">
+    <div className="ilinfo-container">
       <div className="not-found">
         <h2>{'Bộ sưu tập không tìm thấy'}</h2>
-        <Link to="/ImageLibrary" className="back-btn">← {'Quay lại thư viện'}</Link>
+        <Link to="/ImageLibrary" className="ilinfo-back">← {'Quay lại thư viện'}</Link>
       </div>
     </div>
   );
@@ -85,12 +107,12 @@ const ImageLibraryInformation = () => {
   const mainImage = collection.ImagePath || collection.image || '';
 
   return (
-    <div className="lib-info-container">
-      <div className="lib-info-header">
-        <button onClick={() => navigate(-1)} className="back-btn">
+    <div className="ilinfo-container">
+      <div className="ilinfo-header">
+        <button onClick={() => navigate(-1)} className="ilinfo-back">
           <span>←</span> {'Quay lại'}
         </button>
-        <div className="breadcrumb">
+        <div className="ilinfo-breadcrumb">
           <Link to="/">{'Trang chủ'}</Link>
           <span>/</span>
           <Link to="/ImageLibrary">{'Thư viện ảnh'}</Link>
@@ -98,30 +120,30 @@ const ImageLibraryInformation = () => {
           <span>{collection.Title || collection.Name || `#${collection.CollectionID || collection.id}`}</span>
         </div>
       </div>
-
-      <div className="lib-info-hero">
-        <div className="hero-image" style={{ backgroundImage: `url(${mainImage})` }}>
-          <div className="hero-overlay">
-            <span className="hero-category">{collection.Category?.Name || (`ID:${collection.CategoryID ?? collection.CategoryId ?? ''}`)}</span>
+      <div className="ilinfo-hero">
+        <div className="ilinfo-heroImage" style={{ backgroundImage: `url(${mainImage})` }}>
+          <div className="ilinfo-heroOverlay">
+            <span className="ilinfo-category">{collection.Category?.Name || (`ID:${collection.CategoryID ?? collection.CategoryId ?? ''}`)}</span>
           </div>
         </div>
-        <div className="hero-content">
-          <h1 className="hero-title">{collection.Title || collection.Name}</h1>
-          <div className="hero-meta">
-            <span className="meta-item">📅 {'Năm'} {collection.CreatedAt ? new Date(collection.CreatedAt).getFullYear() : ''}</span>
+
+        <div className="ilinfo-content">
+          <h1 className="ilinfo-title">{collection.Title || collection.Name}</h1>
+          <div className="ilinfo-meta">
+            <span className="ilinfo-metaItem">📅 {formatYear(collection) ? `Năm ${formatYear(collection)}` : ''}</span>
             {/* Likes removed per request */}
           </div>
-          <p className="hero-description">{collection.Description || collection.description || collection.Content}</p>
+          <p className="ilinfo-description">{collection.Description || collection.description || collection.Content}</p>
         </div>
       </div>
 
-      
 
-      <div className="cta-section">
-  <h3>{'Khám phá thêm'}</h3>
-        <div className="cta-buttons">
-          <Link to="/ImageLibrary" className="cta-btn primary">{'Xem thêm bài viết'}</Link>
-          <Link to="/compare" className="cta-btn secondary">{'So sánh xưa - nay'}</Link>
+
+      <div className="ilinfo-cta">
+        <h3>{'Khám phá thêm'}</h3>
+        <div className="ilinfo-ctaButtons">
+          <Link to="/ImageLibrary" className="ilinfo-ctaBtn primary">{'Xem thêm bài viết'}</Link>
+          <Link to="/compare" className="ilinfo-ctaBtn secondary">{'So sánh xưa - nay'}</Link>
         </div>
       </div>
     </div>

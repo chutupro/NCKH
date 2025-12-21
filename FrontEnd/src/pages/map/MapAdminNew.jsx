@@ -373,9 +373,6 @@ const MapAdminNew = () => {
         imageYear: locationForm.modernYear || "",  // ✅ THÊM: Năm ảnh hiện đại
         oldImageYear: locationForm.oldYear || "",  // ✅ THÊM: Năm ảnh xưa
       };
-
-      console.log('🚀 Creating location with ImageIDs + Years:', locationData);
-      console.log('📅 [DEBUG] Sending imageYear:', locationData.imageYear, 'oldImageYear:', locationData.oldImageYear);
       const locationRes = await axios.post(`${BASE_URL}/map-locations`, locationData);
       const newLocationId = locationRes.data.LocationID || locationRes.data.id;
 
@@ -443,7 +440,7 @@ const MapAdminNew = () => {
         color: "white",
       }}>
         <h1 style={{ margin: 0, fontSize: "2rem", fontWeight: "600" }}>
-          📍 Quản lý Địa điểm - Gắn ảnh từ Thư viện
+        Quản lý Địa điểm - Gắn ảnh từ Thư viện
         </h1>
         <p style={{ margin: "8px 0 0", fontSize: "1rem", opacity: 0.95 }}>
           Chọn ảnh từ thư viện và gắn thông tin địa điểm vào ảnh
@@ -462,7 +459,7 @@ const MapAdminNew = () => {
           overflowY: "auto",
         }}>
           <h2 style={{ margin: "0 0 16px", fontSize: "1.3rem", color: "#374151" }}>
-            🖼️ Ảnh từ Thư viện
+            Ảnh từ Thư viện
           </h2>
 
           {/* Filter */}
@@ -513,7 +510,7 @@ const MapAdminNew = () => {
               textAlign: "center",
             }}>
               <p style={{ margin: 0, fontWeight: "600", color: "#d97706" }}>
-                🏛️ Chọn ảnh XƯA từ thư viện
+                Chọn ảnh XƯA từ thư viện
               </p>
               <button
                 onClick={() => setSelectingOldImage(false)}
@@ -670,7 +667,7 @@ const MapAdminNew = () => {
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           }}>
             <h3 style={{ margin: "0 0 12px", fontSize: "1.1rem", color: "#374151" }}>
-              🏙️ Ảnh HIỆN ĐẠI (Upload mới)
+              Ảnh HIỆN ĐẠI (Upload mới)
             </h3>
             {uploadedModernImage ? (
               <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
@@ -745,7 +742,7 @@ const MapAdminNew = () => {
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           }}>
             <h3 style={{ margin: "0 0 12px", fontSize: "1.1rem", color: "#374151" }}>
-              🏛️ Ảnh XƯA (Từ thư viện)
+              Ảnh XƯA (Từ thư viện)
             </h3>
             {selectedOldImage ? (
               <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
@@ -813,7 +810,7 @@ const MapAdminNew = () => {
             boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           }}>
             <h3 style={{ margin: "0 0 16px", fontSize: "1.1rem", color: "#374151" }}>
-              📝 Thông tin Địa điểm
+              Thông tin Địa điểm
             </h3>
 
             <form onSubmit={handleSubmit}>

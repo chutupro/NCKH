@@ -121,7 +121,7 @@
 
 .menu-item {
   display: flex;
-  align-items: center;
+
   gap: 0.75rem;
   padding: 0.75rem 1.5rem;
   color: rgba(255, 255, 255, 0.8);
@@ -397,6 +397,16 @@
   color: var(--admin-gray);
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
+}
+
+/* Prevent category badges in admin tables from wrapping */
+.data-table td span {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 96px;
+  vertical-align: middle;
 }
 
 .stats-card-value {

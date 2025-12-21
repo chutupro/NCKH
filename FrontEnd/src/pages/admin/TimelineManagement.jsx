@@ -132,6 +132,11 @@ const TimelineManagement = () => {
   const [selectedExistingTimeline, setSelectedExistingTimeline] = useState(null);
   const [selectedGalleryImage, setSelectedGalleryImage] = useState(null);
 
+  // Year modal state: month-specific items are shown only inside this modal
+  const [showYearModal, setShowYearModal] = useState(false);
+  const [yearModalItems, setYearModalItems] = useState([]);
+  const [expandedYear, setExpandedYear] = useState(null);
+
   // Mở modal để chọn tháng và ảnh để đăng vào Timeline
   const handleAttachToEvent = (imageId) => {
     console.log('🟢 [FUNCTION START] handleAttachToEvent called with ImageID:', imageId);
@@ -191,6 +196,26 @@ const TimelineManagement = () => {
       const matchMonth = !selectedMonth || month === selectedMonth;
       return matchYear && matchMonth;
     });
+  };
+
+  // Open year modal and load items for that year
+  const openYearModal = (year) => {
+    if (!year) return;
+    const items = timelines.filter(t => {
+      if (t.eventDate) {
+        const y = t.eventDate.split('-')[0];
+        if (String(y) === String(year)) return true;
+      }
+      if (t.ImageID) {
+        const img = images.find(i => i.ImageID === t.ImageID);
+        if (img?.collection?.Year && String(img.collection.Year) === String(year)) return true;
+      }
+      return false;
+    });
+
+    setYearModalItems(items);
+    setExpandedYear(year);
+    setShowYearModal(true);
   };
 
   // Xử lý đăng ảnh vào Timeline
@@ -301,6 +326,34 @@ const TimelineManagement = () => {
   const sortedTimelines = [...filteredTimelines].sort((a, b) => {
     return (b.eventDate || '').localeCompare(a.eventDate || '');
   });
+
+  // Group timelines by year so main table shows one row per year.
+  const groupedYears = (() => {
+    const map = {};
+    sortedTimelines.forEach(t => {
+      let year = null;
+      if (t.eventDate) {
+        const parts = t.eventDate.split('-');
+        if (parts[0]) year = parts[0];
+      }
+      if (!year && t.ImageID) {
+        const img = images.find(i => i.ImageID === t.ImageID);
+        if (img?.collection?.Year) year = String(img.collection.Year);
+      }
+      if (!year) year = 'N/A';
+
+      if (!map[year]) map[year] = [];
+      map[year].push(t);
+    });
+
+    return Object.keys(map)
+      .sort((a, b) => {
+        if (a === 'N/A') return 1;
+        if (b === 'N/A') return -1;
+        return parseInt(b) - parseInt(a);
+      })
+      .map(y => ({ year: y, items: map[y] }));
+  })();
 
   const fetchTimelines = async () => {
     try {
@@ -424,12 +477,13 @@ const TimelineManagement = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    // Format YYYY-MM-DD to DD/MM/YYYY
-    const parts = dateStr.split('-');
+    // Accept ISO datetimes too: take only the date portion before 'T' or space
+    let ds = String(dateStr).split('T')[0].split(' ')[0];
+    const parts = ds.split('-');
     if (parts.length === 3) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
-    return dateStr;
+    return String(dateStr);
   };
 
   return (
@@ -524,7 +578,7 @@ const TimelineManagement = () => {
             <tr>
               <th style={{width: '100px'}}>Hình ảnh</th>
               <th>Tiêu đề</th>
-              <th style={{width: '100px'}}>Năm</th>
+              <th style={{width: '130px'}}>Thời gian</th>
               <th style={{width: '400px'}}>Mô tả</th>
               <th style={{width: '150px'}}>Thao tác</th>
             </tr>
@@ -533,11 +587,35 @@ const TimelineManagement = () => {
             {sortedTimelines.map((timeline) => {
               const image = images.find(i => i.ImageID === timeline.ImageID);
               
-              // Lấy năm từ collection của ảnh
-              const yearFromImage = image?.collection?.Year;
-              // Hoặc từ eventDate nếu có
-              const yearFromEvent = timeline.eventDate ? new Date(timeline.eventDate).getFullYear() : null;
-              const displayYear = yearFromImage || yearFromEvent || 'N/A';
+              // Tính giá trị hiển thị cho cột Tháng/Năm:
+              // - Nếu có trường ngày trên timeline => hiển thị 'Tháng M/YYYY'
+              // - Nếu chỉ có collection.Year hoặc timeline.year => hiển thị 'Tháng 1/YYYY' (fallback tháng 1)
+              // - Ngược lại => 'N/A'
+              let displayTime = 'N/A';
+              const eventDateRaw = timeline.eventDate || timeline.date || timeline.EventDate || timeline.event_date || timeline.eventDateTime || timeline.Date || null;
+              if (eventDateRaw) {
+                // chuẩn hoá và lấy month/year
+                const ds = String(eventDateRaw).split('T')[0].split(' ')[0];
+                const parts = ds.split('-');
+                if (parts.length === 3) {
+                  const month = parseInt(parts[1], 10);
+                  const year = parts[0];
+                  displayTime = `Tháng ${month}/${year}`;
+                } else if (parts.length === 2) {
+                  // nếu chỉ có YYYY-MM
+                  const month = parseInt(parts[1], 10);
+                  const year = parts[0];
+                  displayTime = `Tháng ${month}/${year}`;
+                } else {
+                  displayTime = String(eventDateRaw);
+                }
+              } else if (image?.collection?.Year) {
+                displayTime = `Tháng 1/${image.collection.Year}`;
+              } else if (timeline.year) {
+                displayTime = `Tháng 1/${timeline.year}`;
+              } else {
+                console.debug('[TimelineManagement] missing date for timeline', timeline.timelineID || timeline.id || '(no id)');
+              }
               
               // Lấy MÔ TẢ từ ảnh gallery (ImageDescription hoặc Description từ collection)
               const imageDescription = image?.collection?.ImageDescription || image?.collection?.Description || image?.AltText || 'Chưa có mô tả';
@@ -557,7 +635,7 @@ const TimelineManagement = () => {
                     )}
                   </td>
                   <td className="timeline-title">{timeline.title || imageDescription}</td>
-                  <td className="timeline-date">{displayYear}</td>
+                  <td className="timeline-date">{displayTime}</td>
                   <td className="timeline-desc">
                     {imageDescription?.substring(0, 200)}
                     {imageDescription?.length > 200 ? '...' : ''}
@@ -571,7 +649,7 @@ const TimelineManagement = () => {
                       }}
                       title="Gắn ảnh vào sự kiện"
                     >
-                      📌 Gắn vào Sự kiện
+                      Gắn vào Sự kiện
                     </button>
                     <button 
                       className="btn-delete"
@@ -597,12 +675,12 @@ const TimelineManagement = () => {
       {activeTab === 'pending-images' && (
         <div className="pending-images-section">
           <div className="section-info">
-            <h3>📸 Ảnh từ Thư viện (thông tin gốc - không sửa)</h3>
+            <h3>Ảnh từ Thư viện (thông tin gốc - không sửa)</h3>
             <p>Các ảnh này đã có <strong>tiêu đề ảnh, mô tả ảnh, thể loại</strong> từ Thư viện. Timeline sẽ:</p>
             <ul>
-              <li>📌 <strong>Giữ nguyên</strong> thông tin ảnh gốc</li>
-              <li>📅 <strong>Thêm</strong> thông tin sự kiện lịch sử (năm, tiêu đề sự kiện, mô tả sự kiện)</li>
-              <li>♻️ <strong>1 ảnh</strong> có thể xuất hiện trong <strong>nhiều timeline</strong> (nhiều mốc thời gian khác nhau)</li>
+              <li><strong>Giữ nguyên</strong> thông tin ảnh gốc</li>
+              <li><strong>Thêm</strong> thông tin sự kiện lịch sử (năm, tiêu đề sự kiện, mô tả sự kiện)</li>
+              <li><strong>1 ảnh</strong> có thể xuất hiện trong <strong>nhiều timeline</strong> (nhiều mốc thời gian khác nhau)</li>
             </ul>
           </div>
 
@@ -892,7 +970,7 @@ const TimelineManagement = () => {
                       <img src={selectedImagePreview} alt="Preview" />
                     </div>
                     <div className="image-original-info">
-                      <p className="info-label">📌 Thông tin ảnh gốc (từ Thư viện - không sửa):</p>
+                      <p className="info-label">Thông tin ảnh gốc (từ Thư viện - không sửa):</p>
                       <p><strong>Tiêu đề ảnh:</strong> {images.find(i => i.ImageID === timelineForm.ImageID)?.AltText || 'Chưa có'}</p>
                       <p><strong>Thể loại:</strong> {
                         images.find(i => i.ImageID === timelineForm.ImageID)?.CategoryID === 1 ? 'Di sản' :

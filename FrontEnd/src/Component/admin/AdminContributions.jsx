@@ -312,25 +312,8 @@ const AdminContributions = () => {
   return (
     <div className="admin-contributions">
       <div className="contributions-header">
-        <h1>Quản lý Đóng góp</h1>
-        <div className="contributions-stats">
-          <div className="stat-card total">
-            <span className="stat-number">{totalSubmissions}</span>
-            <span className="stat-label">Tổng đóng góp</span>
-          </div>
-          <div className="stat-card pending">
-            <span className="stat-number">{pendingArticles.length}</span>
-            <span className="stat-label">Chờ duyệt</span>
-          </div>
-          <div className="stat-card approved">
-            <span className="stat-number">{approvedArticles.length}</span>
-            <span className="stat-label">Đã duyệt</span>
-          </div>
-          <div className="stat-card rejected">
-            <span className="stat-number">{rejectedArticles.length}</span>
-            <span className="stat-label">Đã từ chối</span>
-          </div>
-        </div>
+        <h1 style={{color:'black'}}>Quản lý Đóng góp</h1>
+        
       </div>
 
       {/* Thanh tìm kiếm và lọc */}

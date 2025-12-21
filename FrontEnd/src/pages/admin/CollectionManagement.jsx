@@ -269,39 +269,14 @@ const CollectionManagement = () => {
       {/* Page Header */}
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#1f2937', marginBottom: '0.5rem' }}>
-          📚 Quản lý bộ sưu tập
+          Quản lý bộ sưu tập
         </h1>
         <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
           Tạo và quản lý các bộ sưu tập bài viết theo danh mục
         </p>
       </div>
 
-      {/* Header Stats */}
-      <div className="stats-grid" style={{ marginBottom: '2rem' }}>
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon primary">📚</div>
-          </div>
-          <div className="stats-card-title">Tổng bộ sưu tập</div>
-          <div className="stats-card-value">{collections.length}</div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon success">📁</div>
-          </div>
-          <div className="stats-card-title">Danh mục</div>
-          <div className="stats-card-value">{categories.length}</div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card-header">
-            <div className="stats-card-icon warning">🔍</div>
-          </div>
-          <div className="stats-card-title">Kết quả lọc</div>
-          <div className="stats-card-value">{filteredCollections.length}</div>
-        </div>
-      </div>
+      
 
       {/* Search & Filter Bar */}
       <div className="data-table-container" style={{ marginBottom: '1rem' }}>
@@ -339,7 +314,7 @@ const CollectionManagement = () => {
               minWidth: '200px',
             }}
           >
-            <option value="all">📁 Tất cả danh mục</option>
+            <option value="all">Tất cả danh mục</option>
             {categories.map((cat) => (
               <option key={cat.CategoryID} value={cat.CategoryID}>
                 {cat.Name}
@@ -568,7 +543,7 @@ const CollectionManagement = () => {
                     color: '#374151',
                   }}
                 >
-                  Mô tả
+                  Mô tả ảnh
                 </label>
                 <textarea
                   name="description"
@@ -664,14 +639,14 @@ const CollectionManagement = () => {
                     color: '#374151',
                   }}
                 >
-                  Mô tả ảnh
+                  thông tin chi tiết
                 </label>
                 <input
                   type="text"
                   name="imageDescription"
                   value={formData.imageDescription}
                   onChange={handleInputChange}
-                  placeholder="Nhập mô tả ảnh (alt text)"
+                  placeholder="Nhập thông tin chi tiết"
                   style={{
                     width: '100%',
                     padding: '0.75rem',

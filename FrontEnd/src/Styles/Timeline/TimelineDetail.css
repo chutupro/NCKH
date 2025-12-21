@@ -1,7 +1,7 @@
 /* Timeline Detail Page - Redesigned */
 .timeline-detail-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, rgba(42, 35, 28, 1) 0%, rgba(32, 25, 20, 1) 100%);
+  
   padding: 80px 20px 40px;
 }
 
@@ -118,10 +118,8 @@
 
 /* Month Navigation Bar - Sticky */
 .month-navigation-sticky {
-  position: sticky;
   top: 60px;
   z-index: 100;
-  background: linear-gradient(135deg, rgba(61, 47, 31, 0.95) 0%, rgba(42, 35, 28, 0.95) 100%);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 25px;

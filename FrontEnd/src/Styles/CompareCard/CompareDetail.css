@@ -61,7 +61,6 @@
   color: #e8e9ed;
 }
 
-
 .cd-container {
   max-width: 1180px;
   margin: 0 auto;
@@ -86,7 +85,11 @@
 .cd-category-badge {
   display: inline-block;
   padding: 6px 16px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.2),
+    rgba(37, 99, 235, 0.2)
+  );
   border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 20px;
   color: #60a5fa;
@@ -180,7 +183,9 @@
   position: relative;
   width: 100%;
   max-width: 560px; /* reduce media width so image fits on one viewport */
-  max-height: calc(100vh - 160px); /* keep compare area within viewport height */
+  max-height: calc(
+    100vh - 160px
+  ); /* keep compare area within viewport height */
   aspect-ratio: 4 / 3; /* give the container an intrinsic height so absolutely-positioned images have space */
   margin: 8px auto;
   overflow: hidden;
@@ -269,7 +274,7 @@
   justify-content: center;
   color: #fff;
   box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5),
-              0 0 0 8px rgba(59, 130, 246, 0.2);
+    0 0 0 8px rgba(59, 130, 246, 0.2);
   transition: all 0.2s ease;
 }
 
@@ -278,7 +283,7 @@
 .cd-dragging .cd-handle-circle {
   transform: scale(1.15);
   box-shadow: 0 6px 30px rgba(59, 130, 246, 0.6),
-              0 0 0 12px rgba(59, 130, 246, 0.3);
+    0 0 0 12px rgba(59, 130, 246, 0.3);
 }
 
 .cd-labels {
@@ -353,7 +358,7 @@
 }
 
 .cd-section h3::before {
-  content: '';
+  content: "";
   width: 4px;
   height: 24px;
   background: linear-gradient(180deg, #3b82f6, #2563eb);
@@ -419,7 +424,11 @@
 .cd-like-btn {
   width: 100%;
   padding: 12px; /* reduce height */
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.1),
+    rgba(220, 38, 38, 0.1)
+  );
   border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 10px;
   color: #ef4444;
@@ -435,7 +444,11 @@
 }
 
 .cd-like-btn:hover {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.2),
+    rgba(220, 38, 38, 0.2)
+  );
   border-color: rgba(239, 68, 68, 0.5);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
@@ -466,16 +479,26 @@
 
 /* Sidebar entrance animation */
 @keyframes cdSlideUpFade {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .cd-sidebar > * {
   opacity: 0;
   animation: cdSlideUpFade 0.4s ease forwards;
 }
-.cd-sidebar > *:nth-child(1) { animation-delay: 0.05s; }
-.cd-sidebar > *:nth-child(2) { animation-delay: 0.1s; }
+.cd-sidebar > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.cd-sidebar > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
 
 .cd-stat-item svg {
   color: #60a5fa;
@@ -609,8 +632,88 @@
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .compare-slider-section .section-title {
     font-size: 24px;
+  }
+}
+
+/* CTA (Khám phá thêm) styles — mirror provided screenshot */
+.cta-section {
+  max-width: 1200px;
+  margin: 40px auto 48px;
+  padding: 28px 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.6) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.cta-section h3 {
+  font-size: 22px;
+  color: #ffffff;
+  margin: 0;
+  font-weight: 800;
+  text-align: center;
+}
+
+.cta-buttons {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.cta-btn {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+/* left button: white pill with blue text + glow */
+.cta-btn.light {
+  background: #ffffff;
+  color: #2b63ff;
+  box-shadow: 0 20px 40px rgba(43, 99, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(43, 99, 255, 0.08);
+}
+
+.cta-btn.light:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 60px rgba(43, 99, 255, 0.16), 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+/* right button: dark outlined */
+.cta-btn.outline {
+  background: transparent;
+  color: #e8e9ed;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.cta-btn.outline:hover {
+  background: rgba(255, 255, 255, 0.02);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .cta-section {
+    padding: 20px;
+  }
+  .cta-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  .cta-btn {
+    width: 100%;
+    padding: 12px 18px;
   }
 }

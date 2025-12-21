@@ -46,6 +46,18 @@ const Community = () => {
     }
   }, [location.search])
 
+  // When user navigates away from the Community page, clear persisted filters
+  // so returning to the page starts with a fresh state. This prevents the
+  // search field from re-populating unintentionally after visiting other pages.
+  useEffect(() => {
+    return () => {
+      try { localStorage.removeItem('community.filters'); } catch (e) { /* ignore */ }
+      try { window.history.replaceState({}, '', location.pathname); } catch (e) { /* ignore */ }
+    }
+    // We intentionally do not add dependencies; this cleanup runs on unmount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Persist activeFilter + searchQuery to URL so refresh keeps them
   useEffect(() => {
     const params = new URLSearchParams();

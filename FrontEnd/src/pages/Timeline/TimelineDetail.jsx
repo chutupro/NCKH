@@ -79,14 +79,17 @@ const TimelineDetail = () => {
 
   // Scroll to month
   const scrollToMonth = (month) => {
+    // set active first, then scroll after render (small delay)
     setActiveMonth(month);
-    if (monthRefs.current[month]) {
-      monthRefs.current[month].scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start',
-        inline: 'nearest'
-      });
-    }
+    setTimeout(() => {
+      if (monthRefs.current[month]) {
+        monthRefs.current[month].scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 60);
   };
 
   // Count events per month
@@ -118,6 +121,8 @@ const TimelineDetail = () => {
 
   const year = mainEvent.date.slice(0, 4);
   const { months: monthGroups, yearOnlyEvents } = groupByMonth(yearEvents);
+  // only months that actually have events
+  const monthsWithEvents = Object.keys(monthGroups).map(Number).sort((a, b) => a - b);
 
   return (
     <main className="timeline-detail-page">
@@ -143,23 +148,24 @@ const TimelineDetail = () => {
           <div className="month-nav-container">
             <h2 className="nav-title">⏳ Chọn tháng trong năm {year}</h2>
             <div className="month-nav-grid">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
-                const eventCount = getMonthEventCount(month, monthGroups);
-                const hasEvents = eventCount > 0;
-                
-                return (
-                  <button
-                    key={month}
-                    className={`month-nav-btn ${activeMonth === month ? 'active' : ''} ${!hasEvents ? 'disabled' : ''}`}
-                    onClick={() => hasEvents && scrollToMonth(month)}
-                    disabled={!hasEvents}
-                  >
-                    <span className="month-nav-number">{month}</span>
-                    <span className="month-nav-name">{monthNames[month - 1]}</span>
-                    {hasEvents && <span className="month-nav-count">{eventCount}</span>}
-                  </button>
-                );
-              })}
+              {monthsWithEvents.length === 0 ? (
+                <div className="no-events">Không có bài viết theo tháng trong năm này.</div>
+              ) : (
+                monthsWithEvents.map((month) => {
+                  const eventCount = getMonthEventCount(month, monthGroups);
+                  return (
+                    <button
+                      key={month}
+                      className={`month-nav-btn ${activeMonth === month ? 'active' : ''}`}
+                      onClick={() => scrollToMonth(month)}
+                    >
+                      <span className="month-nav-number">{month}</span>
+                      <span className="month-nav-name">{monthNames[month - 1]}</span>
+                      {eventCount > 0 && <span className="month-nav-count">{eventCount}</span>}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
@@ -170,9 +176,8 @@ const TimelineDetail = () => {
             <p className="no-events">Không có sự kiện nào trong năm này.</p>
           ) : (
             <div className="monthly-timeline">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
+              {monthsWithEvents.map((month) => {
                 const events = monthGroups[month] || [];
-                if (events.length === 0) return null;
 
                 return (
                   <div 
@@ -185,43 +190,43 @@ const TimelineDetail = () => {
                       <span className="month-name">{monthNames[month - 1]}</span>
                       <span className="month-event-count">{events.length} sự kiện</span>
                     </div>
-                    <div className="month-events">
-                      {events.map((event) => (
-                        <div 
-                          key={event.id} 
-                          className={`event-card ${event.id === parseInt(id) ? 'active' : ''}`}
-                          onClick={() => {
-                            if (event.id !== parseInt(id)) {
-                              navigate(`/timeline/${event.id}`);
-                            }
-                          }}
-                        >
-                          <div className="event-image" style={{ backgroundImage: `url(${event.image})` }}>
-                            <span className="event-badge">{mainEvent.category}</span>
+                    {activeMonth === month ? (
+                      <div className="month-events">
+                        {events.map((event) => (
+                          <div 
+                            key={event.id} 
+                            className={`event-card ${event.id === parseInt(id) ? 'active' : ''}`}
+                            onClick={() => {
+                              if (event.id !== parseInt(id)) {
+                                navigate(`/timeline/${event.id}`);
+                              }
+                            }}
+                          >
+                            <div className="event-image" style={{ backgroundImage: `url(${event.image})` }}>
+                              <span className="event-badge">{mainEvent.category}</span>
+                            </div>
+                            <div className="event-content">
+                              <time className="event-date">
+                                {(() => {
+                                  const eventDate = new Date(event.date);
+                                  const month = eventDate.getMonth() + 1;
+                                  const year = eventDate.getFullYear();
+                                  const day = eventDate.getDate();
+                                  
+                                  if (day > 1 || event.desc) {
+                                    return `Tháng ${month}/${year}`;
+                                  } else {
+                                    return `Năm ${year}`;
+                                  }
+                                })()}
+                              </time>
+                              <h3 className="event-title">{event.title}</h3>
+                              <p className="event-desc">{event.desc || 'Không có mô tả'}</p>
+                            </div>
                           </div>
-                          <div className="event-content">
-                            <time className="event-date">
-                              {(() => {
-                                const eventDate = new Date(event.date);
-                                const month = eventDate.getMonth() + 1;
-                                const year = eventDate.getFullYear();
-                                const day = eventDate.getDate();
-                                
-                                // Nếu có tháng cụ thể (không phải ngày 01) → hiển thị tháng/năm
-                                // Nếu là ngày 01 (mặc định) → chỉ hiển thị năm
-                                if (day > 1 || event.desc) {
-                                  return `Tháng ${month}/${year}`;
-                                } else {
-                                  return `Năm ${year}`;
-                                }
-                              })()}
-                            </time>
-                            <h3 className="event-title">{event.title}</h3>
-                            <p className="event-desc">{event.desc || 'Không có mô tả'}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}
