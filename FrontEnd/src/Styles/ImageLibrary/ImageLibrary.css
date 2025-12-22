@@ -116,6 +116,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: space-between;
   font-size: 13px;
   color: var(--muted);
 }
@@ -123,6 +124,25 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+}
+
+.imglib-map-btn {
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.2), rgba(49, 130, 206, 0.15));
+  color: #90cdf4;
+  border: 1px solid rgba(66, 153, 225, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.imglib-map-btn:hover {
+  background: linear-gradient(135deg, rgba(66, 153, 225, 0.3), rgba(49, 130, 206, 0.25));
+  border-color: rgba(66, 153, 225, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
 }
 
 .imglib-pagination-bar {

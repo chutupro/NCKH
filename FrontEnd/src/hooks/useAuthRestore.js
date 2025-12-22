@@ -60,12 +60,14 @@ export const useAuthRestore = () => {
           fullName: user?.FullName || user?.fullName || "",
           roleId: roleId,
           Role: roleName,
-          avatar:
-            user?.profile?.Avatar ||
-            user?.profile?.avatar ||
-            user?.Avatar ||
-            user?.avatar ||
-            "/img/default-avatar.png",
+          profile: {
+            avatar:
+              user?.profile?.Avatar ||
+              user?.profile?.avatar ||
+              user?.Avatar ||
+              user?.avatar ||
+              "/img/image.png",
+          },
         };
 
         setUser(normalizedUser);

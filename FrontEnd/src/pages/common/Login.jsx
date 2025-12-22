@@ -73,10 +73,12 @@ const Login = () => {
         fullName: response?.user?.fullName ?? response?.user?.FullName ?? "",
         roleId: roleId,
         Role: roleName,
-        avatar:
-          response?.user?.profile?.avatar ??
-          response?.user?.avatar ??
-          "/img/default-avatar.png",
+        profile: {
+          avatar:
+            response?.user?.profile?.avatar ??
+            response?.user?.avatar ??
+            "/img/image.png",
+        },
       };
 
       console.log("🔐 [Login] Normalized user:", normalizedUser);

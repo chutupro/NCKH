@@ -312,13 +312,16 @@ const ImageLibrary = () => {
             <div
               key={item.CollectionID}
               className="imglib-article-card-link"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigate(`/ImageLibrary/${item.CollectionID}`)}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/ImageLibrary/${item.CollectionID}`); }}
             >
               <div className="imglib-article-card">
-                <div className="imglib-card-image" style={{ backgroundImage: `url(${mainImage})` }}>
+                <div 
+                  className="imglib-card-image" 
+                  style={{ backgroundImage: `url(${mainImage})` }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/ImageLibrary/${item.CollectionID}`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/ImageLibrary/${item.CollectionID}`); }}
+                >
                   {/* Show Category name inside the image if available, otherwise fallback to CategoryID */}
                   <span className="imglib-card-category">{getCollectionCategoryName(item) || (item.CategoryID ?? item.categoryID ?? item.CategoryId ?? item.categoryId ?? '')}</span>
                 </div>
@@ -326,6 +329,26 @@ const ImageLibrary = () => {
                   <h3 className="imglib-card-title">{item.Title || item.Name}</h3>
                   <div className="imglib-card-meta">
                     <span className="imglib-card-date">{formatYear(item) ? `Năm ${formatYear(item)}` : ''}</span>
+                    <button 
+                      className="imglib-map-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('🗺️ [ImageLibrary] Navigating to map with:', {
+                          MapLocationID: item.MapLocationID,
+                          Title: item.Title,
+                          Name: item.Name
+                        });
+                        // Nếu có MapLocationID, zoom vào location đó; nếu không, search theo tên
+                        if (item.MapLocationID) {
+                          navigate(`/map?locationId=${item.MapLocationID}`);
+                        } else {
+                          navigate(`/map?search=${encodeURIComponent(item.Title || item.Name)}`);
+                        }
+                      }}
+                      title="Xem trên bản đồ"
+                    >
+                      📍 Bản đồ
+                    </button>
                   </div>
                 </div>
               </div>

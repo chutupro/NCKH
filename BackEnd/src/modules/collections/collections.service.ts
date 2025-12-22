@@ -83,6 +83,7 @@ export class CollectionsService {
       .leftJoinAndSelect('col.collectionArticles', 'colArticles')
       .leftJoinAndSelect('colArticles.article', 'article')
       .leftJoinAndSelect('article.images', 'articleImages')
+      .leftJoinAndSelect('article.mapLocations', 'mapLocations')
       .leftJoinAndSelect('col.category', 'category')
       .orderBy('col.CollectionID', 'DESC')
       .getMany();
@@ -102,24 +103,82 @@ export class CollectionsService {
 
     console.log(`📚 [Collections.findAll] Found ${cols.length} collections (public library, excluded ${allCols.length - cols.length} map-only collections)`);
 
-    return cols.map((c) => ({
-      CollectionID: c.CollectionID,
-      Name: c.Name,
-      CategoryID: c.CategoryID,
-      Category: c.category ? { CategoryID: c.category.CategoryID, Name: c.category.Name } : null,
-      Title: c.Title,
-      Description: c.Description,
-      Year: c.Year,
-      ImagePath: c.ImagePath,
-      ImageDescription: c.ImageDescription,
-      CreatedAt: c.CreatedAt,
-      articles: (c.collectionArticles || []).map((ca) => ca.article),
+    return Promise.all(cols.map(async (c) => {
+      // Lấy MapLocationID đầu tiên từ articles (nếu có)
+      let mapLocationId: number | null = null;
+      if (c.collectionArticles && c.collectionArticles.length > 0) {
+        for (const ca of c.collectionArticles) {
+          if (ca.article?.mapLocations && ca.article.mapLocations.length > 0) {
+            mapLocationId = ca.article.mapLocations[0].LocationID;
+            break;
+          }
+        }
+      }
+
+      // Nếu chưa tìm thấy, tìm MapLocation có sử dụng ảnh của collection này
+      if (!mapLocationId) {
+        const images = await this.imagesRepo.find({ 
+          where: { CollectionID: c.CollectionID },
+          select: ['ImageID']
+        });
+        
+        if (images.length > 0) {
+          const imageIds = images.map(img => img.ImageID);
+          
+          const mapLocation = await this.collectionRepo.manager
+            .getRepository('MapLocations')
+            .createQueryBuilder('ml')
+            .where('ml.MainImageID IN (:...imageIds) OR ml.OldImageID IN (:...imageIds)', { imageIds })
+            .select('ml.LocationID')
+            .getOne();
+          
+          if (mapLocation) {
+            mapLocationId = mapLocation.LocationID;
+          }
+        }
+      }
+      
+      return {
+        CollectionID: c.CollectionID,
+        Name: c.Name,
+        CategoryID: c.CategoryID,
+        Category: c.category ? { CategoryID: c.category.CategoryID, Name: c.category.Name } : null,
+        Title: c.Title,
+        Description: c.Description,
+        Year: c.Year,
+        ImagePath: c.ImagePath,
+        ImageDescription: c.ImageDescription,
+        CreatedAt: c.CreatedAt,
+        MapLocationID: mapLocationId,
+        articles: (c.collectionArticles || []).map((ca) => ca.article),
+      };
     }));
   }
 
   async findOne(id: number) {
-  const c = await this.collectionRepo.findOne({ where: { CollectionID: id }, relations: ['collectionArticles', 'collectionArticles.article', 'collectionArticles.article.images', 'category'] });
+  const c = await this.collectionRepo.findOne({ 
+    where: { CollectionID: id }, 
+    relations: [
+      'collectionArticles', 
+      'collectionArticles.article', 
+      'collectionArticles.article.images', 
+      'collectionArticles.article.mapLocations',
+      'category'
+    ] 
+  });
     if (!c) return null;
+    
+    // Lấy MapLocationID đầu tiên từ articles (nếu có)
+    let mapLocationId: number | null = null;
+    if (c.collectionArticles && c.collectionArticles.length > 0) {
+      for (const ca of c.collectionArticles) {
+        if (ca.article?.mapLocations && ca.article.mapLocations.length > 0) {
+          mapLocationId = ca.article.mapLocations[0].LocationID;
+          break;
+        }
+      }
+    }
+    
     return {
       CollectionID: c.CollectionID,
       Name: c.Name,
@@ -131,6 +190,7 @@ export class CollectionsService {
       ImagePath: c.ImagePath,
       ImageDescription: c.ImageDescription,
       CreatedAt: c.CreatedAt,
+      MapLocationID: mapLocationId,
       articles: (c.collectionArticles || []).map((ca) => ca.article),
     };
   }

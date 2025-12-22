@@ -90,7 +90,9 @@ const Personal = () => {
       setUser({
         ...user,
         fullName: data.fullName,
-        avatar: data.profile?.avatar || avatar,
+        profile: {
+          avatar: data.profile?.avatar || avatar,
+        },
       });
 
       // ✅ Dispatch event để UserPosts component re-fetch

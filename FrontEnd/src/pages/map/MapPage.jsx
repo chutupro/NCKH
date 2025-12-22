@@ -10,6 +10,7 @@ import ReactDOM from "react-dom";
 import axios from "axios";
 import { useAppContext } from "../../context/useAppContext";
 import getAiFeatureConfig, { getAiEndpointUrl } from "../../config/aiConfig";
+import { useLocation } from "react-router-dom"; // ✅ Import useLocation để theo dõi URL changes
 
 const BASE_URL = "http://localhost:3000";
 const FAVORITE_PHOTOS_KEY = "favoritePhotosByUser";
@@ -67,6 +68,7 @@ const moderateText = async (text) => {
 /* ---------- COMPONENT ---------- */
 const MapPage = () => {
   const dispatch = useDispatch();
+  const location = useLocation(); // ✅ Hook để theo dõi URL changes
   const { places, status, error } = useSelector((state) => state.mapLocations);
   const { user, isAuthLoading } = useAppContext(); // ✅ LẤY USER + AUTH LOADING STATE
 
@@ -137,6 +139,7 @@ const MapPage = () => {
   const [shareLocation, setShareLocation] = useState(null);
   const [shareMapPosition, setShareMapPosition] = useState(null);
   const [userLocation, setUserLocation] = useState(null); // Lưu vị trí người dùng
+  const [pendingLocationId, setPendingLocationId] = useState(null); // Lưu locationId từ URL
 
   useEffect(() => {
     localStorage.setItem(
@@ -232,33 +235,111 @@ const MapPage = () => {
   }, [user, places]);
 
   /* ---------- XỬ LÝ URL PARAMETERS KHI CHIA SẺ ĐỊA ĐIỂM ---------- */
+  // Bước 1: Đọc locationId hoặc search từ URL mỗi khi URL thay đổi
   useEffect(() => {
-    // Chỉ chạy khi map và places đã load
-    if (!mapInstance.current || !places || places.length === 0) return;
+    const urlParams = new URLSearchParams(location.search);
+    const locationId = urlParams.get("locationId");
+    const searchTerm = urlParams.get("search");
+    
+    console.log('📌 [MapPage Step 1] Reading URL params:', { locationId, searchTerm, fullSearch: location.search });
+    
+    if (locationId) {
+      console.log("📌 [MapPage] Detected locationId from URL:", locationId);
+      setPendingLocationId(locationId);
+    } else if (searchTerm) {
+      console.log("📌 [MapPage] Detected search term from URL:", searchTerm);
+      setSearchQuery(searchTerm); // Set search query
+      setPendingLocationId(null); // Clear pending location
+    } else {
+      setPendingLocationId(null); // Clear nếu không có params
+    }
+  }, [location.search]); // ✅ Chạy lại mỗi khi URL search thay đổi
+  
+  // Bước 2: Tự động search khi có searchQuery và places đã load
+  useEffect(() => {
+    if (!searchQuery || !places || places.length === 0 || !mapInstance.current) return;
+    
+    // Kiểm tra xem có phải search từ URL không (để tự động trigger)
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchTerm = urlParams.get("search");
+    
+    if (searchTerm && searchQuery === searchTerm) {
+      console.log("🔍 [MapPage] Auto-searching for:", searchQuery);
+      
+      // Tìm kiếm địa điểm
+      const query = searchQuery.toLowerCase();
+      const matches = places.filter((p) => {
+        const title = (p.title || "").toLowerCase();
+        const address = (p.address || "").toLowerCase();
+        const desc = (p.desc || "").toLowerCase();
+        return title.includes(query) || address.includes(query) || desc.includes(query);
+      });
+      
+      if (matches.length > 0) {
+        const place = matches[0];
+        console.log("✅ [MapPage] Found place:", place.title);
+        
+        // Zoom đến địa điểm
+        mapInstance.current.setView([place.position[0], place.position[1]], 17, { animate: true });
+        
+        // Hiển thị chi tiết
+        setTimeout(() => {
+          showPlaceDetail(place, mapInstance.current);
+        }, 1000);
+        
+        // Clear URL search param
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        console.log("❌ [MapPage] No place found for:", searchQuery);
+      }
+    }
+  }, [searchQuery, places, mapInstance.current]);
+  
+  // Bước 3: Xử lý pending locationId khi map và places đã sẵn sàng
+  useEffect(() => {
+    console.log('🔄 [MapPage Step 3] Checking conditions:', {
+      hasMap: !!mapInstance.current,
+      placesCount: places?.length || 0,
+      pendingLocationId
+    });
+    
+    // Chỉ chạy khi map và places đã load VÀ có pendingLocationId
+    if (!mapInstance.current || !places || places.length === 0 || !pendingLocationId) {
+      if (pendingLocationId && (!mapInstance.current || !places || places.length === 0)) {
+        console.log('⏳ [MapPage] Waiting for map and places to load...', {
+          hasMap: !!mapInstance.current,
+          placesCount: places?.length || 0,
+          pendingLocationId
+        });
+      }
+      return;
+    }
 
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const locationId = urlParams.get("locationId");
+      const locationId = pendingLocationId;
       const locationName = urlParams.get("locationName");
       const lat = parseFloat(urlParams.get("lat"));
       const lng = parseFloat(urlParams.get("lng"));
       const zoom = parseInt(urlParams.get("zoom")) || 15;
 
-      // Nếu không có parameters, không làm gì
-      if (!locationId && !lat && !lng) return;
-
-      console.log("📍 Shared location detected:", {
+      console.log("📍 [MapPage] Processing location:", {
         locationId,
         locationName,
         lat,
         lng,
         zoom,
+        placesAvailable: places.length
       });
 
       // Tìm địa điểm trong danh sách
       let targetPlace = null;
       if (locationId) {
         targetPlace = places.find((p) => String(p.id) === String(locationId));
+        console.log(`🔍 [MapPage] Searching for locationId=${locationId}:`, 
+          targetPlace ? `Found: ${targetPlace.title}` : 'NOT FOUND',
+          `\nAvailable places:`, places.map(p => ({ id: p.id, title: p.title }))
+        );
       }
 
       // Nếu có tọa độ, fly đến vị trí đó
@@ -284,23 +365,42 @@ const MapPage = () => {
       } else if (targetPlace) {
         // Không có tọa độ nhưng có địa điểm
         const placePos = targetPlace.position;
+        console.log('🎯 [MapPage] Using targetPlace position:', {
+          title: targetPlace.title,
+          position: placePos,
+          hasMap: !!mapInstance.current
+        });
+        
         if (placePos && placePos.length === 2) {
-          mapInstance.current.flyTo(placePos, zoom, {
-            duration: 1.5,
+          const currentCenter = mapInstance.current.getCenter();
+          const currentZoom = mapInstance.current.getZoom();
+          console.log('✈️ [MapPage] Flying from:', [currentCenter.lat, currentCenter.lng], 'zoom:', currentZoom);
+          console.log('✈️ [MapPage] Flying to:', placePos, 'zoom: 18');
+          
+          mapInstance.current.flyTo(placePos, 18, {
+            duration: 2,
             easeLinearity: 0.25,
           });
+          
           setTimeout(() => {
+            console.log('📱 [MapPage] Opening sidebar for:', targetPlace.title);
             showPlaceDetail(targetPlace, mapInstance.current);
-          }, 1800);
+          }, 2200);
+        } else {
+          console.log('❌ [MapPage] Invalid position:', placePos);
         }
       }
 
+      // Clear pending locationId sau khi xử lý
+      setPendingLocationId(null);
+      
       // Xóa parameters khỏi URL sau khi xử lý (optional - giữ URL clean)
       // window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
       console.error("Error handling shared location:", error);
+      setPendingLocationId(null);
     }
-  }, [places, mapInstance.current]);
+  }, [places, mapInstance.current, pendingLocationId]);
 
   // ✅ RE-RENDER FORM ĐÁNH GIÁ SAU KHI USER RESTORE (KHÔNG RESET RATING)
   useEffect(() => {

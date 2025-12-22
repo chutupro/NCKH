@@ -66,12 +66,12 @@ const Headers = () => {
                 className="user-avatar" 
                 onClick={() => setShowDropdown(!showDropdown)}
                 style={{
-                  backgroundImage: user.avatar ? `url(${user.avatar})` : 'none',
+                  backgroundImage: user.profile?.avatar ? `url(${user.profile.avatar})` : 'none',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
               >
-                {!user.avatar && getInitials(user.fullName)}
+                {!user.profile?.avatar && getInitials(user.fullName)}
               </div>
               
               {showDropdown && (

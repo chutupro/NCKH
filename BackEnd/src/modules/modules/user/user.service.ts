@@ -43,7 +43,7 @@ export class UserService {
 
     const profile = this.profileRepo.create({
       UserID: savedUser.UserID,
-      Avatar: '/img/default-avatar.png',
+      Avatar: '/img/image.png',
       Bio: '',
       TotalContributions: 0,
       TotalEdits: 0,
