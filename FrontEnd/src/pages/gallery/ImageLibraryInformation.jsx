@@ -108,31 +108,20 @@ const ImageLibraryInformation = () => {
 
   return (
     <div className="ilinfo-container">
-      <div className="ilinfo-header">
-        <button onClick={() => navigate(-1)} className="ilinfo-back">
-          <span>←</span> {'Quay lại'}
-        </button>
-        <div className="ilinfo-breadcrumb">
-          <Link to="/">{'Trang chủ'}</Link>
-          <span>/</span>
-          <Link to="/ImageLibrary">{'Thư viện ảnh'}</Link>
-          <span>/</span>
-          <span>{collection.Title || collection.Name || `#${collection.CollectionID || collection.id}`}</span>
-        </div>
-      </div>
-      <div className="ilinfo-hero">
+      
+      <div className="ilinfo-hero ilinfo-hero--split">
         <div className="ilinfo-heroImage" style={{ backgroundImage: `url(${mainImage})` }}>
           <div className="ilinfo-heroOverlay">
-            <span className="ilinfo-category">{collection.Category?.Name || (`ID:${collection.CategoryID ?? collection.CategoryId ?? ''}`)}</span>
+            {/* category removed from image overlay per design */}
           </div>
         </div>
 
         <div className="ilinfo-content">
-          <h1 className="ilinfo-title">{collection.Title || collection.Name}</h1>
-          <div className="ilinfo-meta">
+          <div className="ilinfo-topRow">
             <span className="ilinfo-metaItem">📅 {formatYear(collection) ? `Năm ${formatYear(collection)}` : ''}</span>
-            {/* Likes removed per request */}
+            <span className="ilinfo-categoryBadge">{collection.Category?.Name || ''}</span>
           </div>
+          <h1 className="ilinfo-title">{collection.Title || collection.Name}</h1>
           <p className="ilinfo-description">{collection.Description || collection.description || collection.Content}</p>
         </div>
       </div>

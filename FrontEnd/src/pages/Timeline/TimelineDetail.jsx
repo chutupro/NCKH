@@ -128,18 +128,20 @@ const TimelineDetail = () => {
     <main className="timeline-detail-page">
       <div className="timeline-detail-container">
         {/* Header */}
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          ← Quay lại
-        </button>
+        
 
-        <div className="timeline-detail-hero">
-          <div className="hero-image" style={{ backgroundImage: `url(${mainEvent.image})` }}>
-            <div className="hero-overlay"></div>
+        <div className="timeline-detail-hero hero-grid">
+          <div className="hero-left">
+            {/* use real img for clearer rendering */}
+            <img src={mainEvent.image} alt={mainEvent.title} className="hero-img" />
           </div>
-          <div className="hero-content">
-            <span className="hero-year">{year}</span>
+          <div className="hero-right">
+            <div className="hero-top-row">
+              <span className="hero-year-inline">{year}</span>
+              <div className="hero-category-badge">{mainEvent.category}</div>
+            </div>
             <h1 className="hero-title">{mainEvent.title}</h1>
-            <p className="hero-category">📚 {mainEvent.category}</p>
+            <p className="hero-desc">{mainEvent.desc || 'Không có mô tả'}</p>
           </div>
         </div>
 
@@ -234,35 +236,7 @@ const TimelineDetail = () => {
           )}
         </div>
 
-        {/* Ảnh tiêu biểu của năm - Hiển thị chi tiết */}
-        {yearOnlyEvents.length > 0 && (
-          <div className="main-event-detail">
-            <h2 className="section-title">🏆 Ảnh tiêu biểu của năm {year}</h2>
-            <div className="detail-content">
-              <div className="detail-image">
-                <img src={yearOnlyEvents[0].image} alt={yearOnlyEvents[0].title} />
-              </div>
-              <div className="detail-text">
-                <h3>{yearOnlyEvents[0].title}</h3>
-                <time>Năm {year}</time>
-                <div className="description">
-                  {yearOnlyEvents[0].desc ? (
-                    yearOnlyEvents[0].desc.split("\n").map((p, i) => (
-                      <p key={i}>{p}</p>
-                    ))
-                  ) : (
-                    <p>Ảnh đại diện tiêu biểu cho năm {year}.</p>
-                  )}
-                </div>
-                {yearOnlyEvents[0].sourceUrl && (
-                  <a href={yearOnlyEvents[0].sourceUrl} target="_blank" rel="noopener noreferrer" className="source-link">
-                    🔗 Xem nguồn gốc
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        
       </div>
     </main>
   );

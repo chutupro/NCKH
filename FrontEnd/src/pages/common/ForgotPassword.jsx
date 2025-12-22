@@ -199,7 +199,7 @@ const ForgotPassword = () => {
             {step === 1 && (
               <form className="auth-form" onSubmit={handleSendOTP}>
                 <div className="form-group">
-                  <label htmlFor="email">Email</label>
+                  <label htmlFor="email" style={{ color: '#ffffff' }}>Email</label>
                   <input
                     id="email"
                     type="email"
@@ -214,7 +214,26 @@ const ForgotPassword = () => {
                   />
                 </div>
 
-                <button className="auth-btn-submit" type="submit" disabled={loading}>
+                <button
+                  className="auth-btn-submit"
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    height: '50px',
+                    border: 'none',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #4ecdc4, #3db8af)',
+                    color: '#ffffff',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    boxShadow: '0 6px 20px rgba(78, 205, 196, 0.35)',
+                    transition: 'none',
+                    cursor: loading ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   {loading ? 'Đang gửi...' : 'Gửi Mã OTP'}
                 </button>
 
@@ -228,7 +247,7 @@ const ForgotPassword = () => {
             {step === 2 && (
               <form className="auth-form" onSubmit={handleResetPassword}>
                 <div className="form-group">
-                  <label htmlFor="otp">Mã OTP</label>
+                  <label htmlFor="otp" style={{ color: '#ffffff' }}>Mã OTP</label>
                   <input
                     id="otp"
                     type="text"
@@ -248,7 +267,7 @@ const ForgotPassword = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="newPassword">Mật khẩu mới</label>
+                  <label htmlFor="newPassword" style={{ color: '#ffffff' }}>Mật khẩu mới</label>
                   <input
                     id="newPassword"
                     type="password"
@@ -264,7 +283,7 @@ const ForgotPassword = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="confirmPassword">Xác nhận mật khẩu</label>
+                  <label htmlFor="confirmPassword" style={{ color: '#ffffff' }}>Xác nhận mật khẩu</label>
                   <input
                     id="confirmPassword"
                     type="password"
@@ -279,7 +298,26 @@ const ForgotPassword = () => {
                   />
                 </div>
 
-                <button className="auth-btn-submit" type="submit" disabled={loading}>
+                <button
+                  className="auth-btn-submit"
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    height: '50px',
+                    border: 'none',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #4ecdc4, #3db8af)',
+                    color: '#ffffff',
+                    fontSize: '1rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    boxShadow: '0 6px 20px rgba(78, 205, 196, 0.35)',
+                    transition: 'none',
+                    cursor: loading ? 'not-allowed' : 'pointer'
+                  }}
+                >
                   {loading ? 'Đang xử lý...' : 'Đặt Lại Mật Khẩu'}
                 </button>
 

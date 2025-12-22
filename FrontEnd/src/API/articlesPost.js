@@ -30,8 +30,14 @@ export async function createArticlePost(payload) {
 			if (cfg && cfg.featureFlags && endpointKey) {
 				const modUrl = getAiEndpointUrl(endpointKey)
 				if (modUrl) {
-					const text = `${payload.title || ''}\n${payload.imageDescription || ''}\n${payload.content || ''}`
-					const modResp = await fetch(modUrl, {
+						const text = [payload.title || '', payload.imageDescription || '', payload.content || '']
+							.filter(Boolean)
+							.join(' ')
+							.replace(/\s+/g, ' ')
+							.trim()
+						// Log the exact JSON body that will be sent to the AI moderation endpoint
+						try { console.log('[articlesPost] AI moderation request ->', modUrl, { text }) } catch (e) {}
+						const modResp = await fetch(modUrl, {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ text }),

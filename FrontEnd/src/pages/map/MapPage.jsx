@@ -36,6 +36,13 @@ const DA_NANG_BOUNDS = [
   [16.25, 108.4],
 ];
 
+// Safe image URL helper: return absolute URL if provided, else prefix BASE_URL
+const safeImageUrl = (img, fallback) => {
+  if (!img) return fallback || "https://via.placeholder.com/260x120?text=Chưa+có+hình";
+  const s = String(img || "");
+  return s.startsWith("http") ? s : `${BASE_URL}${s}`;
+};
+
 // Helper: call AI moderation endpoint and normalize result
 const moderateText = async (text) => {
   if (!text) return null;
@@ -2130,12 +2137,10 @@ const MapPage = () => {
 
     let isSaved = getCurrentUserPlaceFavorites().some((f) => f.id === place.id);
 
+    const imgSrc = safeImageUrl(place.image, "https://via.placeholder.com/260x120?text=Chưa+có+hình");
+
     popup.innerHTML = `
-      <img src="${
-        place.image
-          ? `${BASE_URL}${place.image}`
-          : "https://via.placeholder.com/260x120?text=Chưa+có+hình"
-      }" style="width:100%;height:120px;object-fit:cover;" />
+      <img src="${imgSrc}" style="width:100%;height:120px;object-fit:cover;" />
       <div style="padding:12px;">
         <h4 style="margin:0 0 4px;font-size:1rem;font-weight:600;">${
           place.title
@@ -2809,13 +2814,7 @@ const MapPage = () => {
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            ${
-              place.image
-                ? place.imageYear
-                  ? `<span style="background:#dbeafe;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:600;color:#1e40af;white-space:nowrap;">🖼️ Hiện đại: ${place.imageYear}</span>`
-                  : `<span style="background:#dcfce7;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:600;color:#166534;white-space:nowrap;">🖼️ Hiện đại</span>`
-                : ""
-            }
+            
             ${
               place.oldImageYear
                 ? `<span style="background:#fee2e2;padding:4px 10px;border-radius:16px;font-size:0.75rem;font-weight:600;color:#991b1b;white-space:nowrap;">📅 Năm: ${place.oldImageYear}</span>`
@@ -3987,11 +3986,7 @@ const MapPage = () => {
         <div onclick="window.closeDetailModal()" style="position:absolute;top:12px;right:12px;width:36px;height:36px;background:rgba(0,0,0,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">
           <span style="font-size:1.4rem;color:#666;">×</span>
         </div>
-        <img src="${
-          place.image
-            ? `${BASE_URL}${place.image}`
-            : "https://via.placeholder.com/700xauto?text=Chưa+có+hình"
-        }" style="width:100%;height:auto;object-fit:contain;border-radius:12px;" />
+        <img src="${safeImageUrl(place.image, "https://via.placeholder.com/700xauto?text=Chưa+có+hình")}" style="width:100%;height:auto;object-fit:contain;border-radius:12px;" />
       </div>
       <div style="padding:20px;flex:1;overflow-y:auto;">
         <h3 style="margin:0 0 12px;font-size:1.4rem;font-weight:600;color:#1a0dab;">${
@@ -4414,11 +4409,7 @@ const MapPage = () => {
           const place = places.find((p) => p.id === fav.id) || fav;
           return `
             <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #444;position:relative;">
-              <img src="${
-                place.image
-                  ? `${BASE_URL}${place.image}`
-                  : "https://via.placeholder.com/60x60?text=Chưa+có+hình"
-              }" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" />
+              <img src="${safeImageUrl(place.image, "https://via.placeholder.com/60x60?text=Chưa+có+hình")}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;" />
               <div style="flex:1;cursor:pointer;" onclick="window.showPlaceFromFav(${
                 place.id
               })">

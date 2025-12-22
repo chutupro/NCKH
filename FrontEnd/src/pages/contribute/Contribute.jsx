@@ -76,6 +76,23 @@ const Contribute = () => {
 
   const navigate = useNavigate()
 
+  // Inline style for the confirm button when loading to avoid touching CSS file
+  const confirmButtonLoadingStyle = loading
+    ? {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '8px',
+        width: '56px',
+        height: '56px',
+        minWidth: '0',
+        minHeight: '0',
+        boxSizing: 'border-box',
+        borderRadius: '999px',
+        overflow: 'hidden'
+      }
+    : undefined
+
   // Analyze image and category when user confirms, but not title
   const handleConfirm = async () => {
     setError(null)
@@ -237,9 +254,10 @@ const Contribute = () => {
                 className={`confirm-btn ${loading ? 'loading' : (analysis ? 'enabled' : 'primary')}`}
                 onClick={handleConfirm}
                 disabled={loading}
+                style={confirmButtonLoadingStyle}
               >
                 {loading ? (
-                  <span className="btn-spinner" aria-hidden="true" />
+                  <span className="btn-spinner" aria-hidden="true" style={{ marginRight: 0 }} />
                 ) : (
                   <span>{'Tiếp tục'}</span>
                 )}

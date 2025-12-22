@@ -134,7 +134,7 @@ const ContributeInformation = () => {
             if (v instanceof File) fdLog[k] = { name: v.name, type: v.type, size: v.size }
             else fdLog[k] = v
           }
-          console.log('[Contribute] Uploading file to', `${BACKEND_BASE}/upload`, fdLog)
+          
         } catch (logErr) {
           console.warn('Failed to serialize upload FormData for logging', logErr)
         }
@@ -145,7 +145,7 @@ const ContributeInformation = () => {
         })
         if (!res.ok) throw new Error('Upload failed: ' + res.status)
         const json = await res.json()
-        console.log('[Contribute] upload response JSON:', json)
+        
         const fp = json?.filePath || json?.file_path || null
         if (fp && mounted) {
           // keep server-returned path as-is, but log normalized preview URL for debugging
@@ -154,7 +154,7 @@ const ContributeInformation = () => {
             const normalized = String(fp).startsWith('http')
               ? fp
               : `${BACKEND_BASE}${fp.startsWith('/') ? '' : '/'}${fp}`
-            console.log('[Contribute] stored uploadedPath:', fp, 'normalized preview URL:', normalized)
+            
           } catch (e) {
             console.warn('Failed to compute normalized preview URL', e)
           }
@@ -286,7 +286,7 @@ const ContributeInformation = () => {
           if (v instanceof File) fdLog[k] = { name: v.name, type: v.type, size: v.size }
           else fdLog[k] = v
         }
-        console.log('[Contribute][AI] POST ->', endpoint, fdLog)
+       
       } catch (logErr) {
         console.warn('Failed to serialize AI FormData for logging', logErr)
       }
@@ -411,7 +411,7 @@ const ContributeInformation = () => {
       }
       // Log the JSON payload that will be sent to backend for article creation
       try {
-        console.log('[Contribute] createArticlePost payload:', payload)
+        
       } catch (logErr) {
         console.warn('Failed to log createArticlePost payload', logErr)
       }

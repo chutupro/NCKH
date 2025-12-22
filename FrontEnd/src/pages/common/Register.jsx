@@ -212,7 +212,7 @@ const Register = () => {
 
                 <form className="auth-form" onSubmit={handleSubmit}>
                   <div className="form-group">
-                    <label>Họ tên</label>
+                    <label style={{ color: '#ffffff' }}>Họ tên</label>
                     <input
                       type="text"
                       placeholder="Nhập họ tên"
@@ -223,7 +223,7 @@ const Register = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Email</label>
+                    <label style={{ color: '#ffffff' }}>Email</label>
                     <input
                       type="email"
                       placeholder="example@email.com"
@@ -234,7 +234,7 @@ const Register = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Mật khẩu</label>
+                    <label style={{ color: '#ffffff' }}>Mật khẩu</label>
                     <input
                       type="password"
                       placeholder="Nhập mật khẩu"
@@ -422,7 +422,7 @@ const Register = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Xác nhận mật khẩu</label>
+                    <label style={{ color: '#ffffff' }}>Xác nhận mật khẩu</label>
                     <input
                       type="password"
                       placeholder="Nhập lại mật khẩu"
@@ -506,7 +506,7 @@ const Register = () => {
                 </div>
 
                 {/* Login link */}
-                <p className="auth-footer">
+                <p className="auth-footer" style={{ color: '#ffffff' }}>
                   Bạn đã có tài khoản? <Link to="/login" className="link-primary">Đăng nhập</Link>
                 </p>
               </>

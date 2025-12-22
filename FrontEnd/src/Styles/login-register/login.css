@@ -364,7 +364,7 @@
   margin-top: 32px;
   text-align: center;
   font-size: 0.9rem;
-  color: var(--auth-text-muted);
+  color: white;
 }
 
 .auth-footer .link-primary {

@@ -28,7 +28,8 @@ export class Articles {
   @Column({ type: 'nvarchar', length: 200, nullable: false })
   Title: string;
 
-  @Column({ type: 'nvarchar', length: '255', nullable: true })
+  // Store arbitrarily long content. Use LONGTEXT for MySQL/MariaDB.
+  @Column({ type: 'longtext', nullable: true })
   Content: string;
 
   @Column({ type: 'varchar', length: 10, nullable: false, default: 'vi' })

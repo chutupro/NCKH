@@ -54,13 +54,7 @@ const CompareDetail = () => {
         <button onClick={() => navigate(-1)} className="back-btn">
           <span>←</span> Quay lại
         </button>
-        <div className="breadcrumb">
-          <Link to="/">Trang chủ</Link>
-          <span>/</span>
-          <Link to="/compare">Xưa & Nay</Link>
-          <span>/</span>
-          <span>{item.title}</span>
-        </div>
+        
       </div>
 
       

@@ -64,7 +64,7 @@ const Timeline = () => {
   // Build a list of representative items — one per YEAR — but only for years
   // that have at least one event dated on January 1st (YYYY-01-01).
   const filtered = useMemo(() => {
-    console.log('🔍 [Timeline Debug] Timeline Data:', timelineData);
+   
 
     // Group items by year
     const yearMap = new Map();
@@ -98,7 +98,7 @@ const Timeline = () => {
       return yb - ya;
     });
 
-    console.log('🔍 [Timeline Debug] Representative items per year (Jan 1 only):', reps.map(r => ({ id: r.id, year: r.collectionYear || (r.date ? r.date.split('-')[0] : null) })));
+    
     return reps;
   }, [timelineData]);
 
