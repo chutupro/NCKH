@@ -34,12 +34,40 @@ const ComparisonManager = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
 
-  const categories = [
+  const [categories, setCategories] = useState([
     { id: 1, name: 'Kiến trúc' },
     { id: 2, name: 'Văn hóa' },
     { id: 3, name: 'Du lịch' },
     { id: 4, name: 'Thiên nhiên' },
-  ];
+  ])
+
+  // Fetch categories from API on mount; fall back to defaults on error
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      try {
+        const res = await axios.get('http://localhost:3000/categories')
+        if (!mounted) return
+        if (Array.isArray(res.data)) {
+          const mapped = res.data.map(c => ({ id: c.id || c.ID || c.CategoryID || c.CategoryId || c.Id || c.id, name: c.Name || c.name || c.Title || c.title || String(c) }))
+          if (mapped.length > 0) setCategories(mapped)
+        }
+      } catch (err) {
+        console.warn('Failed loading categories, using defaults', err)
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
+
+  // Ensure comparisonForm.CategoryID is set to a valid category when categories load
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      setComparisonForm(prev => ({ ...prev, CategoryID: prev.CategoryID || categories[0].id }))
+    }
+    // only run when categories change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories])
 
   useEffect(() => {
     fetchComparisons();

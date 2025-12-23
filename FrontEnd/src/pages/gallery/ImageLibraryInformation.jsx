@@ -122,7 +122,7 @@ const ImageLibraryInformation = () => {
             <span className="ilinfo-categoryBadge">{collection.Category?.Name || ''}</span>
           </div>
           <h1 className="ilinfo-title">{collection.Title || collection.Name}</h1>
-          <p className="ilinfo-description">{collection.Description || collection.description || collection.Content}</p>
+          <p className="ilinfo-description">{collection.ImageDescription || collection.Description || collection.description || collection.Content}</p>
         </div>
       </div>
 

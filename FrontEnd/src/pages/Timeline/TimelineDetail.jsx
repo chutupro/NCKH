@@ -138,7 +138,7 @@ const TimelineDetail = () => {
           <div className="hero-right">
             <div className="hero-top-row">
               <span className="hero-year-inline">{year}</span>
-              <div className="hero-category-badge">{mainEvent.category}</div>
+              
             </div>
             <h1 className="hero-title">{mainEvent.title}</h1>
             <p className="hero-desc">{mainEvent.desc || 'Không có mô tả'}</p>
@@ -205,7 +205,7 @@ const TimelineDetail = () => {
                             }}
                           >
                             <div className="event-image" style={{ backgroundImage: `url(${event.image})` }}>
-                              <span className="event-badge">{mainEvent.category}</span>
+                              
                             </div>
                             <div className="event-content">
                               <time className="event-date">

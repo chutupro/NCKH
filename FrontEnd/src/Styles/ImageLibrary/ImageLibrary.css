@@ -14,6 +14,16 @@
     "Helvetica Neue", Arial;
 }
 
+.imglib-page-title {
+  margin: 8px 0 28px 0;
+  font-size: 50px;
+  color: white;
+  font-weight: 800;
+  text-align: center;
+  width: 100%;
+
+}
+
 .imglib-filters-bar {
   display: flex;
   gap: 12px;

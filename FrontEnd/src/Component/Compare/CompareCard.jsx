@@ -88,12 +88,19 @@ const CompareCard = ({ item }) => {
   const oldYear = item.firstImage?.year || item.YearOld || '';
   const newYear = item.lastImage?.year || item.YearNew || '';
 
+  // Swap positions: show newest image on the left and oldest as overlay on the right
+  const leftImage = newImage || oldImage;
+  const rightImage = oldImage || newImage;
+  // Show oldest year on the left, newest on the right
+  const leftYear = oldYear || newYear;
+  const rightYear = newYear || oldYear;
+
   return (
     <div className="cc-card" onClick={handleCardClick}>
       <div className="cc-media" ref={containerRef}>
-        <img src={oldImage} alt={`${item.title} ${t('compareCommon.altOld')}`} className="cc-img cc-img-old" />
+        <img src={leftImage} alt={`${item.title} ${t('compareCommon.altNew')}`} className="cc-img cc-img-old" />
         <div className="cc-img-wrap-new" style={{ width: `${pos}%` }}>
-          <img src={newImage} alt={`${item.title} ${t('compareCommon.altNew')}`} className="cc-img cc-img-new" />
+          <img src={rightImage} alt={`${item.title} ${t('compareCommon.altOld')}`} className="cc-img cc-img-new" />
         </div>
 
         <div
@@ -114,14 +121,13 @@ const CompareCard = ({ item }) => {
 
       <div className="cc-body">
         <div className="cc-tags">
-          <span className="cc-tag cc-old">{oldYear}</span>
-          <span className="cc-tag cc-new">{newYear}</span>
+          <span className="cc-tag cc-old">{leftYear}</span>
+          <span className="cc-tag cc-new">{rightYear}</span>
         </div>
         {item?.Category?.Name ? (
           <div className="cc-category">{displayCategoryName(item.Category.Name)}</div>
         ) : null}
         <h3 className="cc-title">{item.Title}</h3>
-        <p className="cc-post">📍 {item.Location || t('compareDetail.defaultLocation')}</p>
         <div className="cc-meta">
           <span className="cc-drag-tip">← {t('compareCommon.dragShort')} →</span>
         </div>

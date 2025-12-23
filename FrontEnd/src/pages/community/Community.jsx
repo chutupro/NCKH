@@ -23,6 +23,7 @@ const Community = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedPost, setSelectedPost] = useState(null)
+  const [openCommentsPostId, setOpenCommentsPostId] = useState(null)
 
   // Nếu URL có query param ?query=..., dùng nó làm searchQuery ban đầu
   useEffect(() => {
@@ -210,7 +211,19 @@ const Community = () => {
               <div className="error">{t('common.error') || 'Lỗi: '}{error}</div>
             ) : filteredPosts.length > 0 ? (
                       filteredPosts.map((p) => (
-                      <PostCard post={p} key={p.id} onOpen={(post) => setSelectedPost(post)} />
+                      <PostCard
+                        post={p}
+                        key={p.id}
+                        onOpen={(post) => setSelectedPost(post)}
+                        showComments={openCommentsPostId === p.id}
+                        onToggleComments={(force) => {
+                          if (force === false) {
+                            if (openCommentsPostId === p.id) setOpenCommentsPostId(null)
+                            return
+                          }
+                          setOpenCommentsPostId(prev => prev === p.id ? null : p.id)
+                        }}
+                      />
                     ))
             ) : (
               <div className="no-posts">

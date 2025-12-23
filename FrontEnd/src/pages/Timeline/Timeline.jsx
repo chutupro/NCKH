@@ -186,7 +186,7 @@ const Timeline = () => {
               onChange={(e) => setToYear(e.target.value)}
             />
           </div>
-          <button className="tln-btn" onClick={clearFilters}>
+          <button className="tln-reset-btn" onClick={clearFilters}>
             Reset
           </button>
         </div>
@@ -236,25 +236,14 @@ const Timeline = () => {
                         className="tln-timeline-card-image"
                         style={{ backgroundImage: `url(${item.image})` }}
                       >
-                        <span className="tln-timeline-badge">{item.category}</span>
+                        
                       </div>
                       <div className="tln-timeline-card-body">
                         <time className="tln-timeline-date">
                           {(() => {
-                            const year = item.collectionYear;
-                            
-                            // Nếu có collectionName → Timeline từ gallery → CHỈ hiện năm
-                            if (item.collectionName) {
-                              return `Năm ${year}`;
-                            }
-                            
-                            // Nếu KHÔNG có collectionName → Timeline từ "Gắn vào Sự kiện" → Hiện tháng/năm
-                            const month = item.date ? parseInt(item.date.split('-')[1]) : null;
-                            if (month && month > 0) {
-                              return `Tháng ${month}/${year}`;
-                            } else {
-                              return `Năm ${year}`;
-                            }
+                            const year =
+                              item.collectionYear || (item.date ? item.date.split("-")[0] : "");
+                            return `Năm ${year}`;
                           })()}
                         </time>
                         
@@ -263,11 +252,7 @@ const Timeline = () => {
                           <div className="tln-timeline-event-title">{item.title}</div>
                         )}
 
-                        <p className="tln-timeline-desc">
-                          {item.collectionName && item.collectionName === item.desc 
-                            ? '' 
-                            : (item.desc || 'Không có mô tả')}
-                        </p>
+                        
                       </div>
                     </div>
                   </Link>

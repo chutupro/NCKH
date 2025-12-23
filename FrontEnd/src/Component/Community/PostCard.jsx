@@ -8,7 +8,8 @@ import PostActions from './PostActions'
 import CommentsSection from './CommentsSection'
 import '../../Styles/community/Community.css'
 
-const PostCard = ({ post, onDelete, showDeleteButton = false, onOpen }) => {
+const PostCard = (props) => {
+  const { post, onDelete, showDeleteButton = false, onOpen } = props
   const navigate = useNavigate()
   const { isAuthenticated, isAuthLoading, accessToken, user } = useAppContext()
 
@@ -16,7 +17,10 @@ const PostCard = ({ post, onDelete, showDeleteButton = false, onOpen }) => {
   const [likes, setLikes] = useState(post?.likes || 0)
   const [commentCount, setCommentCount] = useState(post?.commentCount || 0)
   const [loading, setLoading] = useState(false)
-  const [showComments, setShowComments] = useState(false)
+  // `showComments` is controlled by parent when provided via props
+  // if not provided, fallback to local state for backward compatibility
+  const [localShowComments, setLocalShowComments] = useState(false)
+  const showComments = typeof props?.showComments !== 'undefined' ? props.showComments : localShowComments
 
   const overrideRef = useRef({})
 
@@ -100,8 +104,26 @@ const PostCard = ({ post, onDelete, showDeleteButton = false, onOpen }) => {
     setCommentCount((prev) => Math.max(0, prev + delta))
   }
 
+  const articleRef = useRef(null)
+
+  // Close comments when clicking outside this PostCard
+  useEffect(() => {
+    if (!showComments) return
+    const onDocClick = (e) => {
+      const el = articleRef.current
+      if (!el) return
+      if (!el.contains(e.target)) {
+        // If parent provided onToggleComments, call it; otherwise use local setter
+        if (typeof props.onToggleComments === 'function') props.onToggleComments(false)
+        else setLocalShowComments(false)
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [showComments])
+
   return (
-    <article className="post-card" id={`post-${post.id}`}>
+    <article className="post-card" id={`post-${post.id}`} ref={articleRef}>
       <PostHeader 
         post={post}
         user={user}
@@ -130,7 +152,17 @@ const PostCard = ({ post, onDelete, showDeleteButton = false, onOpen }) => {
           loading={loading}
           showComments={showComments}
           onToggleLike={handleToggleLike}
-          onToggleComments={() => setShowComments(!showComments)}
+          onToggleComments={(e) => {
+            if (e === false) {
+              // explicit close
+              if (typeof props.onToggleComments === 'function') props.onToggleComments()
+              else setLocalShowComments(false)
+              return
+            }
+            // toggle: prefer parent handler if provided
+            if (typeof props.onToggleComments === 'function') props.onToggleComments()
+            else setLocalShowComments(prev => !prev)
+          }}
           postId={post.id}
         />
 

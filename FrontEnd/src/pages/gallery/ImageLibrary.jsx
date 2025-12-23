@@ -284,6 +284,7 @@ const ImageLibrary = () => {
 
   return (
     <div className="imglib-image-library-container">
+      <h1 className="imglib-page-title">Thư viện ảnh</h1>
       <div className="imglib-filters-bar">
         <input
           type="text"
@@ -329,7 +330,7 @@ const ImageLibrary = () => {
                   <h3 className="imglib-card-title">{item.Title || item.Name}</h3>
                   <div className="imglib-card-meta">
                     <span className="imglib-card-date">{formatYear(item) ? `Năm ${formatYear(item)}` : ''}</span>
-                    <button 
+                    {/* <button 
                       className="imglib-map-btn"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -348,7 +349,7 @@ const ImageLibrary = () => {
                       title="Xem trên bản đồ"
                     >
                       📍 Bản đồ
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>

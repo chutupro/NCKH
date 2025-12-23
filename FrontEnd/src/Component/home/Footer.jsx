@@ -23,23 +23,7 @@ const Footer = () => {
               <p className="footer-description">
                 {t('footer.description')}
               </p>
-              <div className="social-links">
-                <button className="social-link facebook" aria-label="Facebook">
-                  <FontAwesomeIcon icon={faFacebook} />
-                </button>
-                <button className="social-link twitter" aria-label="Twitter">
-                  <FontAwesomeIcon icon={faTwitter} />
-                </button>
-                <button className="social-link instagram" aria-label="Instagram">
-                  <FontAwesomeIcon icon={faInstagram} />
-                </button>
-                <button className="social-link linkedin" aria-label="LinkedIn">
-                  <FontAwesomeIcon icon={faLinkedin} />
-                </button>
-                <button className="social-link youtube" aria-label="YouTube">
-                  <FontAwesomeIcon icon={faYoutube} />
-                </button>
-              </div>
+              
             </div>
 
             {/* Liên kết nhanh (dùng cùng routes như header) */}

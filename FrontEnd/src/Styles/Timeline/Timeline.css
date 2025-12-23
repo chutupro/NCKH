@@ -73,12 +73,13 @@
 }
 
 .tln-timeline-main-title {
-  margin: 0;
-  font-size: 28px;
-  color: #f5e6d3;
+
+  font-size: 30px;
+  color: white;
   font-weight: 700;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
   letter-spacing: 1px;
+  margin-bottom: 20px;
 }
 
 .tln-timeline-search {
@@ -129,22 +130,44 @@
   color: #f5e6d3;
   backdrop-filter: blur(10px);
 }
-.tln-search-actions .tln-btn {
+
+/* Hide native number input spin buttons */
+.tln-search-field input[type="number"]::-webkit-outer-spin-button,
+.tln-search-field input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.tln-search-field input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+.tln-timeline-search .tln-reset-btn,
+.tln-reset-btn {
+  -webkit-appearance: none;
+  appearance: none;
   background: linear-gradient(135deg, #8b6f47 0%, #6b5638 100%);
   color: #f5e6d3;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
+  border: 1px solid rgba(212, 197, 176, 0.28);
+  padding: 8px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(212, 197, 176, 0.3);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
 }
 
-.tln-search-actions .tln-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(139, 111, 71, 0.5);
+.tln-timeline-search .tln-reset-btn:hover,
+.tln-reset-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   background: linear-gradient(135deg, #a0845a 0%, #7d6342 100%);
+}
+
+.tln-timeline-search .tln-reset-btn:focus,
+.tln-reset-btn:focus {
+  outline: none;
+  box-shadow: 0 8px 26px rgba(0,0,0,0.5), 0 0 0 4px rgba(168,132,82,0.12);
 }
 
 /* input focus glow */
@@ -387,10 +410,12 @@
   text-align: center;
   font-weight: 700;
   text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
   max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .tln-timeline-desc {

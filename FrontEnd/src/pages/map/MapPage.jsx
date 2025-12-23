@@ -1442,7 +1442,7 @@ const MapPage = () => {
       )}
             <span style="color:#888;">(${place.reviews || 0})</span>
           </div>
-          <p style="margin:0;font-size:0.8rem;color:#666;line-height:1.3;max-height:40px;overflow:hidden;">${
+          <p style="margin:0;font-size:0.8rem;color:#666;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;white-space:normal;">${
             place.desc || "Mô tả chưa có"
           }</p>
           <div style="margin-top:8px;font-size:0.75rem;color:#1a73e8;font-weight:500;">
@@ -3051,18 +3051,7 @@ const MapPage = () => {
           }
         </div>
 
-        <div id="view-detail-section" style="${
-          activeTab === "overview" ? "" : "display:none;"
-        }margin-top:20px;">
-          <div style="border:1px solid #e5e7eb;border-radius:12px;padding:18px;">
-            <button id="view-detail-btn" style="width:100%;padding:14px;background:#1a73e8;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem;margin-bottom:12px;">
-              Xem chi tiết
-            </button>
-            <div style="font-size:0.9rem;color:#555;line-height:1.6">
-              <div>Location: ${place.address || "Địa chỉ chưa có"}</div>
-            </div>
-          </div>
-        </div>
+        <!-- view-detail-section removed -->
       </div>
     `;
 
@@ -3719,9 +3708,7 @@ const MapPage = () => {
       .getElementById("reviews-tab")
       ?.addEventListener("click", () => switchTab("reviews"));
 
-    document
-      .getElementById("view-detail-btn")
-      ?.addEventListener("click", () => showDetailModal(place));
+    // view-detail-btn removed — no longer attaching showDetailModal here
 
     // ✅ TỰ ĐỘNG MỞ REVIEWS TAB NẾU USER ĐÃ LOGIN
     if (user && user.userId && activeTab === "overview") {
@@ -4560,13 +4547,22 @@ const MapPage = () => {
     <>
       <style>{`
         /* Custom popup styling */
-        .custom-marker-popup .leaflet-popup-content-wrapper,
-        .custom-marker-tooltip {
+        .custom-marker-popup .leaflet-popup-content-wrapper {
           background: white;
           border-radius: 8px;
           box-shadow: 0 4px 16px rgba(0,0,0,0.2);
           padding: 0;
           overflow: hidden;
+          pointer-events: auto !important;
+        }
+
+        /* Tooltips should allow visible/scrollable content so long text can wrap */
+        .custom-marker-tooltip {
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+          padding: 0;
+          overflow: visible !important;
           pointer-events: auto !important;
         }
         
@@ -4575,6 +4571,8 @@ const MapPage = () => {
           margin: 0;
           width: auto !important;
           pointer-events: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
         }
         
         .custom-marker-popup .leaflet-popup-tip {
@@ -4595,6 +4593,8 @@ const MapPage = () => {
           padding: 8px;
           cursor: pointer;
           pointer-events: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
         }
       `}</style>
 

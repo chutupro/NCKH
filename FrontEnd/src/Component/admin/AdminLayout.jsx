@@ -5,7 +5,7 @@ import AdminNavbar from './AdminNavbar';
 import '../../Styles/Admin/AdminDashboard.css';
 
 const AdminLayout = ({ title }) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   return (
     <div className="admin-layout">

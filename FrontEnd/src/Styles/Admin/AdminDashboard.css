@@ -114,7 +114,7 @@
   margin-top: 1rem;
 }
 
-.sidebar.collapsed .menu-section-title {
+.admin-sidebar.collapsed .menu-section-title {
   text-align: center;
   padding: 0.5rem;
 }
@@ -158,14 +158,44 @@
   font-weight: 600;
 }
 
-.sidebar.collapsed .menu-item {
+.admin-sidebar.collapsed .menu-item {
   justify-content: center;
   padding: 0.75rem;
 }
 
-.sidebar.collapsed .menu-item-text,
-.sidebar.collapsed .menu-item-badge {
+.admin-sidebar.collapsed .menu-item-text,
+.admin-sidebar.collapsed .menu-item-badge {
   display: none;
+}
+
+/* Collapsed-by-default: hide non-icon text and footer, reveal on hover */
+.admin-sidebar.collapsed .sidebar-logo-text,
+.admin-sidebar.collapsed .menu-section-title,
+.admin-sidebar.collapsed .menu-item-text,
+.admin-sidebar.collapsed .menu-item-badge,
+.admin-sidebar.collapsed .sidebar-footer {
+  display: none;
+}
+
+.admin-sidebar.collapsed:hover {
+  width: var(--sidebar-width);
+}
+
+.admin-sidebar.collapsed:hover .sidebar-logo-text,
+.admin-sidebar.collapsed:hover .menu-section-title,
+.admin-sidebar.collapsed:hover .menu-item-text,
+.admin-sidebar.collapsed:hover .menu-item-badge,
+.admin-sidebar.collapsed:hover .sidebar-footer {
+  display: block;
+}
+
+/* When the collapsed sidebar is hovered, expand content area and navbar */
+.admin-sidebar.collapsed:hover ~ .admin-content-wrapper {
+  margin-left: var(--sidebar-width);
+}
+
+.admin-sidebar.collapsed:hover ~ .admin-navbar {
+  left: var(--sidebar-width);
 }
 
 /* Navbar */

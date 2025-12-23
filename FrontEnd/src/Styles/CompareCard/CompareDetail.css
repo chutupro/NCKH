@@ -596,19 +596,25 @@
 }
 
 .compare-detail-content {
-  max-width: 1200px;
+  /* allow content to take more horizontal space so right column reaches nearer viewport edge */
+  max-width: 1400px;
   margin: 40px auto;
-  padding: 0 20px;
+  padding: 0 12px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1.7fr 1fr; /* wider left media + roomy right content */
+  gap: 18px;
 }
 
 .compare-detail-content .content-section {
   background: rgba(255, 255, 255, 0.05);
-  padding: 24px;
+  padding: 20px 16px; /* reduce horizontal padding to let text get closer to edges */
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* specifically reduce right padding of the right-side section so paragraph touches closer to page edge */
+.compare-detail-content .content-section:last-child {
+  padding-right: 6px;
 }
 
 .compare-detail-content .content-section h3 {

@@ -17,7 +17,8 @@ function buildTimelineImages(item) {
 
 const CompareSlider = ({ item }) => {
   const { t } = useTranslation();
-  const images = useMemo(() => buildTimelineImages(item), [item]);
+  // Reverse so newest appears first (left) in the timeline viewer
+  const images = useMemo(() => buildTimelineImages(item).reverse(), [item]);
   const [index, setIndex] = useState(0); // Mặc định chọn ảnh đầu tiên (index = 0)
   const [dragging, setDragging] = useState(false);
   const cardsRef = useRef([]);

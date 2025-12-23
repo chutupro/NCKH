@@ -70,20 +70,16 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
       {/* Header */}
       <div className="sidebar-header">
         <Link to="/admin" className="sidebar-logo">
-          {!collapsed && <span>Admin Panel</span>}
+          <span className="sidebar-logo-text">Admin Panel</span>
         </Link>
-        <button className="sidebar-toggle" onClick={onToggle}>
-          {collapsed ? '→' : '←'}
-        </button>
+        
       </div>
 
       {/* Menu */}
       <nav className="sidebar-menu">
         {menuItems.map((section, idx) => (
           <div key={idx}>
-            {!collapsed && (
-              <div className="menu-section-title">{section.section}</div>
-            )}
+            <div className="menu-section-title">{section.section}</div>
             {section.items.map((item) => (
               <Link
                 key={item.path}
@@ -91,13 +87,9 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
                 className={`menu-item ${isActive(item.path) ? 'active' : ''}`}
               >
                 <span className="menu-item-icon">{item.icon}</span>
-                {!collapsed && (
-                  <>
-                    <span className="menu-item-text">{item.label}</span>
-                    {item.badge && (
-                      <span className="menu-item-badge">{item.badge}</span>
-                    )}
-                  </>
+                <span className="menu-item-text">{item.label}</span>
+                {item.badge && (
+                  <span className="menu-item-badge">{item.badge}</span>
                 )}
               </Link>
             ))}
@@ -106,14 +98,12 @@ const AdminSidebar = ({ collapsed, onToggle }) => {
       </nav>
 
       {/* Footer Info */}
-      {!collapsed && (
-        <div style={{ padding: '1.5rem', marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
-            <div>Version 2.0.0</div>
-            <div>© 2025 Đà Nẵng Heritage</div>
-          </div>
+      <div className="sidebar-footer" style={{ padding: '1.5rem', marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>
+          <div>Version 2.0.0</div>
+          <div>© 2025 Đà Nẵng Heritage</div>
         </div>
-      )}
+      </div>
     </aside>
   );
 };

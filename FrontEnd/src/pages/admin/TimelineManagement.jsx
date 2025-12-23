@@ -566,6 +566,14 @@ const TimelineManagement = () => {
           Xóa bộ lọc
         </button>
 
+        <button
+          className="btn-add-timeline"
+          onClick={() => handleCreate()}
+          style={{marginLeft: '12px'}}
+        >
+          ➕ Thêm Timeline
+        </button>
+
         <div className="filter-result-count">
           Tìm thấy: {sortedTimelines.length} / {timelines.length}
         </div>
@@ -890,8 +898,8 @@ const TimelineManagement = () => {
         </div>
       )}
 
-      {/* Timeline Form Modal - REMOVED: Không cho tạo/sửa thủ công */}
-      {false && showForm && (
+      {/* Timeline Form Modal */}
+      {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">

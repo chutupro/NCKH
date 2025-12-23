@@ -189,9 +189,9 @@
 
 .hero-title {
   font-size: 32px;
-  font-weight: 800;
+  font-weight: 20px;
   margin: 6px 0 0 0;
-  color: #f5e6d3;
+  color:white ;
 }
 
 .hero-desc {
@@ -456,17 +456,6 @@
   position: relative;
 }
 
-.event-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
 
 .event-content {
   padding: 15px;
